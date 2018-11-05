@@ -14,6 +14,10 @@ def testProject():
     mc.xform (loc1.name, t=[10, 0, 0])
 
 
+def connectNodes(plug1, plug2):
+    dgModifier = om.MDGModifier()
+    dgModifier.connect(plug1, plug2)
+    dgModifier.doIt()
 
 class transform(object):
 
@@ -49,17 +53,46 @@ class transform(object):
                 mc.setAttr(self.name+".jointOrientY", 0)
                 mc.setAttr(self.name+".jointOrientZ", 0)
             self.parent = parent
+        
 
+    # Connect plugs
+                
+    # def __gt__(self, plug1, plug2):
+    #     connectNodes(self.args, plug.)
     # Add Attribute
     def addAttr(self, longName="attr", softMinValue=0, defaultValue=0, softMaxValue=1, attrType="double", keyable=True):
         attr = mc.addAttr(ln=longName, smn=softMinValue, dv=defaultValue, smx=softMaxValue, at=attrType, k=keyable)
         return "{}.{}".format(self.name, longName)
         
-    
+    def getMObject(self):
+        selectionList = om.MSelectionList()
+        try: 
+            selectionList.add(self.name)
+            mObj = om.MObject()
+            selectionList.getDependNode(0, mObj)
+            return mObj
+        except:
+            return None
+    def getPlug(self, nodeName):
+        ''' returns node's plug '''
+        self_mObject =self.getMObject()
+        dependencyNode =om.MFnDependencyNode(self_mObject)
+        try:
+            plug = dependencyNode.findPlug(nodeName)
+            return plug
+        except:
+            return None
+
     # TranslateX
     @property
     def translateX(self):
         return mc.getAttr(self.name+".translateX")
+
+
+    @translateX.getter
+    def translateX(self):
+        ''' returns node's plug '''
+        return self.getPlug("translateX")
     @translateX.setter
     def translateX(self, value):
         mc.setAttr(self.name+".translateX", value)
@@ -67,7 +100,8 @@ class transform(object):
     # TranslateY
     @property
     def translateY(self):
-        return mc.getAttr(self.name+".translateY")
+        ''' returns node's plug '''
+        return self.getPlug("translateY")
     @translateY.setter
     def translateY(self, value):
         mc.setAttr(self.name+".translateY", value)
@@ -75,7 +109,8 @@ class transform(object):
     # TranslateZ
     @property
     def translateZ(self):
-        return mc.getAttr(self.name+".translateZ")
+        ''' returns node's plug '''
+        return self.getPlug("translateZ")
     @translateZ.setter
     def translateZ(self, value):
         mc.setAttr(self.name+".translateZ", value)
@@ -117,6 +152,12 @@ class joint(transform):
     def __init__(self, side="C", name="joint", type="JNT", parent=None): #, parent=None, position=[0, 0, 0]):
         super(joint, self).__init__(side, name, type, parent)
         joint.elemIndex +=1
+
+    @property
+    def translateY(self):
+        ''' returns node's plug '''
+        return self.getPlug("radius")
+    
     
 class circle(transform):
     elemIndex = 0
@@ -126,5 +167,10 @@ class circle(transform):
         circle.elemIndex +=1
 
 
-# # loc = locator()
-c = circle(name="ana")
+# loc = locator(name="locatorTest")
+# c = circle(name="ana")
+# c.translateX = 10
+# print c.translateX
+# c.translateX > loc.translateX
+# # connectNodes(c.translateX, loc.translateX)
+# # mc.connectAttr(c.name+".")

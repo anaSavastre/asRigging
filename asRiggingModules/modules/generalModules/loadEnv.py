@@ -11,7 +11,7 @@ controlShapesPath = "D:/Bournemouth University/asRigging/controlShapes"
 
 def loadEnvironment():
     sys.path.append("D:/Bournemouth University/asRigging/scripts/asRigging/asRiggingModules/functions")
-    sys.path.append("D:/Bournemouth University/asRigging/scripts/asRigging/asRiggingModules/modules")
+    sys.path.append("D:/Bournemouth University/asRigging/scripts/asRigging/asRiggingModules/modules/generalModules")
     loadPlugins()
 def loadPlugins():
     for plugIn in plugInList:

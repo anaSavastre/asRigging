@@ -124,7 +124,7 @@ def getParent(grp):
     '''
     return mc.listRelatives(grp, p=True)
 
-def translateShapePoints(shape, translationVector):
+def translateShapePoints(shape, translationVector, pivot):
     shapeList= getChildren(shape)
     # for shape in shapeList:
     # mc.select(shape+"*.cv[0:*]")
@@ -135,6 +135,9 @@ def scaleShapePoints(shape, scaleAmount):
 
     mc.xform(shape+"*.cv[0:*]", s=[scaleAmount, scaleAmount, scaleAmount], r=True)
 
+def rotateShapePoints(shape, rotationVector=[0, 0, 0], pivot=[0, 0, 0]):
+
+    mc.xform(shape+".cv[0:*]", ro=rotationVector, rp = pivot, os=True)
 
 # def getBoundingBox(selection):
     

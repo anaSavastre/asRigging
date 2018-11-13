@@ -2,8 +2,6 @@ import maya.cmds as mc
 import shutil 
 import os 
 import sys
-# import mayaModule as mmod
-# import functions as fn
 
 # print sys.path
 plugInList = ["asRivet", "asMatloft", "asTrig"]

@@ -1,69 +1,56 @@
 import maya.cmds as mc
 import maya.OpenMaya as om
 
+import functions as fn
 
-def testProject():
-    mc.file(new = True, f=True)
-    grp = mc.group(em=True, n="C_grp_GRP")
-    mc.xform(grp, t=[5, 0, 0])
-    loc1 = locator ()
-    loc2 = locator ()
-    jnt1 = joint (parent=grp)
-    jnt2 = joint ()
-    loc3 = locator(parent=grp)
-    mc.xform (loc1.name, t=[10, 0, 0])
+def getParent(grp):
+    '''
+    Returns parent of given transform node in the outliner 
+    '''
+    return mc.listRelatives(grp, p=True)
 
+def connectAttr(attr1, attr2):
+    mc.connectAttr(attr1, attr2, f=True)
 
-def connectNodes(plug1, plug2):
+def connectPlugs(plug1, plug2):
     dgModifier = om.MDGModifier()
     dgModifier.connect(plug1, plug2)
     dgModifier.doIt()
 
-class transform(object):
 
+def testProject():
+    mc.file(new = True, f=True)
+    
+    side ="C"
+    parent = None
+    legName="leg"
+    legGRP = transform(side=side, name=legName, type="GRP", parent=parent)
+    legJntGRP = transform(side=side, name=legName+"Joints", type="GRP", parent=legGRP)
+    limitedAnkleGRP = transform(side=side, name=legName+"LimitedAnkle", type="GRP", parent=legGRP)
+    ankleCtrl = constructCTL(ankleGuide, side=side, name=legName+"Ankle", parent=legGRP)
+    settingsGRP = transform(side=side, name=legName+"Settings", type="GRP", parent=legGRP)
+
+
+
+class utilityNode(object):
     elemIndex = 0
-    nodeType = "transform"
-    # visibility = 1
-    # Main attributes
-    def __init__(self, side="C", name="name", type="TRF", parent=None): 
-        #, parent=None, position=[0, 0, 0]):
+    def __init__(self, nodeType, side="C", name="name", type="NOD"):
+        self.nodeType = nodeType
         self.side = side
         self.type = type
         self.name = side+"_"+name+"0"+str(self.elemIndex)+"_"+type
-        transform.elemIndex+=1
-        if (self.nodeType == "locator"):
-            shapeNode = mc.createNode(self.nodeType, n=self.name.replace(name, name+"Shape"))
-            mc.rename(mc.listRelatives(shapeNode, p=True), self.name)
-        elif (self.nodeType == "nurbsCurve"):
-            # print "name", self.name
-            makeCircleNode = mc.createNode("makeNurbCircle", name="make_"+self.name)
-            shapeNode = mc.createNode(self.nodeType, n=self.name.replace(name, name+"Shape"))
-            mc.connectAttr(makeCircleNode+".outputCurve", shapeNode+".create")
-            mc.rename(mc.listRelatives(shapeNode, p=True), self.name)
-        else:
-            mc.createNode(self.nodeType, n=self.name)
-        
-        if (parent != None):
-            mc.parent(self.name, parent)
-            mc.setAttr(self.name+".translateX",0)
-            mc.setAttr(self.name+".translateY",0)
-            mc.setAttr(self.name+".translateZ",0)
-            if (self.nodeType == "joint"):
-                mc.setAttr(self.name+".jointOrientX", 0)
-                mc.setAttr(self.name+".jointOrientY", 0)
-                mc.setAttr(self.name+".jointOrientZ", 0)
-            self.parent = parent
-        
-
-    # Connect plugs
-                
-    # def __gt__(self, plug1, plug2):
-    #     connectNodes(self.args, plug.)
-    # Add Attribute
-    def addAttr(self, longName="attr", softMinValue=0, defaultValue=0, softMaxValue=1, attrType="double", keyable=True):
-        attr = mc.addAttr(ln=longName, smn=softMinValue, dv=defaultValue, smx=softMaxValue, at=attrType, k=keyable)
-        return "{}.{}".format(self.name, longName)
-        
+        self.utilityNode = mc.createNode(self.nodeType, n=self.name)
+    def getPlug(self, nodeName):
+        ''' returns node's plug '''
+        self_mObject =self.getMObject()
+        dependencyNode =om.MFnDependencyNode(self_mObject)
+        try:
+            plug = dependencyNode.findPlug(nodeName)
+            return plug
+        except:
+            print "plug not returned"
+            return None
+    
     def getMObject(self):
         selectionList = om.MSelectionList()
         try: 
@@ -72,7 +59,394 @@ class transform(object):
             selectionList.getDependNode(0, mObj)
             return mObj
         except:
+            print "mObj not returned"
             return None
+
+class multiplyDivide(utilityNode):
+    ''' JUST OPERATION ATTR IMPLEMENTED
+    needs refinement'''
+    elemIndex = 0
+    nodeType = "multiplyDivide"
+    def __init__(self, side="C", name="multiplyDivide", type ="MDV"):
+        super(multiplyDivide, self).__init__(self.nodeType, side, name, type)
+        multiplyDivide.elemIndex+=1
+    # INPUT ATTRIBUTES
+    # Operation
+    def getOperation(self):
+        return self.name+".operation"
+    @property
+    def operation(self):
+        ''' returns node's plug '''
+        return self.getPlug("operation")
+    @operation.setter
+    def operation(self, value):
+        mc.setAttr(self.name+".operation", value)
+   
+    # Input1
+    def getInput1(self):
+        return self.name+".input1"
+    @property
+    def input1(self):
+        ''' returns node's plug '''
+        return self.getPlug("input1")
+    @input1.setter
+    def input1(self, value):
+        mc.setAttr(self.name+".input1", value)
+
+    # Input2
+    def getInput2(self):
+        return self.name+".input2"
+    @property
+    def input2(self):
+        ''' returns node's plug '''
+        return self.getPlug("input2")
+    @input2.setter
+    def input2(self, value):
+        mc.setAttr(self.name+".input2", value)
+
+    # OUTPUT ATTRIBUTES
+    def getOutput(self):
+        return self.name+".output"
+    @property
+    def output(self):
+        ''' returns node's plug '''
+        return self.getPlug("output")
+    @output.setter
+    def output(self, value):
+        mc.setAttr(self.name+".output", value)
+     
+
+
+class vectorProduct(utilityNode):
+    ''' not completely implemented'''
+    elemIndex = 0
+    nodeType = "vectorProduct"
+    def __init__(self, side="C", name="vectorProduct", type ="VEC"):
+        super(vectorProduct, self).__init__(self.nodeType, side, name, type)
+        vectorProduct.elemIndex+=1
+    
+    # INPUT ATTRIBUTES
+    # Operation
+    def getOperation(self):
+        return self.name+".operation"
+    @property
+    def operation(self):
+        ''' returns node's plug '''
+        return self.getPlug("operation")
+    @operation.setter
+    def operation(self, value):
+        mc.setAttr(self.name+".operation", value)
+
+    # normalizeOutput
+    def getnormalizeOutput(self):
+        return self.name+".normalizeOutput"
+    @property
+    def normalizeOutput(self):
+        ''' returns node's plug '''
+        return self.getPlug("normalizeOutput")
+    @normalizeOutput.setter
+    def normalizeOutput(self, value):
+        mc.setAttr(self.name+".normalizeOutput", value)
+
+    # input1
+    def getInput1(self):
+        return self.name+".input1"
+    @property
+    def input1(self):
+        ''' returns node's plug '''
+        return self.getPlug("input1")
+    @input1.setter
+    def input1(self, value):
+        mc.setAttr(self.name+".input1", value)
+    # OUTPUT ATTRIBUTES
+    def getOutput(self):
+        return self.name+".output"
+    @property
+    def output(self):
+        ''' returns node's plug '''
+        return self.getPlug("output")
+    @output.setter
+    def output(self, value):
+        mc.setAttr(self.name+".output", value)
+     
+
+
+class clamp(utilityNode): 
+    ''' not completely implemented'''
+    elemIndex = 0
+    nodeType = "clamp"
+    def __init__(self, side="C", name="clamp", type ="CLP"):
+        super(clamp, self).__init__(self.nodeType, side, name, type)
+        clamp.elemIndex+=1
+    
+    # INPUT ATTRIBUTES
+    # Input
+    def getInput(self):
+        return self.name+".input"
+    @property
+    def input(self):
+        ''' returns node's plug '''
+        return self.getPlug("input")
+    @input.setter
+    def input(self, value):
+        mc.setAttr(self.name+".input", value)
+
+    # InputR
+    def getInputR(self):
+        return self.name+".input.inputR"
+    @property
+    def inputR(self):
+        ''' returns node's plug '''
+        return self.getPlug("inputR")
+    @inputR.setter
+    def inputR(self, value):
+        mc.setAttr(self.name+".input.inputR", value)
+
+    # inputG
+    def getinputG(self):
+        return self.name+".input.inputG"
+    @property
+    def inputG(self):
+        ''' returns node's plug '''
+        return self.getPlug("inputG")
+    @inputG.setter
+    def inputG(self, value):
+        mc.setAttr(self.name+".input.inputG", value)
+
+    # inputB
+    def getinputB(self):
+        return self.name+".input.inputB"
+    @property
+    def inputB(self):
+        ''' returns node's plug '''
+        return self.getPlug("inputB")
+    @inputB.setter
+    def inputB(self, value):
+        mc.setAttr(self.name+".input.inputB", value)
+
+    # Min
+    def getMin(self):
+        return self.name+".min"
+    @property
+    def min(self):
+        ''' returns node's plug '''
+        return self.getPlug("min")
+    @min.setter
+    def min(self, value):
+        mc.setAttr(self.name+".min", value)
+
+    # Max
+    def getMax(self):
+        return self.name+".max"
+    @property
+    def max(self):
+        ''' returns node's plug '''
+        return self.getPlug("max")
+    @max.setter
+    def max(self, value):
+        mc.setAttr(self.name+".max", value)
+
+    # maxR
+    def getmaxR(self):
+        return self.name+".input.maxR"
+    @property
+    def maxR(self):
+        ''' returns node's plug '''
+        return self.getPlug("maxR")
+    @maxR.setter
+    def maxR(self, value):
+        mc.setAttr(self.name+".input.maxR", value)
+
+    # OUTPUT ATTRIBUTES
+    # outputR
+    def getoutputR(self):
+        return self.name+".output.outputR"
+    @property
+    def outputR(self):
+        ''' returns node's plug '''
+        return self.getPlug("outputR")
+    @outputR.setter
+    def outputR(self, value):
+        mc.setAttr(self.name+".outputR", value)
+
+
+class plusMinusAverage(utilityNode):
+    ''' JUST OPERATION ATTR IMPLEMENTED
+    needs refinement'''
+    elemIndex = 0
+    nodeType = "plusMinusAverage"
+    def __init__(self, side="C", name="plusMinusAverage", type ="PMA"):
+        super(plusMinusAverage, self).__init__(self.nodeType, side, name, type)
+        plusMinusAverage.elemIndex+=1
+    # INPUT ATTRIBUTES
+    def getOperation(self):
+        return self.name+".operation"
+    @property
+    def operation(self):
+        ''' returns node's plug '''
+        return self.getPlug("operation")
+    @operation.setter
+    def operation(self, value):
+        mc.setAttr(self.name+".operation", value)
+ 
+    # OUTPUT ATTRIBUTES
+    def getOutput3D(self):
+        return self.name+".output3D"
+    @property
+    def output3D(self):
+        ''' returns node's plug '''
+        return self.getPlug("output3D")
+    @output3D.setter
+    def output3D(self, value):
+        mc.setAttr(self.name+".output3D", value)
+    
+    
+
+class decomposeMatrix(utilityNode):
+    elemIndex = 0
+    nodeType = "decomposeMatrix"
+    def __init__(self, side="C", name="decomposeMatrix", type ="DMTX"):
+        super(decomposeMatrix, self).__init__(self.nodeType, side, name, type)
+        decomposeMatrix.elemIndex+=1
+
+    # INPUT ATTRIBUTES
+    # inputMatrix
+    def getInputMatrix(self):
+        return self.name+".inputMatrix"
+    @property
+    def inputMatrix(self):
+        ''' returns attr str'''
+        return self.getPlug("inputMatrix")
+    @inputMatrix.setter
+    def inputMatrix(self, value):
+        mc.setAttr(self.name+".inputMatrix", value)
+
+    # OUTPUT ATTRIBUTES
+    # output Quat
+    @property
+    def outputQuat(self):
+        return self.name +".outputQuat"
+
+    # output Rotate
+    @property
+    def outputRotate(self):
+        return self.getPlug("outputRotate")
+
+    # output Translate
+    @property
+    def getOutputTranslate(self):
+        return self.name +".outputTranslate"
+
+    def outputTranslate(self):
+        return self.getPlug("outputTranslate")
+
+    # output Scale
+    @property
+    def outputScale(self):
+        return self.getPlug("outputScale")
+
+ 
+class distanceBetween(utilityNode):
+    elemIndex = 0
+    nodeType = "distanceBetween"
+    def __init__(self, side="C", name="distanceBetween", type ="DST"):
+        super(distanceBetween, self).__init__(self.nodeType, side, name, type)
+        distanceBetween.elemIndex+=1
+
+    # INPUT ATTRIBUTES
+    # inMatrix1
+    @property
+    def inMatrix1(self):
+        ''' returns node's plug '''
+        return self.getPlug("inMatrix1")
+    @inMatrix1.setter
+    def inMatrix1(self, value):
+        mc.setAttr(self.name+".inMatrix1", value)
+
+     # inMatrix2
+    def getInMatrix2(self):
+        return self.name+".inMatrix2"
+    @property
+    def inMatrix2(self):
+        ''' returns attr str'''
+        return self.getPlug("inMatrix2")
+    @inMatrix2.setter
+    def inMatrix2(self, value):
+        mc.setAttr(self.name+".inMatrix2", value)
+
+    # OUTPUT ATTRIBUTES
+    def getDistance(self):
+        ''' return attr str'''
+        return self.name+".distance"
+    @property
+    def distance(self):
+        ''' returns attr plug'''
+        return self.getPlug("distance")
+    
+class addDoubleLinear(utilityNode):
+    elemIndex = 0
+    nodeType = "addDoubleLinear"
+    def __init__(self, side="C", name="addDoubleLinear", type ="DST"):
+        super(addDoubleLinear, self).__init__(self.nodeType, side, name, type)
+        addDoubleLinear.elemIndex+=1
+
+    # INPUT ATTRIBUTES
+    def getInput1(self):
+            return self.name+".input1"
+    @property
+    def input1(self):
+        ''' returns node's plug '''
+        return self.getPlug("input1")
+    @input1.setter
+    def input1(self, value):
+        mc.setAttr(self.name+".input1", value)
+
+    def getInput2(self):
+        return self.name+".input2"
+    @property
+    def input2(self):
+        ''' returns node's plug '''
+        return self.getPlug("input2")
+    @input1.setter
+    def input2(self, value):
+        mc.setAttr(self.name+".input2", value)
+    
+    # OUTPUT ATTRIBUTES
+    def getOutput(self):
+        return self.name+".output"
+    @property
+    def output(self):
+        ''' returns node's plug '''
+        return self.getPlug("output")
+    @output.setter
+    def output(self, value):
+        mc.setAttr(self.name+".output", value)
+    
+
+class transform(object):
+
+    elemIndex = 0
+    nodeType = "transform"
+    # visibility = 1
+    # Main attributes
+    def __init__(self, side="C", name="name", type="TRF", parent=None): 
+        self.side = side
+        self.type = type
+        self.name = side+"_"+name+"0"+str(self.elemIndex)+"_"+type
+        transform.elemIndex+=1
+        self.transformNode = mc.createNode(self.nodeType, n=self.name)
+        if (parent != None):
+            if(getParent(self.name)!=None):
+                transformName = getParent(self.name)[0]
+            else:
+                transformName = self.name
+            mc.parent(transformName, parent)
+            mc.setAttr(transformName+".translateX",0)
+            mc.setAttr(transformName+".translateY",0)
+            mc.setAttr(transformName+".translateZ",0)
+            self.parent = parent
+        
+    # Add Attribute
     def getPlug(self, nodeName):
         ''' returns node's plug '''
         self_mObject =self.getMObject()
@@ -83,13 +457,39 @@ class transform(object):
         except:
             return None
 
-    # TranslateX
+    def addAttr(self, longName="attr", softMinValue=None, defaultValue=0, softMaxValue=None, attrType="double", keyable=True):
+        if softMaxValue!=None:
+            attr = mc.addAttr(self.name, ln=longName, smn=softMinValue, dv=defaultValue, smx=softMaxValue, at=attrType, k=keyable)
+        else:
+            attr = mc.addAttr(self.name, ln=longName, at=attrType, dv=defaultValue, k=keyable)
+        # return "{}.{}".format(self.name, longName)
+        return self.getPlug(longName)
+        
+    def getMObject(self):
+        selectionList = om.MSelectionList()
+        try: 
+            selectionList.add(self.name)
+            mObj = om.MObject()
+            selectionList.getDependNode(0, mObj)
+            return mObj
+        except:
+            return None
+   
+    # Translate
+    def getTranslate(self):
+        return mc.getAttr(self.name+".translate")
     @property
-    def translateX(self):
+    def translate(self):
+        ''' returns node's plug '''
+        return self.getPlug("translate")
+    @translate.setter
+    def translate(self, value):
+        mc.setAttr(self.name+".translate", value)
+    
+    # TranslateX
+    def getTranslateX(self):
         return mc.getAttr(self.name+".translateX")
-
-
-    @translateX.getter
+    @property
     def translateX(self):
         ''' returns node's plug '''
         return self.getPlug("translateX")
@@ -102,9 +502,13 @@ class transform(object):
     def translateY(self):
         ''' returns node's plug '''
         return self.getPlug("translateY")
+
     @translateY.setter
     def translateY(self, value):
         mc.setAttr(self.name+".translateY", value)
+
+    def getTranslateY(self):
+        return mc.getAttr(self.name+".translateY")
 
     # TranslateZ
     @property
@@ -114,47 +518,65 @@ class transform(object):
     @translateZ.setter
     def translateZ(self, value):
         mc.setAttr(self.name+".translateZ", value)
+    
+    def getTranslateZ(self):
+        return mc.getAttr(self.name+".translateZ")
+
 
     # Visibility
+    def getVisibility(self):
+        return mc.getAttr(self.name+".visibility")
     @property
     def visibility(self):
-        return mc.getAttr(self.name+".visibility")
+        ''' returns node's plug '''
+        return self.getPlug("visibility")
     @visibility.setter
     def visibility(self, value):
         mc.setAttr(self.name+".visibility", value)
 
-    # Operator Overloading
-    # def __gt__(self, firstAttr, anotherAttr):
-    #     mc.connectAttr("{}.{}".format(self.name, firstAttr), anotherAttr, f=True)
-
+    # WorldMatrix
+    def getWorldMatrix(self):
+        return self.name+".worldMatrix"
+    @property
+    def worldMatrix(self):
+        return self.getPlug("worldMatrix")
+    @worldMatrix.setter
+    def worldMatrix(self, matrix):
+        mc. setAttr(self.name+".worldMatrix", matrix)
     def __repr__(self):
         return self.name
     def __str__(self):
         return self.name
-
-    # Operator Overloading
-    # def __lt__(self):
-        
 
 
 class locator(transform):
 
     elemIndex = 0
     nodeType = "locator"
-    def __init__(self, side="C", name="locator", type="LOC", parent=None): #, parent=None, position=[0, 0, 0]):
-        super(locator, self).__init__(side, name, type, parent)
+    def __init__(self, side="C", name="locator", type="LOC", parent=None):
+        super(locator, self).__init__(side, name+"Shape", type, parent)
         locator.elemIndex +=1
+        name = self.name
+        self.name = name.replace("Shape", "")
       
 class joint(transform):
 
     elemIndex = 0
     nodeType = "joint"
-    def __init__(self, side="C", name="joint", type="JNT", parent=None): #, parent=None, position=[0, 0, 0]):
+    def __init__(self, side="C", name="joint", type="JNT", parent=None): 
         super(joint, self).__init__(side, name, type, parent)
         joint.elemIndex +=1
+        if (parent!=None):                
+            mc.setAttr(self.name+".jointOrientX", 0)
+            mc.setAttr(self.name+".jointOrientY", 0)
+            mc.setAttr(self.name+".jointOrientZ", 0)
 
+
+    def getRadius(self):
+        ''' radius value'''
+        return mc.getAttr(self.name+".radius")
     @property
-    def translateY(self):
+    def radius(self):
         ''' returns node's plug '''
         return self.getPlug("radius")
     
@@ -162,15 +584,12 @@ class joint(transform):
 class circle(transform):
     elemIndex = 0
     nodeType = "nurbsCurve"
-    def __init__(self, side="C", name="circle", type="CTL", parent=None): #, parent=None, position=[0, 0, 0]):
-        super(circle, self).__init__(side, name, type, parent)
+    def __init__(self, side="C", name="circle", type="CTL", parent=None): 
+        super(circle, self).__init__(side, name+"Shape", type, parent)
+        
+        self.name = side+"_"+name+"0"+str(self.elemIndex)+"_"+type
+        self.transformNode = mc.listRelatives(self.name, p=True)
+        makeCircle = mc.createNode("makeNurbCircle", n=self.name.replace(name, "makeCircle"+name))
+        mc.connectAttr(makeCircle+".outputCurve", self.name+".create")
         circle.elemIndex +=1
-
-
-# loc = locator(name="locatorTest")
-# c = circle(name="ana")
-# c.translateX = 10
-# print c.translateX
-# c.translateX > loc.translateX
-# # connectNodes(c.translateX, loc.translateX)
-# # mc.connectAttr(c.name+".")
+        

@@ -79,7 +79,7 @@ def saveFile(projectEnv="C:/Users/anama/Desktop/MajorProject/Production", saveNa
     projectPath = getDirectoryPath()
     
     
-    if sceneName!=None:
+    if sceneName==None:
         mc.file(rn=projectEnv+"/"+saveName+".0000.ma")
         mc.file(save=True, f=True)
 
@@ -111,3 +111,5 @@ def saveFile(projectEnv="C:/Users/anama/Desktop/MajorProject/Production", saveNa
 
 # nameObj(name="finger")
 # saveFile(projectEnv="D:/Bournemouth University/asRigging/projects/Hanni/rigging/Koa/wip/components")
+
+saveFile()

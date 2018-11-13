@@ -1,3 +1,14 @@
+''' 
+Ana Maria Savastre
+Bournemouth University 
+
+Master Class Assignment: Frontier Rigging 
+
+Character: Spinosaurus
+
+
+'''
+
 import maya.cmds as mc
 
 import shutil 

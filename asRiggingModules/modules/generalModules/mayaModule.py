@@ -9,6 +9,13 @@ def getParent(grp):
     '''
     return mc.listRelatives(grp, p=True)
 
+
+def resetJNTCount():
+    joint.elemIndex = 0
+
+def resetTRNCount():
+    transform.elemIndex = 0
+
 def connectAttr(attr1, attr2):
     mc.connectAttr(attr1, attr2, f=True)
 
@@ -115,6 +122,64 @@ class multiplyDivide(utilityNode):
     def output(self, value):
         mc.setAttr(self.name+".output", value)
      
+class blendColors(utilityNode):
+    elemIndex = 0
+    nodeType = "blendColors"
+    def __init__(self, side="C", name="blendColors", type ="BLD"):
+        super(blendColors, self).__init__(self.nodeType, side, name, type)
+        blendColors.elemIndex+=1
+
+    # INPUT ATTRIBUTES
+    # Color1
+    def getColor1(self):
+        return self.name+".color1"
+    @property
+    def color1(self):
+        ''' returns node's plug '''
+        return self.getPlug("color1")
+    @color1.setter
+    def color1(self, value):
+        mc.setAttr(self.name+".color1", value)
+
+    # Color2
+    def getColor2(self):
+        return self.name+".color2"
+    @property
+    def color2(self):
+        ''' returns node's plug '''
+        return self.getPlug("color2")
+    @color2.setter
+    def color2(self, value):
+        mc.setAttr(self.name+".color2", value)
+
+    # Blender
+    def getBlender(self):
+        return self.name+".blender"
+    @property
+    def blender(self):
+        ''' returns node's plug '''
+        return self.getPlug("blender")
+    @blender.setter
+    def blender(self, value):
+        mc.setAttr(self.name+".blender", value)
+
+    # OUTPUT ATTRIBUTES
+    def getOutput(self):
+        return self.name+".output"
+    @property
+    def output(self):
+        ''' returns node's plug '''
+        return self.getPlug("output")
+    @output.setter
+    def output(self, value):
+        mc.setAttr(self.name+".output", value)
+
+    
+    
+
+
+    
+    
 
 
 class vectorProduct(utilityNode):
@@ -259,8 +324,8 @@ class clamp(utilityNode):
 
     # OUTPUT ATTRIBUTES
     # outputR
-    def getoutputR(self):
-        return self.name+".output.outputR"
+    def getOutputR(self):
+        return self.name+".outputR"
     @property
     def outputR(self):
         ''' returns node's plug '''
@@ -382,11 +447,49 @@ class distanceBetween(utilityNode):
     def distance(self):
         ''' returns attr plug'''
         return self.getPlug("distance")
+class multDoubleLinear(utilityNode):
+    elemIndex = 0
+    nodeType = "multDoubleLinear"
+    def __init__(self, side="C", name="multDoubleLinear", type ="MTL"):
+        super(multDoubleLinear, self).__init__(self.nodeType, side, name, type)
+        multDoubleLinear.elemIndex+=1
+
+    # INPUT ATTRIBUTES
+    def getInput1(self):
+            return self.name+".input1"
+    @property
+    def input1(self):
+        ''' returns node's plug '''
+        return self.getPlug("input1")
+    @input1.setter
+    def input1(self, value):
+        mc.setAttr(self.name+".input1", value)
+
+    def getInput2(self):
+        return self.name+".input2"
+    @property
+    def input2(self):
+        ''' returns node's plug '''
+        return self.getPlug("input2")
+    @input1.setter
+    def input2(self, value):
+        mc.setAttr(self.name+".input2", value)
     
+    # OUTPUT ATTRIBUTES
+    def getOutput(self):
+        return self.name+".output"
+    @property
+    def output(self):
+        ''' returns node's plug '''
+        return self.getPlug("output")
+    @output.setter
+    def output(self, value):
+        mc.setAttr(self.name+".output", value)
+
 class addDoubleLinear(utilityNode):
     elemIndex = 0
     nodeType = "addDoubleLinear"
-    def __init__(self, side="C", name="addDoubleLinear", type ="DST"):
+    def __init__(self, side="C", name="addDoubleLinear", type ="ADD"):
         super(addDoubleLinear, self).__init__(self.nodeType, side, name, type)
         addDoubleLinear.elemIndex+=1
 
@@ -444,6 +547,9 @@ class transform(object):
             mc.setAttr(transformName+".translateX",0)
             mc.setAttr(transformName+".translateY",0)
             mc.setAttr(transformName+".translateZ",0)
+            mc.setAttr(transformName+".rotateX",0)
+            mc.setAttr(transformName+".rotateY",0)
+            mc.setAttr(transformName+".rotateZ",0)
             self.parent = parent
         
     # Add Attribute
@@ -522,6 +628,18 @@ class transform(object):
     def getTranslateZ(self):
         return mc.getAttr(self.name+".translateZ")
 
+    # ROTATION
+    # rotateZ
+    @property
+    def rotateZ(self):
+        ''' returns node's plug '''
+        return self.getPlug("rotateZ")
+    @rotateZ.setter
+    def rotateZ(self, value):
+        mc.setAttr(self.name+".rotateZ", value)
+    
+    def getRotateZ(self):
+        return mc.getAttr(self.name+".rotateZ")
 
     # Visibility
     def getVisibility(self):
@@ -579,6 +697,19 @@ class joint(transform):
     def radius(self):
         ''' returns node's plug '''
         return self.getPlug("radius")
+    
+    def jointOrient(self):
+        ''' '''
+        return self.getPlug("jointOrient")
+    def jointOrientX(self):
+        ''' '''
+        return self.getPlug("jointOrientX")
+    def jointOrientY(self):
+        ''' '''
+        return self.getPlug("jointOrientY")
+    def jointOrientZ(self):
+        ''' '''
+        return self.getPlug("jointOrientZ")
     
     
 class circle(transform):

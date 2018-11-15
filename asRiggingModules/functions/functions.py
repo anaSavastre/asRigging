@@ -5,6 +5,8 @@ import fileinput
 # import maya.openMaya as om
 
 ##########################    Functions    ##########################
+
+
 def deleting_pointConstraint(obj):
     ''' This function delets the point constraint from the given obj'''
     #get children
@@ -40,7 +42,18 @@ def alignTool ():
         deleting_pointConstraint(objString[2])
         #deleting orientCnstraint
         deleting_orientConstraint(objString[2])
-        
+
+def snapTool(targetObj, obj):
+    '''
+    Matching of targetObj to the given obj
+    
+    '''
+
+    #point constraint for matching position
+    mc.pointConstraint(targetObj, obj)
+    #deleting pointConstrint
+    deleting_pointConstraint(obj)
+
 def align(targetObj, obj):
     '''
     Matching orientation and position of targetObj to the given obj
@@ -113,6 +126,22 @@ def cleanFile (filePath, searchText="student", replaceText=""):
         tempFile.write( line.replace( searchText, replaceText ) )
     tempFile.close()
 
+def planeEquation(p1, p2, p3):
+    ''' 
+    ax + by + cz + d = 0
+
+    a = (y2z3 - y3z2) + (y3z1 - y1z3) + (y1z2 - y2z1)
+    b = (z2x3 - z3x2) + (z3x1 - z1x3) + ()
+    
+    '''
+
+    a = (p2[1]*p3[2] - p3[1]*p2[2]) + (p3[1]*p1[2] - p1[1]*p3[2]) + (p1[1]*p2[2] - p2[1]*p1[2])
+    b = (p2[2]*p3[0] - p3[2]*p2[0]) + (p3[2]*p1[0] - p1[2]*p3[0]) + (p1[2]*p2[0] - p2[2]*p1[0])
+    c = (p2[2]*p3[1] - p3[0]*p2[1]) + (p3[0]*p1[1] - p1[0]*p3[1]) + (p1[0]*p2[1] - p2[0]*p1[1])
+    d = -a*p1[0] - b*p1[1] - c*p1[2]
+    return [a, b, c, d]
+
+
 def getChildren(grp):
     '''
     Returns children of given transform node in the outliner 
@@ -122,7 +151,7 @@ def getParent(grp):
     '''
     Returns parent of given transform node in the outliner 
     '''
-    return mc.listRelatives(grp, p=True)
+    return mc.listRelatives(grp, p=True)[0]
 
 def translateShapePoints(shape, translationVector, pivot):
     shapeList= getChildren(shape)
@@ -139,8 +168,11 @@ def rotateShapePoints(shape, rotationVector=[0, 0, 0], pivot=[0, 0, 0]):
 
     mc.xform(shape+".cv[0:*]", ro=rotationVector, rp = pivot, os=True)
 
-# def getBoundingBox(selection):
+
+def descendentsList(root=None):
+    descendentsList = mc.listRelatives(root, ad=True)
+    descendentsList.append(root)
+    descendentsList.reverse()
     
-# filePath = "C:/Users/anama/Desktop/MajorProject/Other/layout.0010.ma"
-# cleanFile(filePath)
+    return descendentsList
 

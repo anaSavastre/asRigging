@@ -167,6 +167,41 @@ def scaleShapePoints(shape, scaleAmount):
 def rotateShapePoints(shape, rotationVector=[0, 0, 0], pivot=[0, 0, 0]):
 
     mc.xform(shape+".cv[0:*]", ro=rotationVector, rp = pivot, os=True)
+def colRed():
+    '''CRED: Color selected ctrl-s to RED '''
+    
+    #assigning all selected obj to ctrlString
+    ctrlString = mc.ls(sl=True)
+    #Assigning all controlers the yellow color
+    for ctrl in ctrlString :
+        #enable color override
+        mc.setAttr(ctrl+".overrideEnabled", 1);
+        #set color to yellow
+        mc.setAttr(ctrl+".overrideColor", 13)
+def colBlue():
+        
+    '''CBLUE: Color selected ctrl-s to BLUE '''
+    
+    #assigning all selected obj to ctrlString
+    ctrlString = mc.ls(sl=True)
+    #Assigning all controlers the yellow color
+    for ctrl in ctrlString :
+        #enable color override
+        mc.setAttr(ctrl+".overrideEnabled", 1);
+        #set color to yellow
+        mc.setAttr(ctrl+".overrideColor", 6)
+def colYellow ():
+        
+    '''CYLW: Color selected ctrl-s to YELLOW '''
+    
+    #assigning all selected obj to ctrlString
+    ctrlString = mc.ls(sl=True)
+    #Assigning all controlers the yellow color
+    for ctrl in ctrlString :
+        #enable color override
+        mc.setAttr(ctrl+".overrideEnabled", 1);
+        #set color to yellow
+        mc.setAttr(ctrl+".overrideColor", 17)
 
 
 def descendentsList(root=None):

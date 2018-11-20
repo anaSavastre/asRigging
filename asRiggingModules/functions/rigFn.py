@@ -28,28 +28,34 @@ def jntHierarchy (guideJnt, side="C", name="name", segmentList=[], parent=None):
                 for each elem in the jntList
                     OFS>JNT
     '''
-    grp = mmod.transform(side=side, name=name, type="GRP", parent=parent)
-    ofs = mmod.transform(side=side, name=name, type="OFS", parent=grp)
-    # Matching orientation GUIDE > OFS
+    
     
     jntChainList=[]
     # Creating JNT
-    root = ofs
-    for i, jnt in enumerate(jntList):
-        if (len(segmentList)==len(jntList)):
+    root = parent
+    for i, jnt in enumerate(guideJnt):
+        if (len(segmentList)==len(guideJnt)):
             # NewJnt
-            newJnt = mmod.joint(side=side, name=name+segmentList[i], parent=root)
+            newJnt = mmod.joint(side=side, name=name+segmentList[i], parent=None)
             fn.align(jnt, newJnt)
             jntChainList.append(newJnt)
+            mc.makeIdentity(newJnt)
+            if root!=None:
+                mc.parent(newJnt, root)
             root = newJnt
         else:
-            # NewJnt
-            newJnt = mmod.joint(side=side, name=name, parent=root)
+            newJnt = mmod.joint(side=side, name=name, parent=None)
+            fn.align(jnt, newJnt)
             jntChainList.append(newJnt)
+            mc.makeIdentity(newJnt)
+            if root!=None:
+                mc.parent(newJnt, root)
             root = newJnt
-
-    mc.joint(jntChainList, oj="xyz", sao="yup")
-    mc.setAttr(jntChainList[len(jntChainList)-1]+".jointOrient", 0)
+    # for  jnt in jntChainList:
+    mc.joint(jntChainList[0].name, oj="xyz", sao="yup", ch=True, e=True)
+    mc.setAttr(jntChainList[len(jntChainList)-1].name+".jointOrientX", 0)
+    mc.setAttr(jntChainList[len(jntChainList)-1].name+".jointOrientY", 0)
+    mc.setAttr(jntChainList[len(jntChainList)-1].name+".jointOrientZ", 0)
     return jntChainList
 
 def createJntChain(jntList, side="C", name="name", segmentList=[], parent=None):
@@ -123,6 +129,9 @@ def createFKChain(jntList, side="C", name="name", segmentList=[], parent=None):
             fn.align(jnt, ofs)
             newJnt = mmod.joint(side=side, name=name+"_"+segmentList[i], parent=ofs)
             jntChainList.append(newJnt)
+            # Creating Circle
+            if (i==len(jntList)-1):
+                break
             circle = mmod.circle( side=side, name=name+"_"+segmentList[i], parent=None)
             # Scaling Ctrl
             fn.scaleShapePoints(circle.name, mc.getAttr(jnt+".radius"))
@@ -139,6 +148,8 @@ def createFKChain(jntList, side="C", name="name", segmentList=[], parent=None):
             fn.align(jnt, ofs)
             newJnt = mmod.joint(side=side, name=name, parent=ofs)
             jntChainList.append(newJnt)
+            if (i==len(jntList)-1):
+                break
             circle = mmod.circle( side=side, name=name, parent=None)
             # Scaling Ctrl
             fn.scaleShapePoints(circle.name, mc.getAttr(jnt+".radius"))

@@ -69,6 +69,45 @@ class utilityNode(object):
             print "mObj not returned"
             return None
 
+class multDoubleLinear(utilityNode):
+    elemIndex = 0
+    nodeType = "multDoubleLinear"
+    def __init__(self, side="C", name="multDoubleLinear", type ="MTL"):
+        super(multDoubleLinear, self).__init__(self.nodeType, side, name, type)
+        multDoubleLinear.elemIndex+=1
+
+    # INPUT ATTRIBUTES
+    def getInput1(self):
+            return self.name+".input1"
+    @property
+    def input1(self):
+        ''' returns node's plug '''
+        return self.getPlug("input1")
+    @input1.setter
+    def input1(self, value):
+        mc.setAttr(self.name+".input1", value)
+
+    def getInput2(self):
+        return self.name+".input2"
+    @property
+    def input2(self):
+        ''' returns node's plug '''
+        return self.getPlug("input2")
+    @input1.setter
+    def input2(self, value):
+        mc.setAttr(self.name+".input2", value)
+    
+    # OUTPUT ATTRIBUTES
+    def getOutput(self):
+        return self.name+".output"
+    @property
+    def output(self):
+        ''' returns node's plug '''
+        return self.getPlug("output")
+    @output.setter
+    def output(self, value):
+        mc.setAttr(self.name+".output", value)
+
 class multiplyDivide(utilityNode):
     ''' JUST OPERATION ATTR IMPLEMENTED
     needs refinement'''
@@ -172,14 +211,7 @@ class blendColors(utilityNode):
         return self.getPlug("output")
     @output.setter
     def output(self, value):
-        mc.setAttr(self.name+".output", value)
-
-    
-    
-
-
-    
-    
+        mc.setAttr(self.name+".output", value)  
 
 
 class vectorProduct(utilityNode):
@@ -312,15 +344,15 @@ class clamp(utilityNode):
         mc.setAttr(self.name+".max", value)
 
     # maxR
-    def getmaxR(self):
-        return self.name+".input.maxR"
+    def getMaxR(self):
+        return self.name+".maxR"
     @property
     def maxR(self):
         ''' returns node's plug '''
         return self.getPlug("maxR")
     @maxR.setter
     def maxR(self, value):
-        mc.setAttr(self.name+".input.maxR", value)
+        mc.setAttr(self.name+".maxR", value)
 
     # OUTPUT ATTRIBUTES
     # outputR
@@ -364,8 +396,169 @@ class plusMinusAverage(utilityNode):
     @output3D.setter
     def output3D(self, value):
         mc.setAttr(self.name+".output3D", value)
+
+
+class angleBetween(utilityNode):
+    elemIndex = 0
+    nodeType = "angleBetween"
+    def __init__(self, side="C", name="angleBetween", type ="ANG"):
+        super(angleBetween, self).__init__(self.nodeType, side, name, type)
+        angleBetween.elemIndex+=1
+    # INPUT ATTRIBUTES
+    def getVector1(self):
+        return self.name+".vector1"
+    @property
+    def vector1(self):
+        ''' returns node's plug '''
+        return self.getPlug("vector1")
+    @vector1.setter
+    def vector1(self, value):
+        mc.setAttr(self.name+".vector1", value)
+
+    def getVector2(self):
+        return self.name+".vector2"
+    @property
+    def vector2(self):
+        ''' returns node's plug '''
+        return self.getPlug("vector2")
+    @vector1.setter
+    def vector2(self, value):
+        mc.setAttr(self.name+".vector2", value)
+    # OUTPUT ATTRIBUTES
+    def getEuler(self):
+        return self.name+".euler"
+    @property
+    def euler(self):
+        ''' returns node's plug '''
+        return self.getPlug("euler")
+    @euler.setter
+    def euler(self, value):
+        mc.setAttr(self.name+".euler", value)
+
+class animBlendNodeAdditiveDA(utilityNode):
+    elemIndex = 0
+    nodeType = "animBlendNodeAdditiveDA"
+    def __init__(self, side="C", name="animBlendNodeAdditiveDA", type ="AddDA"):
+        super(animBlendNodeAdditiveDA, self).__init__(self.nodeType, side, name, type)
+        animBlendNodeAdditiveDA.elemIndex+=1
+    # inputA
+    def getInputA(self):
+        return self.name+".inputA"
+    @property
+    def inputA(self):
+        ''' returns node's plug '''
+        return self.getPlug("inputA")
+    @inputA.setter
+    def inputA(self, value):
+        mc.setAttr(self.name+".inputA", value)
+    # inputB
+    def getInputB(self):
+        return self.name+".inputB"
+    @property
+    def inputB(self):
+        ''' returns node's plug '''
+        return self.getPlug("inputB")
+    @inputB.setter
+    def inputB(self, value):
+        mc.setAttr(self.name+".inputB", value)
+    def getInputA(self):
+        return self.name+".inputA"
+    # weightA
+    def getWeightA(self):
+        return self.name+".weightA"
+    @property
+    def weightA(self):
+        ''' returns node's plug '''
+        return self.getPlug("weightA")
+    @weightA.setter
+    def weightA(self, value):
+        mc.setAttr(self.name+".weightA", value)
+    # weightB
+    def getWeightB(self):
+        return self.name+".weightB"
+    @property
+    def weightB(self):
+        ''' returns node's plug '''
+        return self.getPlug("weightB")
+    @weightB.setter
+    def weightB(self, value):
+        mc.setAttr(self.name+".weightB", value)
     
+    # OUTPUT ATTRIBUTES
+    def getOutput(self):
+        return self.name+".output"
+    @property
+    def output(self):
+        ''' returns node's plug '''
+        return self.getPlug("output")
+    @output.setter
+    def output(self, value):
+        mc.setAttr(self.name+".output", value)
     
+
+
+class condition(utilityNode):
+    elemIndex = 0
+    nodeType = "condition"
+    def __init__(self, side="C", name="condition", type ="CND"):
+        super(condition, self).__init__(self.nodeType, side, name, type)
+        condition.elemIndex+=1
+    # INPUT ATTRIBUTES
+    def getOperation(self):
+        return self.name+".operation"
+    @property
+    def operation(self):
+        ''' returns node's plug '''
+        return self.getPlug("operation")
+    @operation.setter
+    def operation(self, value):
+        mc.setAttr(self.name+".operation", value)
+ 
+    def getFirstTerm(self):
+        return self.name+".firstTerm"
+    @property
+    def firstTerm(self):
+        ''' returns node's plug '''
+        return self.getPlug("firstTerm")
+    @firstTerm.setter
+    def firstTerm(self, value):
+        mc.setAttr(self.name+".firstTerm", value)
+    
+    # INPUT ATTRIBUTES
+    def getColorIfFalse(self):
+        return self.name+".colorIfFalse"
+    @property
+    def colorIfFalse(self):
+        ''' returns node's plug '''
+        return self.getPlug("colorIfFalse")
+    @colorIfFalse.setter
+    def colorIfFalse(self, value):
+        mc.setAttr(self.name+".colorIfFalse", value)
+    
+    def getColorIfTrue(self):
+        return self.name+".colorIfTrue"
+    @property
+    def colorIfTrue(self):
+        ''' returns node's plug '''
+        return self.getPlug("colorIfTrue")
+    @colorIfTrue.setter
+    def colorIfTrue(self, value):
+        mc.setAttr(self.name+".colorIfTrue", value)
+
+    # OUTPUT ATTRIBUTES
+    def getOutColor(self):
+        return self.name+".outColor"
+    @property
+    def outColor(self):
+        ''' returns node's plug '''
+        return self.getPlug("outColor")
+    @outColor.setter
+    def outColor(self, value):
+        mc.setAttr(self.name+".outColor", value)
+        
+
+    
+
 
 class decomposeMatrix(utilityNode):
     elemIndex = 0
@@ -398,10 +591,10 @@ class decomposeMatrix(utilityNode):
         return self.getPlug("outputRotate")
 
     # output Translate
-    @property
     def getOutputTranslate(self):
         return self.name +".outputTranslate"
-
+    
+    @property
     def outputTranslate(self):
         return self.getPlug("outputTranslate")
 
@@ -629,6 +822,30 @@ class transform(object):
         return mc.getAttr(self.name+".translateZ")
 
     # ROTATION
+    # rotateX
+    @property
+    def rotateX(self):
+        ''' returns node's plug '''
+        return self.getPlug("rotateX")
+    @rotateX.setter
+    def rotateX(self, value):
+        mc.setAttr(self.name+".rotateX", value)
+    
+    def getrotateX(self):
+        return mc.getAttr(self.name+".rotateX")
+
+    # rotateY
+    @property
+    def rotateY(self):
+        ''' returns node's plug '''
+        return self.getPlug("rotateY")
+    @rotateY.setter
+    def rotateY(self, value):
+        mc.setAttr(self.name+".rotateY", value)
+    
+    def getrotateY(self):
+        return mc.getAttr(self.name+".rotateY")
+
     # rotateZ
     @property
     def rotateZ(self):
@@ -681,6 +898,10 @@ class joint(transform):
 
     elemIndex = 0
     nodeType = "joint"
+    def setColor(self, colorNumber):
+        mc.setAttr(self.name+".overrideEnabled", 1);
+        #set color to yellow
+        mc.setAttr(self.name+".overrideColor", colorNumber)
     def __init__(self, side="C", name="joint", type="JNT", parent=None): 
         super(joint, self).__init__(side, name, type, parent)
         joint.elemIndex +=1
@@ -688,6 +909,20 @@ class joint(transform):
             mc.setAttr(self.name+".jointOrientX", 0)
             mc.setAttr(self.name+".jointOrientY", 0)
             mc.setAttr(self.name+".jointOrientZ", 0)
+        
+        # Coloring JNT
+        if (self.side == "C"):
+            # Color JNT yellow
+            self.setColor(17)
+            self.ColorNumber = 17
+        elif (self.side == "L"):
+            # Color JNT blue
+            self.setColor(6)
+            self.ColorNumber =6
+        elif (self.side == "R"):
+            # Colour JNT red
+            self.setColor(13)
+            self.ColorNumber = 13
 
 
     def getRadius(self):
@@ -697,24 +932,34 @@ class joint(transform):
     def radius(self):
         ''' returns node's plug '''
         return self.getPlug("radius")
-    
+    @property
     def jointOrient(self):
         ''' '''
         return self.getPlug("jointOrient")
+    @property
     def jointOrientX(self):
         ''' '''
         return self.getPlug("jointOrientX")
+    @property
     def jointOrientY(self):
         ''' '''
         return self.getPlug("jointOrientY")
+    @property
     def jointOrientZ(self):
         ''' '''
         return self.getPlug("jointOrientZ")
+    @property
+    def getDawStyleAttr(self):
+        return self.name + ".drawStyle"
     
     
 class circle(transform):
     elemIndex = 0
     nodeType = "nurbsCurve"
+    def setColor(self, colorNumber):
+        mc.setAttr(self.name+".overrideEnabled", 1);
+        #set color to yellow
+        mc.setAttr(self.name+".overrideColor", colorNumber)
     def __init__(self, side="C", name="circle", type="CTL", parent=None): 
         super(circle, self).__init__(side, name+"Shape", type, parent)
         
@@ -723,4 +968,19 @@ class circle(transform):
         makeCircle = mc.createNode("makeNurbCircle", n=self.name.replace(name, "makeCircle"+name))
         mc.connectAttr(makeCircle+".outputCurve", self.name+".create")
         circle.elemIndex +=1
+
+        # Coloring Circles
+        if (self.side == "C"):
+            # Color CTL yellow
+            self.setColor(17)
+            self.ColorNumber = 17
+        elif (self.side == "L"):
+            # Color CTL blue
+            self.setColor(6)
+            self.ColorNumber =6
+        elif (self.side == "R"):
+            # Colour CTL red
+            self.setColor(13)
+            self.ColorNumber = 13
+   
         

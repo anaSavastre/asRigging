@@ -166,7 +166,7 @@ class rigSceneSetup(object):
         # CHR CTRL: SCALE & POSITION
         translationVector = [0, geoHeight+geoHeight*0.15, 0]
         fn.scaleShapePoints(globalMoveCTL, geoWidth*0.4)
-        fn.translateShapePoints(globalMoveCTL, translationVector)
+        fn.translateShapePoints(globalMoveCTL, translationVector, [0, 0, 0])
         
         
         # ROOT CONTROL
@@ -193,6 +193,6 @@ class rigSceneSetup(object):
 
 # # MAIN
 # loadEnvironment()
-projectEnv = "D:/Bournemouth University/asRigging/projects/Hanni/"
-rig=rigSceneSetup("Koa", projectEnv)
+# projectEnv = "D:/Bournemouth University/asRigging/projects/Hanni/"
+# rig=rigSceneSetup("Koa", projectEnv)
 

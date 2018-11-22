@@ -2,7 +2,6 @@ import maya.cmds as mc
 import shutil 
 import os 
 import sys
-
 # print sys.path
 plugInList = ["asRivet", "asMatloft", "asTrig"]
 controlShapesPath = "D:/Bournemouth University/asRigging/controlShapes"

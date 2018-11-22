@@ -16,6 +16,7 @@ import maya.cmds as mc
 import functions as fn
 import mayaModule as mmod
 import rigFn as rigFn
+import mayaNode as node
 
 
 # TEMPORARY
@@ -65,7 +66,7 @@ class foot(object):
         self.side = side
         self.footJnt = footJnt
         self.legRoot = root
-        self.ankleCTL = root.ankleCtrl
+        self.ankleCtrl = root.ankleCtrl
         self.parent = parent
         self.footSegments = ["Ankle", "Toes", "ToesEnd"]
         self.footName="foot"
@@ -165,23 +166,23 @@ class foot(object):
 
         # 3. FOOT ROLL NETWORK
         # 3.0. HEEL BACK ROTATION
-        clampHeel = mmod.clamp(side=self.side, name="footRoll"+"footRollHeel")
+        clampHeel = node.clamp(side=self.side, name="footRoll"+"footRollHeel")
         mmod.connectPlugs(footRoll, clampHeel.inputR)
         mc.setAttr(clampHeel.name+".minR", -100)
-        inverseMult =mmod.multDoubleLinear(side=self.side, name="footRoll"+"footRollHeel")
+        inverseMult =node.multDoubleLinear(side=self.side, name="footRoll"+"footRollHeel")
         mmod.connectPlugs(clampHeel.outputR, inverseMult.input1)
         mc.setAttr(inverseMult.name+".input2", -1)
         mmod.connectPlugs(inverseMult.output, footRolljnt[0].rotateZ)
         # 3.1. TARSAL ROTATION
-        clampTarsalRot = mmod.clamp(side=self.side, name="footRoll"+"footRollTarsalRotation")
-        clampTarsalLock = mmod.clamp(side=self.side, name="footRoll"+"footRollTarsalLock")
+        clampTarsalRot = node.clamp(side=self.side, name="footRoll"+"footRollTarsalRotation")
+        clampTarsalLock = node.clamp(side=self.side, name="footRoll"+"footRollTarsalLock")
         mmod.connectPlugs(tarsalLock, clampTarsalLock.inputR)
         mc.setAttr(clampTarsalLock.getMaxR(), 100)
         mmod.connectPlugs(footRoll, clampTarsalRot.inputR)
         mmod.connectPlugs(clampTarsalLock.outputR, clampTarsalRot.maxR)
         # 3.2. STRAIGHTENING
-        diffRollTarsalLock = mmod.plusMinusAverage(side=self.side, name="footRoll"+"toeRotation")
-        clampDiff = mmod.clamp(side=self.side, name="footRoll"+"toeRotation")
+        diffRollTarsalLock = node.plusMinusAverage(side=self.side, name="footRoll"+"toeRotation")
+        clampDiff = node.clamp(side=self.side, name="footRoll"+"toeRotation")
         mc.setAttr(diffRollTarsalLock.getOperation(), 2)
         mmod.connectAttr(animParameters.name+".footRoll", diffRollTarsalLock.name+".input1D[0]")
         mmod.connectAttr(clampTarsalLock.getOutputR(), diffRollTarsalLock.name+".input1D[1]")
@@ -190,9 +191,9 @@ class foot(object):
         mmod.connectPlugs(clampDiff.outputR, footRolljnt[1].rotateZ)
 
         # Subtracting this rotation from the tarsal Rot
-        invClampDiff = mmod.multDoubleLinear(side=self.side, name="footRoll"+"invToeRotation")
-        straightenCoef = mmod.multDoubleLinear(side=self.side, name="footRoll"+"straightenCoef")
-        addStraightening = mmod.addDoubleLinear(side=self.side, name="footRoll"+"tarsalRotation")
+        invClampDiff = node.multDoubleLinear(side=self.side, name="footRoll"+"invToeRotation")
+        straightenCoef = node.multDoubleLinear(side=self.side, name="footRoll"+"straightenCoef")
+        addStraightening = node.addDoubleLinear(side=self.side, name="footRoll"+"tarsalRotation")
         mc.setAttr(invClampDiff.getInput2(), -1)
         mmod.connectPlugs(clampDiff.outputR, invClampDiff.input1)
         mmod.connectPlugs(invClampDiff.output, straightenCoef.input1)
@@ -206,16 +207,16 @@ class foot(object):
         
         # 4. CONNECT FOOTROLL TO LEG
         # Get Ankle jnt WM Translation
-        decompMtxFootRollAnkle = mmod.decomposeMatrix(side=self.side, name="footRoll"+"footRollAnkle")
-        decompMtxAnkeCtl = mmod.decomposeMatrix(side=self.side, name="footRoll"+"ankleControl")
-        subtractingTransformations = mmod.plusMinusAverage(side=self.side, name="footRoll"+"totalTransforms")
+        decompMtxFootRollAnkle = node.decomposeMatrix(side=self.side, name="footRoll"+"footRollAnkle")
+        decompMtxAnkeCtl = node.decomposeMatrix(side=self.side, name="footRoll"+"ankleControl")
+        subtractingTransformations = node.plusMinusAverage(side=self.side, name="footRoll"+"totalTransforms")
         mmod.connectAttr(footRolljnt[3].name+".worldMatrix", decompMtxFootRollAnkle.name+".inputMatrix") 
-        mmod.connectAttr(self.ankleCTL.name+".worldMatrix", decompMtxAnkeCtl.name+".inputMatrix")
-        mc.disconnectAttr(self.ankleCTL.name+".worldMatrix", decompMtxAnkeCtl.name+".inputMatrix")
+        mmod.connectAttr(self.ankleCtrl.name+".worldMatrix", decompMtxAnkeCtl.name+".inputMatrix")
+        mc.disconnectAttr(self.ankleCtrl.name+".worldMatrix", decompMtxAnkeCtl.name+".inputMatrix")
         mmod.connectAttr(decompMtxFootRollAnkle.getOutputTranslate(), subtractingTransformations.name+".input3D[0]")
         mmod.connectAttr(decompMtxAnkeCtl.getOutputTranslate(), subtractingTransformations.name+".input3D[1]")
         mc.setAttr(subtractingTransformations.getOperation(), 2)
-        mmod.connectAttr(subtractingTransformations.getOutput3D(), mc.listRelatives(self.ankleCTL, c=True)[1] +".translate")
+        mmod.connectAttr(subtractingTransformations.getOutput3D(), mc.listRelatives(self.ankleCtrl, c=True)[1] +".translate")
 
         # 5. CONNECT FOOTROLL TO FK FOOT
         # 5.0. Get Heel Toe Vector (bind pose value)
@@ -226,20 +227,20 @@ class foot(object):
             heelToeVect.append(pToes[i]-pHeel[i])
 
         # 5.1. Get Ankle Tarsal Vector 
-        plusMinAnkleTarsalVect = mmod.plusMinusAverage(side=self.side, name="footRoll"+"ankleTarsalVect")
-        decompMtxFootRollTarsal = mmod.decomposeMatrix(side=self.side, name="footRoll"+"footRollTarsal")
+        plusMinAnkleTarsalVect = node.plusMinusAverage(side=self.side, name="footRoll"+"ankleTarsalVect")
+        decompMtxFootRollTarsal = node.decomposeMatrix(side=self.side, name="footRoll"+"footRollTarsal")
         mmod.connectAttr(footRolljnt[2].name+".worldMatrix", decompMtxFootRollTarsal.name+".inputMatrix") 
         mc.setAttr(plusMinAnkleTarsalVect.getOperation(), 2)
         mmod.connectAttr(decompMtxFootRollTarsal.getOutputTranslate(), plusMinAnkleTarsalVect.name+".input3D[0]")
         mmod.connectAttr(decompMtxFootRollAnkle.getOutputTranslate(), plusMinAnkleTarsalVect.name+".input3D[1]")
 
         # 5.2. Angle Between vectors
-        angleBetweenVect = mmod.angleBetween(side=self.side, name="footRoll"+"angleBetween")
+        angleBetweenVect = node.angleBetween(side=self.side, name="footRoll"+"angleBetween")
         mc.setAttr(angleBetweenVect.getVector1(), heelToeVect[0], heelToeVect[1], heelToeVect[2], type="double3")
         mmod.connectAttr(plusMinAnkleTarsalVect.getOutput3D(), angleBetweenVect.getVector2())
         
         # 5.3. Hook Foot GRP
-        animBlend = mmod.animBlendNodeAdditiveDA(side=self.side, name="footRoll"+"ankleAddingRotationX")
+        animBlend = node.animBlendNodeAdditiveDA(side=self.side, name="footRoll"+"ankleAddingRotationX")
         mmod.connectPlugs(self.legRoot.ankleCtrl.rotateX, animBlend.inputA)
         mmod.connectAttr(angleBetweenVect.name+".eulerX", animBlend.getInputB())
         # mc.setAttr(animBlend.getWeightB(), -1)
@@ -251,7 +252,7 @@ class foot(object):
         
         # 5.4. Hook Toes
         hook = fn.getParent(self.footFKJnt[1].name)
-        animBlend = mmod.animBlendNodeAdditiveDA(side=self.side, name="footRoll"+"tarsalRotationX")
+        animBlend = node.animBlendNodeAdditiveDA(side=self.side, name="footRoll"+"tarsalRotationX")
         mmod.connectPlugs(footRolljnt[2].rotateZ, animBlend.inputA)
         # mc.setAttr(animBlend.getWeightA(), -1)
         mc.setAttr(animBlend.getInputB(), mc.getAttr(hook+".rotateZ"))
@@ -272,9 +273,9 @@ class foot(object):
         footFK_GRP = mmod.transform(side=self.side, name=self.footName+"FK", type="GRP", parent=parent)
         footFKJntGRP = mmod.transform(side=self.side, name=self.footName+"FK"+"Joints", type="GRP", parent=footFK_GRP)
         # 2.1. CONSTRAINING FOOT TO ANKLE
-        decmpMatrixLimAnkle = mmod.decomposeMatrix(side=self.side, name="limitedAnkleWM")
-        decmpMatrixFKAnkle = mmod.decomposeMatrix(side=self.side, name="FKAnkleWM")
-        conditionNode = mmod.condition(side=self.side, name="legBlendMode")
+        decmpMatrixLimAnkle = node.decomposeMatrix(side=self.side, name="limitedAnkleWM")
+        decmpMatrixFKAnkle = node.decomposeMatrix(side=self.side, name="FKAnkleWM")
+        conditionNode = node.condition(side=self.side, name="legBlendMode")
         mmod.connectAttr(self.legRoot.limitedAnkle.name+".worldMatrix", decmpMatrixLimAnkle.getInputMatrix())
         mmod.connectAttr(self.legRoot.FKjntChain[2].name+".worldMatrix", decmpMatrixFKAnkle.getInputMatrix())
         mmod.connectAttr(decmpMatrixLimAnkle.getOutputTranslate(), conditionNode.getColorIfFalse())
@@ -330,14 +331,14 @@ class leg(object):
             # Creating attribute on ctrl
             self.blendAttr = self.ankleCtrl.addAttr(longName="fkIkBlend", softMinValue=0, defaultValue=1, softMaxValue=1, attrType="short", keyable=True)
             for ikJnt, fkJnt, bindJnt, segment in zip(self.IKjntChain, self.FKjntChain, self.bindJntChain, self.legSegments):
-                blendNode = mmod.blendColors(side=self.side, name=segment+"FK_IK", type ="BLD")
+                blendNode = node.blendColors(side=self.side, name=segment+"FK_IK", type ="BLD")
                 mmod.connectAttr(fkJnt.name+".rotate", blendNode.getColor2())
                 mmod.connectAttr(ikJnt.name+".rotate", blendNode.getColor1())
                 mmod.connectPlugs(self.blendAttr, blendNode.blender)
                 mmod.connectAttr(blendNode.getOutput(), bindJnt.name+".rotate")
                 # Visibility
                 mmod.connectPlugs(self.blendAttr, self.legIKGRP.visibility)
-                reverse = mmod.addDoubleLinear(side = self.side, name="inverseFKIKBlend")
+                reverse = node.addDoubleLinear(side = self.side, name="inverseFKIKBlend")
                 mmod.connectPlugs(self.blendAttr, reverse.input1)
                 mc.setAttr(reverse.getInput2(), -1)
                 mmod.connectAttr(reverse.getOutput(), self.FKjntChain[0].name+".visibility")
@@ -441,51 +442,51 @@ class leg(object):
         mmod.connectAttr(settingsGRP.name+".tibiaLength", fn.getParent(jntChain[2].name)+".translateX")
         
         # AddDoubleLiniar: femour.len+tibia.len
-        maxLength = mmod.addDoubleLinear(side=self.side, name="legMaxLength")
+        maxLength = node.addDoubleLinear(side=self.side, name="legMaxLength")
         mmod.connectAttr(settingsGRP.name+".femurLength", maxLength.getInput1())
         mmod.connectAttr(settingsGRP.name+".tibiaLength", maxLength.getInput2())
         
         # DecompMatrix: anlkeJNT.worldMatrix
-        ankleWorldDecompose = mmod.decomposeMatrix(side=self.side, name="ankleWorldMatrix") 
+        ankleWorldDecompose = node.decomposeMatrix(side=self.side, name="ankleWorldMatrix") 
         mmod.connectAttr(ankleJNT+".worldMatrix", ankleWorldDecompose.getInputMatrix())
 
         # DecompMatrix: hipStartMatrixAttr
-        hipWorldMatrixDecompose = mmod.decomposeMatrix(side=self.side, name="hipWorldMatrix")
+        hipWorldMatrixDecompose = node.decomposeMatrix(side=self.side, name="hipWorldMatrix")
         mmod.connectPlugs(hipStartMatrixAttr, hipWorldMatrixDecompose.inputMatrix)
 
         # PlusMinusAverage: get the vector between the hip and the ankle
-        ankleHipVecDir = mmod.plusMinusAverage(side=self.side, name="hipAngleVecDir")
+        ankleHipVecDir = node.plusMinusAverage(side=self.side, name="hipAngleVecDir")
         # Subtraction Operation
         ankleHipVecDir.operation = 2 
         mmod.connectAttr(ankleWorldDecompose.getOutputTranslate(), ankleHipVecDir.name+".input3D[0]")
         mmod.connectAttr(hipWorldMatrixDecompose.getOutputTranslate(), ankleHipVecDir.name+".input3D[1]")
 
         # VectorProduct: normalize hip ankle vector
-        vectorNormalize = mmod.vectorProduct(side=self.side, name="hipAnkleVectorNormalize")
+        vectorNormalize = node.vectorProduct(side=self.side, name="hipAnkleVectorNormalize")
         vectorNormalize.operation = 0
         vectorNormalize.normalizeOutput = 1
         mmod.connectPlugs(ankleHipVecDir.output3D, vectorNormalize.input1)
 
 
         # DistanceBetween: hipStartMatrix and ankle( child of ankle_CTL)
-        hipAnkleDist = mmod.distanceBetween(side=self.side, name="hipAnkle")
+        hipAnkleDist = node.distanceBetween(side=self.side, name="hipAnkle")
         mmod.connectPlugs(hipStartMatrixAttr, hipAnkleDist.inMatrix1)
         mmod.connectAttr(ankleJNT+".worldMatrix", hipAnkleDist.getInMatrix2())
-
+        # self.ankleCtrl
         # Clamp: distance to max = length(femour.len+tibia.len)
-        distancedClamp = mmod.clamp(side=self.side, name="hipAnkleDist")
+        distancedClamp = node.clamp(side=self.side, name="hipAnkleDist")
         mmod.connectPlugs(hipAnkleDist.distance, distancedClamp.inputR)
         mmod.connectPlugs(maxLength.output, distancedClamp.maxR)
 
         # MultiplyDivide: ankleHipVecDir*ankleHipMaxLength  
-        multiplyDivideNode = mmod.multiplyDivide(side=self.side, name="hipAnkleVector")
+        multiplyDivideNode = node.multiplyDivide(side=self.side, name="hipAnkleVector")
         mmod.connectAttr(vectorNormalize.getOutput(), multiplyDivideNode.getInput1())
         mmod.connectAttr(distancedClamp.getOutputR(), multiplyDivideNode.getInput2()+".input2X")
         mmod.connectAttr(distancedClamp.getOutputR(), multiplyDivideNode.getInput2()+".input2Y")
         mmod.connectAttr(distancedClamp.getOutputR(), multiplyDivideNode.getInput2()+".input2Z")
 
         # PlusMinusAverage: ankleHipVec in local space of hip
-        plusNode = mmod.plusMinusAverage(side=self.side, name="localizeHipAnkleVector")
+        plusNode = node.plusMinusAverage(side=self.side, name="localizeHipAnkleVector")
         mmod.connectAttr(multiplyDivideNode.getOutput(), plusNode.name+".input3D[0]")
         mmod.connectAttr(hipWorldMatrixDecompose.getOutputTranslate(), plusNode.name+".input3D[1]")
         mmod.connectAttr(plusNode.name+".output3D", limitedAnkleGRP.name+".translate")
@@ -501,5 +502,5 @@ class leg(object):
    
 side =["L", "R"]
 for s in side:
-    leg = legMod.leg(legJnt=s+"_legHip00_JNT", ankleGuide=s+"_legAnkleGuid00_LOC", side=s)
-    foot = legMod.foot(footJnt=s+"_footAnkle00_JNT", side=s, root=leg, parent=s+"_legBind00_GRP")
+    my_leg = leg(legJnt=s+"_legHip00_JNT", ankleGuide=s+"_legAnkleGuid00_LOC", side=s)
+    my_foot =foot(footJnt=s+"_footAnkle00_JNT", side=s, root=my_leg, parent=s+"_legBind00_GRP")

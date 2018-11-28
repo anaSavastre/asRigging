@@ -403,6 +403,24 @@ class angleBetween(utilityNode):
     def euler(self, value):
         mc.setAttr(self.name+".euler", value)
 
+class multMatrix(utilityNode):
+    elemIndex = 0
+    nodeType = "multMatrix"
+    def __init__(self, side="C", name="multMatrix", type ="AddDA"):
+        super(multMatrix, self).__init__(self.nodeType, side, name, type)
+        multMatrix.elemIndex+=1
+    # OUTPUT ATTRIBUTES
+    def getMatrixSum(self):
+        return self.name+".matrixSum"
+    @property
+    def matrixSum(self):
+        ''' returns node's plug '''
+        return self.getPlug("matrixSum")
+    @matrixSum.setter
+    def matrixSum(self, value):
+        mc.setAttr(self.name+".matrixSum", value)
+    
+
 class animBlendNodeAdditiveDA(utilityNode):
     elemIndex = 0
     nodeType = "animBlendNodeAdditiveDA"

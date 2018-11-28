@@ -55,7 +55,8 @@ class transform(object):
         self.side = side
         self.type = type
         self.name = side+"_"+name+"0"+str(self.elemIndex)+"_"+type
-        transform.elemIndex+=1
+        if (type == "GRP" or type == "OFS" or type == "TRF"):
+            transform.elemIndex+=1
         self.transformNode = mc.createNode(self.nodeType, n=self.name)
         if (parent != None):
             if(getParent(self.name)!=None):

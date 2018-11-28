@@ -78,6 +78,8 @@ class foot(object):
             # FOOT ROLL
             self.footRoll_setUp(footJNTList=footJNTList, parent=root.legGRP)
 
+            # CONSTRAINING FOOT TO  FK ANKLE (temporary done with orient constraint)
+            oc =mc.orientConstraint(self.legRoot.FKjntChain[-1], fn.getParent(self.footFKJnt[0]), mo=True )
 
             # DELETING GUIDES
             # mc.hide(footJnt)
@@ -272,7 +274,7 @@ class foot(object):
         # 1. CREATING HIERARCHY
         footFK_GRP = mmod.transform(side=self.side, name=self.footName+"FK", type="GRP", parent=parent)
         footFKJntGRP = mmod.transform(side=self.side, name=self.footName+"FK"+"Joints", type="GRP", parent=footFK_GRP)
-        # 2.1. CONSTRAINING FOOT TO ANKLE
+        # 2.1. CONSTRAINING FOOT TO  IK ANKLE
         decmpMatrixLimAnkle = node.decomposeMatrix(side=self.side, name="limitedAnkleWM")
         decmpMatrixFKAnkle = node.decomposeMatrix(side=self.side, name="FKAnkleWM")
         conditionNode = node.condition(side=self.side, name="legBlendMode")
@@ -282,10 +284,12 @@ class foot(object):
         mmod.connectAttr(decmpMatrixFKAnkle.getOutputTranslate(), conditionNode.getColorIfTrue())
         mmod.connectPlugs(self.legRoot.blendAttr, conditionNode.firstTerm)
         mmod.connectPlugs(conditionNode.outColor, footFKJntGRP.translate)
+    
         # 2.2. FOOT JNT CHAIN
         jntChain = rigFn.createFKChain(footJNTList, side=self.side, name=self.footName+"FK", segmentList=self.footSegments, parent=footFKJntGRP)
         self.footFKJnt = jntChain
         self.footFKGRP = footFKJntGRP.name
+        
 
 
        

@@ -11,6 +11,8 @@ def constructJNT(guideJNT, side="C", name="name", parent=None):
         mmod.transformNode_OFS : aligned with guideJNT
             JNT_obj 
     '''
+   
+
     grp = mmod.transform(side=side, name=name, type="GRP", parent=parent)
     ofs = mmod.transform(side=side, name=name, type="OFS", parent=grp)
 
@@ -30,6 +32,8 @@ def jntHierarchy (guideJnt, side="C", name="name", segmentList=[], parent=None):
     '''
     
     
+   
+
     jntChainList=[]
     # Creating JNT
     root = parent
@@ -64,6 +68,8 @@ def createJntChain(jntList, side="C", name="name", segmentList=[], parent=None):
                 for each elem in the jntList
                     OFS>JNT
     '''
+   
+
     grp = mmod.transform(side=side, name=name, type="GRP", parent=parent)
    
     jntChainList=[]
@@ -96,6 +102,8 @@ def constructCTL(guideJNT, side="C", name="name", parent=None, ctrlScale=1):
             circle_CTL
                 JNT_obj 
     '''
+   
+
     grp = mmod.transform(side=side, name=name, type="GRP", parent=parent)
     ofs = mmod.transform(side=side, name=name, type="OFS", parent=grp)
 
@@ -105,7 +113,13 @@ def constructCTL(guideJNT, side="C", name="name", parent=None, ctrlScale=1):
     # Creating CTL
     ctl = mmod.circle(side=side, name=name, parent=ofs)
     # Scaling Ctrl
-    fn.scaleShapePoints(ctl.name, ctrlScale)
+    try:
+        fn.scaleShapePoints(ctl.name, mc.getAttr(guideJNT+".radius"))
+        fn.rotateShapePoints(ctl.name, rotationVector=mc.xform(guideJNT, q=True, ws=True, ro=True), pivot=mc.xform(guideJNT, q=True, ws=True, t=True))
+    except:
+        # Scaling Ctrl
+        fn.scaleShapePoints(ctl.name, ctrlScale)
+
     # Creating JNT
     jnt = mmod.joint(side=side, name=name, parent=ctl)
     return ctl
@@ -117,6 +131,8 @@ def createFKChain(jntList, side="C", name="name", segmentList=[], parent=None):
                 for each elem in the jntList
                     OFS>JNT>CTL_SHAPE
     '''
+   
+
     grp = mmod.transform(side=side, name=name, type="GRP", parent=parent)
 
     jntChainList=[]
@@ -165,6 +181,8 @@ def createFKChain(jntList, side="C", name="name", segmentList=[], parent=None):
 
 def createIKHandle(jnt, endEffector, side="C", name="name", parent=None):
     ''' Creating and remaming the IK Handle elements'''
+   
+
     ik = mc.ikHandle(jnt, ee=endEffector, n=side+"_"+name+"00_IKH")
     mc.rename(ik[1], side+"_"+name+"Effector00_IKE")
     if parent!=None:

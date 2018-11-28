@@ -75,11 +75,10 @@ def createJointHY(side, name, parent):
     
 
 class rigSceneSetup(object):
-    def loadComponents(self, path):
+    def loadLatestFile(self, path):
         '''
         This function gets all the files in the given directory and loads the latest maya scene file
         '''
-        # print "loadComponenets"
         files= os.listdir(path)
         latestFile = sorted(files)[-1];
         
@@ -134,6 +133,8 @@ class rigSceneSetup(object):
         globalMoveCTL="C_globalMove00_CTL"
         modelGrp = "C_"+rigName+"Model_GRP"
         modelFile = projectEnv+"models/"+rigName+"/"+rigName+".ma"
+        # modelFile = projectEnv+"models/"+rigName+"/scenes/s1_v.003.ma"
+
         mmod.transform.elemIndex = 0
 
         # COMPONENT FILES
@@ -176,23 +177,27 @@ class rigSceneSetup(object):
         fn.scaleShapePoints(rootCtrl[0], max(geoWidth, geoDepth))
 
         # Create Joint 
-        rootJnt = mmod.joint(name="root",  parent=rootCtrl)
+        self.rootJnt = mmod.joint(name="root",  parent=rootCtrl)
         # Position JNT: centre of character
         # mc.xform(rootJnt.name, t=geoCenter, ws=True)
         # chrMoveJnt.visibility=0
         # mc.setAttr(jnt.name+".visibility", 0)
 
         # Other GRP
-        rigGrp = mmod.transform(name="rig", type="GRP", parent=mainGrpTransf)
-        jntGRp = mmod.transform(name="jnt", type="GRP", parent=mainGrpTransf)
+        self.rigGrp = mmod.transform(name="rig", type="GRP", parent=mainGrpTransf)
+        self.jntGRp = mmod.transform(name="jnt", type="GRP", parent=mainGrpTransf)
 
         # LOAD COMPONENTS
-        self.loadComponents(componentsFile)
+        self.loadLatestFile(componentsFile)
 
 
 
 # # MAIN
-# loadEnvironment()
-# projectEnv = "D:/Bournemouth University/asRigging/projects/Hanni/"
-# rig=rigSceneSetup("Koa", projectEnv)
 
+# # # MAIN
+# class roadSig(rigSceneSetup):
+#     env = "roadSign"
+#     def __init__(self, rigName, projectEnv):
+#         super(roadSign, self).__init__(rigName, projectEnv)
+
+# rig = roadSign("s1_GEO", "C:/Users/anama/Desktop/MajorProject/Production/assets/environment")

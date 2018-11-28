@@ -10,23 +10,35 @@ Character: Spinosaurus
 '''
 
 import maya.cmds as mc
-
-import shutil 
-import os 
-import sys
 import mayaModule as mmod
 import functions as fn
+import mayaNode as mNode
+import rigFn as rigFn 
 import loadFn 
+import asNodes as asNode
+import math as math
+
 import legModule as legMod
+import spineModule as sineMod
 
 # GLOBALS
 projectEnv = "D:/Bournemouth University/asRigging/projects/masterClass/"
-        
 
+def deistBetween(point1, point2):
+    dist = math.sqrt((point2[0] - point1[0])*(point2[0] - point1[0]) + (point2[1] - point1[1])*(point2[1] - point1[1]) + (point2[2] - point1[2])*(point2[2] - point1[2]))
+    return dist
+         
+
+        
 class spinosaurus(loadFn.rigSceneSetup):
-    character = "lsla"
+    character = "spinosaurus"
     def __init__(self, rigName, projectEnv):
         super(spinosaurus, self).__init__(rigName, projectEnv)
+
+        # Creating the spine
+        my_spine = sineMod.spine(spineJnt="C_spine00_JNT", root=self.rootJnt, parent=self)
+        # Creating the neck
+        # my_neck = spine(spineJnt="C_neck00_JNT", root=my_spine.chestCtl, parent=self)
 
         # Creating the legs
         side =["L", "R"]
@@ -35,10 +47,8 @@ class spinosaurus(loadFn.rigSceneSetup):
             foot = legMod.foot(footJnt=s+"_footAnkle00_JNT", side=s, root=leg, parent=s+"_legBind00_GRP")
 
 
-        # R_leg = leg(legJnt="R_legHip00_JNT", ankleGuide="R_legAnkleGuid00_LOC", side="R")
-        # R_foot = foot(footJnt="R_footAnkle00_JNT", side="R", root=R_leg, parent="R_legBind00_GRP")
-
-
+        # TEMPORARY
+        # mc.hide("C_geometry01_GRP")
 
 
 

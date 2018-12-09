@@ -3,6 +3,13 @@ import os
 import functions as fn
 
 
+def searchAndReplaceText(filePath, searchText="student", repalceText=""):
+    with open(filePath,"r+") as file:
+        fileData = file.read()
+        fileData = fileData.replace(searchText, repalceText)
+        file.seek(0)
+        file.write(fileData)
+        file.truncate()
 
 def nameObj(side="C", name="name"):
     ''' 
@@ -95,6 +102,7 @@ def saveFile(projectEnv="C:/Users/anama/Desktop/MajorProject/Production", saveNa
 
         # Clean-up saved file
         # fn.cleanFile (pathName)
+        searchAndReplaceText(pathName)
 
     else:
         # if scene not incremented save, make instance 0000
@@ -105,11 +113,7 @@ def saveFile(projectEnv="C:/Users/anama/Desktop/MajorProject/Production", saveNa
 
         # Clean-up saved file
         # fn.cleanFile (pathName)
+        searchAndReplaceText(pathName)
 
-
-# def loadComponentsFile():
-
-# nameObj(name="finger")
-# saveFile(projectEnv="D:/Bournemouth University/asRigging/projects/Hanni/rigging/Koa/wip/components")
 
 saveFile()

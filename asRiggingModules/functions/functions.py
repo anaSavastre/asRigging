@@ -1,11 +1,11 @@
 import maya.cmds as mc
 import os
 import sys
+import math as math
 import fileinput
 # import maya.openMaya as om
 
 ##########################    Functions    ##########################
-
 
 def deleting_pointConstraint(obj):
     ''' This function delets the point constraint from the given obj'''
@@ -137,7 +137,7 @@ def planeEquation(p1, p2, p3):
 
     a = (p2[1]*p3[2] - p3[1]*p2[2]) + (p3[1]*p1[2] - p1[1]*p3[2]) + (p1[1]*p2[2] - p2[1]*p1[2])
     b = (p2[2]*p3[0] - p3[2]*p2[0]) + (p3[2]*p1[0] - p1[2]*p3[0]) + (p1[2]*p2[0] - p2[2]*p1[0])
-    c = (p2[2]*p3[1] - p3[0]*p2[1]) + (p3[0]*p1[1] - p1[0]*p3[1]) + (p1[0]*p2[1] - p2[0]*p1[1])
+    c = (p2[0]*p3[1] - p3[0]*p2[1]) + (p3[0]*p1[1] - p1[0]*p3[1]) + (p1[0]*p2[1] - p2[0]*p1[1])
     d = -a*p1[0] - b*p1[1] - c*p1[2]
     return [a, b, c, d]
 
@@ -203,6 +203,10 @@ def colYellow ():
         #set color to yellow
         mc.setAttr(ctrl+".overrideColor", 17)
 
+def deistBetween(point1, point2):
+    dist = math.sqrt((point2[0] - point1[0])*(point2[0] - point1[0]) + (point2[1] - point1[1])*(point2[1] - point1[1]) + (point2[2] - point1[2])*(point2[2] - point1[2]))
+    return dist
+
 
 def descendentsList(root=None):
     descendentsList = mc.listRelatives(root, ad=True)
@@ -210,4 +214,37 @@ def descendentsList(root=None):
     descendentsList.reverse()
     
     return descendentsList
+
+
+def generateCVListFromCurve(curve):
+    print "generateCVListFromCurve"
+    
+    ls=[]
+    degreeLs =[]
+    children = getChildren(curve)
+    for j, shape in enumerate(children): 
+        # GETTING NUMBER OF CV
+        # number of CVs = degree + spans.
+        # Degree
+        degree = mc.getAttr (shape+".degree")
+        print "degree", degree
+        # Spans
+        spans = mc.getAttr (shape+".spans")
+        print "spans", spans
+        numbCV = degree + spans 
+        for i in range(numbCV):
+            poz = mc.xform(shape+".cv["+str(i)+"]", q=True, t=True, ws=True)
+            # print poz, "poz"
+            ls.append(poz)
+        degreeLs.append(degree)
+        
+    return ls, degreeLs
+
+def createCurveFromGuide(guideList, name="name", degree=3):
+    mc.curve(name=name, point=guideList, ws=True, degree=degree)
+
+def generateCurve(curve, name="name"):
+
+    guideList, degree = generateCVListFromCurve(curve)
+    curve = createCurveFromGuide(guideList, name=name, degree=degree[0])
 

@@ -6,6 +6,7 @@ import sys
 import mayaModule as mmod
 import functions as fn
 import pipeline 
+import controlFn as ctlFn
 
 
 # print sys.path
@@ -47,6 +48,10 @@ def folderHierarchy(projectEnv, rigName):
     componentsFile = wipProject+"/components"
     if not os.path.exists(componentsFile):
         os.makedirs(componentsFile)
+        # Create default ma files
+        # Components
+        file = mc.file(new = True, f=True)
+        pipeline.saveFile(projectEnv=componentsFile, saveName=rigName+"Components")
     controlShapesFile = wipProject+"/controlShapes"
     if not os.path.exists(controlShapesFile):
         os.makedirs(controlShapesFile)
@@ -54,24 +59,17 @@ def folderHierarchy(projectEnv, rigName):
     if not os.path.exists(skinWeightsFile):
         os.makedirs(skinWeightsFile)
 
-    # Create default ma files
-    # Components
-    file = mc.file(new = True, f=True)
-    pipeline.saveFile(projectEnv=componentsFile, saveName=rigName+"Components")
+    
 
     return rigWip, componentsFile, controlShapesFile, skinWeightsFile
 
 def createJointHY(side, name, parent):
     grp = mmod.transform(side=side, name=name, type="GRP", parent=parent)
     ofs = mmod.transform(side=side, name=name, type="OFS", parent=grp)
-    # loading ctrl
-    objInScene = mc.ls("*_CTL")
-    mc.file(controlShapesPath+"/"+name+"Control.ma", i= True, type= "mayaAscii", usingNamespaces= False, f=True)
-    newObjInScene = mc.ls("*_CTL")
-    if (len(newObjInScene)-len(objInScene)==1):
-        ctrl= [obj for obj in newObjInScene if obj not in objInScene]
+    
+    ctrl = ctlFn.rootCtrl()
     mc.parent(ctrl, ofs)
-    return ctrl
+    return ctrl.name
     
 
 class rigSceneSetup(object):
@@ -130,7 +128,6 @@ class rigSceneSetup(object):
     def __init__(self, rigName, projectEnv):
         
         # IMITIALIZATION
-        globalMoveCTL="C_globalMove00_CTL"
         modelGrp = "C_"+rigName+"Model_GRP"
         modelFile = projectEnv+"models/"+rigName+"/"+rigName+".ma"
         # modelFile = projectEnv+"models/"+rigName+"/scenes/s1_v.003.ma"
@@ -161,20 +158,22 @@ class rigSceneSetup(object):
         mc.parent(modelGrp, modelMasterGRP)
         
         # CHARACTER CONTROL SHAPE
-        mc.file(controlShapesPath+"/characterControl.ma", i= True, type= "mayaAscii", usingNamespaces= False, f=True)
+        globalMoveCTL= ctlFn.globalMoveCtrl()
         mc.parent(globalMoveCTL, mainGrpTransf)
        
         # CHR CTRL: SCALE & POSITION
         translationVector = [0, geoHeight+geoHeight*0.15, 0]
-        fn.scaleShapePoints(globalMoveCTL, geoWidth*0.4)
-        fn.translateShapePoints(globalMoveCTL, translationVector, [0, 0, 0])
+        fn.scaleShapePoints(globalMoveCTL.name, geoWidth*0.4)
+        fn.translateShapePoints(globalMoveCTL.name, translationVector, [0, 0, 0])
         
         
         # ROOT CONTROL
         moveGrp = mmod.transform(name="moveGlobal", type="GRP", parent=globalMoveCTL)
         rootCtrl = createJointHY(side= "C", name = "root", parent=moveGrp) 
         # ROOT CTRL: SCALE & POSITION
-        fn.scaleShapePoints(rootCtrl[0], max(geoWidth, geoDepth))
+        shapes = fn.getChildren(rootCtrl)
+        for shp in shapes:
+            fn.scaleShapePoints(shp, max(geoWidth, geoDepth))
 
         # Create Joint 
         self.rootJnt = mmod.joint(name="root",  parent=rootCtrl)
@@ -191,13 +190,3 @@ class rigSceneSetup(object):
         self.loadLatestFile(componentsFile)
 
 
-
-# # MAIN
-
-# # # MAIN
-# class roadSig(rigSceneSetup):
-#     env = "roadSign"
-#     def __init__(self, rigName, projectEnv):
-#         super(roadSign, self).__init__(rigName, projectEnv)
-
-# rig = roadSign("s1_GEO", "C:/Users/anama/Desktop/MajorProject/Production/assets/environment")

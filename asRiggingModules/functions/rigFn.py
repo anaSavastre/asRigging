@@ -119,6 +119,8 @@ def constructCTL(guideJNT, side="C", name="name", parent=None, ctrlScale=1):
     except:
         # Scaling Ctrl
         fn.scaleShapePoints(ctl.name, ctrlScale)
+        
+        
 
     # Creating JNT
     jnt = mmod.joint(side=side, name=name, parent=ctl)
@@ -143,6 +145,7 @@ def createFKChain(jntList, side="C", name="name", segmentList=[], parent=None):
             ofs = mmod.transform(side=side, name=name+"_"+segmentList[i], type="OFS", parent=root)
             # Matching orientation GUIDE > OFS
             fn.align(jnt, ofs)
+           
             newJnt = mmod.joint(side=side, name=name+"_"+segmentList[i], parent=ofs)
             jntChainList.append(newJnt)
             # Creating Circle
@@ -166,6 +169,7 @@ def createFKChain(jntList, side="C", name="name", segmentList=[], parent=None):
             jntChainList.append(newJnt)
             if (i==len(jntList)-1):
                 break
+           
             circle = mmod.circle( side=side, name=name, parent=None)
             # Scaling Ctrl
             fn.scaleShapePoints(circle.name, mc.getAttr(jnt+".radius"))
@@ -193,3 +197,31 @@ def createIKHandle(jnt, endEffector, side="C", name="name", parent=None):
         mc.setAttr(ik[0]+".translateZ",0)
 
     return ik[0]
+
+
+######### Script for creating even jnts #########
+def getSideFromParent(obj):
+
+    # getting side
+    if ("L_" in obj):
+        side = "L"
+    elif("R_" in obj):
+        side = "R"
+    else:
+        side="C"
+
+    
+    return side, name, type
+def insetJnt(startJnt=None, endJnt=None, numbJnt=1):
+    # get length
+    len = mc.getAttr(endJnt+".translateX")
+    individualLen = len/numbJnt
+    prevJnt = startJnt
+    for i in range (numbJnt):
+        jnt = mmod.joint(side="C", name="name", parent= prevJnt)
+        mc.xform(jnt, t=[individualLen, 0, 0])
+        prevJnt = jnt
+
+
+
+# insetJnt(startJnt="C_tail01_JNT", endJnt="C_tail029_JNT", numbJnt=)

@@ -576,6 +576,9 @@ class decomposeMatrix(utilityNode):
     def outputRotate(self):
         return self.getPlug("outputRotate")
 
+    def getOutputRotate(self):
+        return self.name +".outputRotate"
+
     # output Translate
     def getOutputTranslate(self):
         return self.name +".outputTranslate"
@@ -588,6 +591,8 @@ class decomposeMatrix(utilityNode):
     @property
     def outputScale(self):
         return self.getPlug("outputScale")
+    def getOutputScale(self):
+        return self.name +".outputScale"
 
  
 class distanceBetween(utilityNode):

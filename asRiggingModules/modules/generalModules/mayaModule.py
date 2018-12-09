@@ -196,6 +196,57 @@ class transform(object):
     def getRotateZ(self):
         return mc.getAttr(self.name+".rotateZ")
 
+
+
+    # SCALE
+    # scale
+    @property
+    def scale(self):
+        ''' returns node's plug '''
+        return self.getPlug("scale")
+    @scale.setter
+    def scale(self, value):
+        mc.setAttr(self.name+".scale", value)
+    
+    def getscale(self):
+        return mc.getAttr(self.name+".scale")
+    # scaleX
+    @property
+    def scaleX(self):
+        ''' returns node's plug '''
+        return self.getPlug("scaleX")
+    @scaleX.setter
+    def scaleX(self, value):
+        mc.setAttr(self.name+".scaleX", value)
+    
+    def getRotateX(self):
+        return mc.getAttr(self.name+".scaleX")
+
+    # scaleY
+    @property
+    def scaleY(self):
+        ''' returns node's plug '''
+        return self.getPlug("scaleY")
+    @scaleY.setter
+    def scaleY(self, value):
+        mc.setAttr(self.name+".scaleY", value)
+    
+    def getRotateY(self):
+        return mc.getAttr(self.name+".scaleY")
+
+    # scaleZ
+    @property
+    def scaleZ(self):
+        ''' returns node's plug '''
+        return self.getPlug("scaleZ")
+    @scaleZ.setter
+    def scaleZ(self, value):
+        mc.setAttr(self.name+".scaleZ", value)
+    
+    def getRotateZ(self):
+        return mc.getAttr(self.name+".scaleZ")
+
+
     # Visibility
     def getVisibility(self):
         return mc.getAttr(self.name+".visibility")
@@ -303,8 +354,8 @@ class circle(transform):
         
         self.name = side+"_"+name+"0"+str(self.elemIndex)+"_"+type
         self.transformNode = mc.listRelatives(self.name, p=True)
-        makeCircle = mc.createNode("makeNurbCircle", n=self.name.replace(name, "makeCircle"+name))
-        mc.connectAttr(makeCircle+".outputCurve", self.name+".create")
+        self.makeCircle = mc.createNode("makeNurbCircle", n=self.name.replace(name, "makeCircle"+name))
+        mc.connectAttr(self.makeCircle+".outputCurve", self.name+".create")
         circle.elemIndex +=1
 
         # Coloring Circles
@@ -320,5 +371,7 @@ class circle(transform):
             # Colour CTL red
             self.setColor(13)
             self.ColorNumber = 13
+
+        # DELETING HISTORY
+        mc.delete(self.name, ch=True)
    
-        

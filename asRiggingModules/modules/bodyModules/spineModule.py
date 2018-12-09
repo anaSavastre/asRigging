@@ -2,6 +2,8 @@ import maya.cmds as mc
 import functions as fn
 import mayaModule as mmod
 import asNodes as asNode
+import mayaNode as mNode
+
 
 import rigFn as rigFn
 import mayaNode as node

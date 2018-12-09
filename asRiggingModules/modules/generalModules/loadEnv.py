@@ -10,6 +10,9 @@ def loadEnvironment():
     sys.path.append("D:/Bournemouth University/asRigging/scripts/asRigging/asRiggingModules/functions")
     sys.path.append("D:/Bournemouth University/asRigging/scripts/asRigging/asRiggingModules/modules/generalModules")
     sys.path.append("D:/Bournemouth University/asRigging/scripts/asRigging/asRiggingModules/modules/bodyModules")
+    sys.path.append("D:/Bournemouth University/asRigging/scripts/asRigging/asRiggingModules/controls")
+
+    # sys.path.append("D:/Bournemouth University/asRigging/scripts/asRigging/asRiggingModules")
 
     loadPlugins()
 def loadPlugins():

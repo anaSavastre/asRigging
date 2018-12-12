@@ -147,7 +147,7 @@ class blendFKIK(object):
         pozX = mc.xform(settingsCtrlGrp, ws=True, q=True, t=True)[0]
         grpSign = 1 if pozX>0 else -1
         guideJntRad = mc.getAttr(jntList[2]+".radius")
-        pozX = grpSign*(abs(pozX)+guideJntRad) *0.6
+        pozX = grpSign*(abs(pozX)+guideJntRad) *0.4
         mc.xform(settingsCtrlGrp, t=[pozX, 0, 0], r=True)
         # Creating CTRL
         self.settingCtl = ctlFn.settingCtl(side=self.side, name=self.name+"Settings")#, parent=settingsCtrlGrp)

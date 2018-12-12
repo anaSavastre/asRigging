@@ -84,6 +84,8 @@ class settingCtl(mmod.circle):
         # Creating Gear
         createNewCureveShape(self.name, self.gearShapeCV, degree=3, name=self.name+"Gear")
 
+
+
 def copyCtrlShape(ctrl):
     form = mc.getAttr(ctrl+".form")
     shaleCv, degree = getCVFronShape(ctrl, r=True, ws=False)
@@ -103,15 +105,20 @@ def pasteCtrlShape(ctrl, copied, degree, form):
         mc.delete(curve)
 
     else:
-        curve = mc.circle()
-        for i, cv in enumerate(copied):
-            mc.xform(fn.getChildren(curve)[0]+".cv["+str(i)+"]", t=cv, ws=True)
+        # curve = mc.circle()
+        # for i, cv in enumerate(copied):
+        #     mc.xform(fn.getChildren(curve)[0]+".cv["+str(i)+"]", t=cv, ws=True)
 
+        # mc.parent(fn.getChildren(curve)[0], ctrl, shape=True, r=True)
+        copied.append(copied[0])
+        curve = mc.curve(name="test" , point = copied, ws=True, degree=degree)
         mc.parent(fn.getChildren(curve)[0], ctrl, shape=True, r=True)
 
         mc.delete(curve)
     
     mc.delete(fn.getChildren(ctrl)[0])
 
+# ctrl, degree, form = copyCtrlShape("C_centerOfGravity00_CTLShape")
+# pasteCtrlShape("nurbsCircle1", ctrl, degree, form)
 
 

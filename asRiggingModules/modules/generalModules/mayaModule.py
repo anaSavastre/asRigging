@@ -31,20 +31,6 @@ def connectPlugs(plug1, plug2):
     dgModifier.connect(plug1, plug2)
     dgModifier.doIt()
 
-
-def testProject():
-    mc.file(new = True, f=True)
-    
-    side ="C"
-    parent = None
-    legName="leg"
-    legGRP = transform(side=side, name=legName, type="GRP", parent=parent)
-    legJntGRP = transform(side=side, name=legName+"Joints", type="GRP", parent=legGRP)
-    limitedAnkleGRP = transform(side=side, name=legName+"LimitedAnkle", type="GRP", parent=legGRP)
-    ankleCtrl = constructCTL(ankleGuide, side=side, name=legName+"Ankle", parent=legGRP)
-    settingsGRP = transform(side=side, name=legName+"Settings", type="GRP", parent=legGRP)
-
-
 class transform(object):
 
     elemIndex = 0

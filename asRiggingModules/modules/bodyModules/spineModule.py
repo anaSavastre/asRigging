@@ -8,6 +8,8 @@ import mayaNode as mNode
 import rigFn as rigFn
 import mayaNode as node
 
+
+  
 class spine(object):
     def __init__(self, side="C", name="spine" , spineJnt=None, root=None, parent=None):
         '''
@@ -19,7 +21,7 @@ class spine(object):
                 > SPINE RIBBON
     
         '''
-        print "spineModule"
+        
         # GLOBALS
         self.side = side
         self.name = name
@@ -33,14 +35,16 @@ class spine(object):
         # 1. CREATE JNT HIERARCHY
         # 1.0. PELVIS
         self.pelvisCtl = rigFn.constructCTL(self.guides[0], name = "pelvis", parent = self.root)
-        
-        # 1.2. Spine FK
-        self.fkCtl1 = rigFn.constructCTL(self.guides[len(self.guides)/2-2], name = self.name+"FKCtl", parent = self.root)
+        # 1.2. COG CTRL
+        self.cog = rigFn.constructCTL(self.guides[0], name = "COG", parent = self.root)
+        fn.rotateShapePoints(self.cog.name, rotationVector=[0, 0, 90], pivot=mc.xform(self.guides[-1], q=True, ws=True, t=True))
+        # 1.3. Spine FK
+        self.fkCtl1 = rigFn.constructCTL(self.guides[len(self.guides)/2-2], name = self.name+"FKCtl", parent = self.cog)
         self.fkCtl2 = rigFn.constructCTL(self.guides[len(self.guides)/2+2], name = self.name+"FKCtl", parent = self.fkCtl1)
-        # 1.1. CHEST
+        # 1.4. CHEST
         self.chestCtl = rigFn.constructCTL(self.guides[-1], name="chest", parent = self.fkCtl2)
 
-        # 1.2. SPINE RIBBON
+        # 2.0. SPINE RIBBON
         # Creating the Global Group
         self.spineGlobalGrp =  mmod.transform(side=self.side, name=self.name+"Global", type="GRP", parent=self.parent.rigGrp)
         # Create Surface Loft Guides
@@ -48,7 +52,7 @@ class spine(object):
         # Attaching Joints
         self.attachJoinnts(parent=self.spineGlobalGrp)
 
-        # 2.0 TWIST INTERPOLATOR
+        # 3.0 TWIST INTERPOLATOR
         self.twistDeformation()
         # DELETING GUIDES
         mc.delete(self.guides)
@@ -61,10 +65,10 @@ class spine(object):
         '''
         # Duplicating the surface
 
-        matloftSurface = mc.duplicate(self.surface, name="C_surfaceDeformation01_NRB", rc=True)[0]
-        mc.rename( fn.getChildren(matloftSurface)[0], "C_surfaceDeformationShape01_SHP" )
-        twistSurface = mc.duplicate(self.surface, name="C_twistDeformation01_NRB" , rc=True)[0]
-        mc.rename( fn.getChildren(twistSurface)[0], "C_twistDeformationShape01_NRB")
+        matloftSurface = mc.duplicate(self.surface, name="C_spineSurfaceDeformation01_NRB", rc=True)[0]
+        mc.rename( fn.getChildren(matloftSurface)[0], "C_spineSurfaceDeformationShape01_SHP" )
+        twistSurface = mc.duplicate(self.surface, name="C_spineTwistDeformation01_NRB" , rc=True)[0]
+        mc.rename( fn.getChildren(twistSurface)[0], "C_spineTwistDeformationShape01_NRB")
 
         # Reconnecting matloft
         mmod.connectAttr(self.matloftNode.getOutputSurface(), fn.getChildren(matloftSurface)[0]+".create")
@@ -86,7 +90,7 @@ class spine(object):
         mc.setAttr(self.bShpName+"."+matloftSurface, 1)
         mc.setAttr(self.bShpName+"."+twistSurface, 1)
 
-        # Connecting the Twist Handke to ChestCTL and PElvis Ctl
+        # Connecting the Twist Handke to ChestCTL and Pelvis Ctl
         multNode = mNode.multDoubleLinear(side=self.side, name=self.name+"ReverseRot")
         mmod.connectAttr(self.pelvisCtl.name+".rotateX", multNode.getInput1())
         mc.setAttr(multNode.getInput2(), -1)
@@ -97,13 +101,15 @@ class spine(object):
         mc.setAttr(multNode.getInput2(), -1)
         mmod.connectAttr(multNode.getOutput(), twistHandle[1]+".endAngle")
 
+        # HIDING TWIST HANDLE
+        mc.hide(twistHandle)
 
     def createRivet(self, parameterU, parent=None):
         rivet = asNode.asRivet(side=self.side, name=self.name)
         group = mmod.transform(side=self.side, name=self.name, type="GRP", parent=parent)
         # self.spineJnt.append(mmod.joint(side=self.side, name="bind"+self.name, parent= self.pelvisCtl))
 
-        self.spineJnt.append(mmod.joint(side=self.side, name="bind"+self.name, parent=self.spineJnt[-1] if len(self.spineJnt)>0 else self.pelvisCtl))
+        self.spineJnt.append(mmod.joint(side=self.side, name="bind"+self.name.capitalize(), parent=self.spineJnt[-1] if len(self.spineJnt)>0 else self.pelvisCtl))
         rivet.percentage = 1
         rivet.parameterU = parameterU
 
@@ -112,7 +118,18 @@ class spine(object):
         mmod.connectPlugs(rivet.outTranslation, group.translate)
         mc.setAttr(rivet.name+".forward", self.forward[0], self.forward[1], self.forward[2], type="double3")
         mc.setAttr(rivet.name+".up", self.up[0], self.up[1], self.up[2], type="double3")
-        mc.parentConstraint( group, self.spineJnt[-1])
+        # GET GRP WORLD TRANSFORM
+        matrixMult   = mNode.multMatrix(side=self.side, name=self.name)
+        mmod.connectAttr(group.name+".worldMatrix", matrixMult.name+".matrixIn[0]")
+        mmod.connectAttr(self.spineJnt[-1].name+".parentInverseMatrix", matrixMult.name+".matrixIn[1]")
+        decompMatrix = mNode.decomposeMatrix(side=self.side, name=self.name)
+        mmod.connectAttr(matrixMult.getMatrixSum(), decompMatrix.getInputMatrix())
+        mmod.connectAttr(decompMatrix.getOutputTranslate(), self.spineJnt[-1].name+".translate" )
+        mmod.connectAttr(decompMatrix.getOutputRotate(), self.spineJnt[-1].name+".rotate" )
+        mmod.connectAttr(decompMatrix.getOutputScale(), self.spineJnt[-1].name+".scale" )
+        # mmod.connectAttr(group.name+".worldMatrix", decompMatrix.getInputMatrix)
+        # mmod.connectAttr(group.name+".translate", self.spineJnt[-1].name+".translate" )
+        # mc.parentConstraint( group, self.spineJnt[-1])
         # mmod.connectAttr(group.name+".translate", self.spineJnt[-1].name+".translate")
         # mmod.connectAttr(group.name+".rotate", self.spineJnt[-1].name+".rotate")
     def attachJoinnts(self, parent=None):
@@ -276,4 +293,4 @@ class spine(object):
             self.createGuideFromObj(midGuide, parent=grp)
             mc.delete(midGuide)
         self.createGuideFromObj(guides[gLen-2], parent=grp)
-        self.createGuideFromObj(guides[gLen-1], parent=grp)   
+        self.createGuideFromObj(guides[gLen-1], parent=grp)  

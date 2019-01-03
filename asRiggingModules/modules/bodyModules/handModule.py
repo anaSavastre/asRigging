@@ -2,17 +2,21 @@ import maya.cmds as mc
 
 import mayaModule as mmod
 import functions as fn
+import mayaNode as mNode
+import rigFn as rigFn 
+import mayaNode as node
+import asNodes as asNode
 
 
 # TEMPORARY
 
-componetFile = "D:/Bournemouth University/asRigging/tmp/masterClass/prePrp_hand_TEST/fingerComponent03.ma"
+# componetFile = "D:/Bournemouth University/asRigging/tmp/masterClass/prePrp_hand_TEST/fingerComponent03.ma"
 
-# NEW SCENE
-mc.file(new = True, f=True)
+# # NEW SCENE
+# mc.file(new = True, f=True)
 
-# IMPORT MODEL
-mc.file(componetFile, i= True, type= "mayaAscii", usingNamespaces= False, f=True)
+# # IMPORT MODEL
+# mc.file(componetFile, i= True, type= "mayaAscii", usingNamespaces= False, f=True)
 
 
 
@@ -75,8 +79,8 @@ def constructJNT(guideJNT, side="C", name="name", parent=None):
 
 
 
-
 class finger(object):
+    globalCtrl=None
     def __init__(self, jntHierarchy, fingerName="finger", side="C", parent=None, worldUpVector=""):
         '''
         NAMES
@@ -93,11 +97,10 @@ class finger(object):
         '''
 
         # GLOBALS
-        resetJNTCount()
-        resetTRNCount()
+        mmod.resetCount()
 
-        metacarpalName = fingerName+"_metacarpal"
-        phalangeName = [fingerName+"_proximalPhalange", fingerName+"_middlePhalange", fingerName+"_distalPhalange"] 
+        metacarpalName = fingerName+"Metacarpal"
+        phalangeName = [fingerName+"ProximalPhalange", fingerName+"MiddlePhalange", fingerName+"DistalPhalange"] 
         guidJntList = mc.listRelatives(jntHierarchy, ad=True); guidJntList.reverse()
         fingerBaseJnt=[]
 
@@ -105,34 +108,38 @@ class finger(object):
         upVector = [0, 1, 0]
                 
 
-
-        # # CONSTRUCTOR
-        # self.jnt
-
         # CREATING HIERARCHY
-        fingerGRP = mmod.transform(side=side, name=fingerName, type="GRP", parent=parent)
+        self.fingerGRP = mmod.transform(side=side, name=fingerName, type="GRP", parent=parent)
         # worldUpVector
-
-        # METACARPAL JNT
         
-        metaJntA = constructJNT(jntHierarchy, side=side, name=metacarpalName, parent=fingerGRP)
-        metaJntB = mmod.joint(side=side, name=metacarpalName, parent=metaJntA)
-        metaJntB.translateX=mc.xform(guidJntList[0], q=True, r=True, t=True)[0]
+        # GLOBAL CTRL
+        if (fingerName=="pinky"):
+            finger.globalCtrl = rigFn.constructCTL(jntHierarchy, side=side, name=metacarpalName, parent=self.fingerGRP)
+            #metaJntA = fn.getChildren(self.globalCtrl.name)[1]
+            #fingerBaseJnt.append(metaJntA)
+
+        metaJntA = rigFn.constructJNT(jntHierarchy, side=side, name=metacarpalName, parent=self.fingerGRP)
         fingerBaseJnt.append(metaJntA.name)
 
+        # METACARPAL JNT        
+        metaJntB = mmod.joint(side=side, name=metacarpalName, parent=metaJntA)
+        metaJntB.translateX=mc.xform(guidJntList[0], q=True, r=True, t=True)[0]
+        metaGrp = mmod.transform(side=side, name=metacarpalName, parent=fn.getParent(metaJntA), type="GRP")
+        mc.parent(metaJntA, metaGrp)
+        
         # PHALANGES JNT
         for i, jnt in enumerate(guidJntList[:-1]):
-            phalangeCTL = constructCTL(jnt, side=side, name=phalangeName[i], parent=getParent(metaJntA) if i==0 else phalangeCTL)
+            phalangeCTL = rigFn.constructCTL(jnt, side=side, name=phalangeName[i], parent=fn.getParent(metaJntA) if i==0 else phalangeCTL)
             fingerBaseJnt.append(mc.listRelatives(phalangeCTL, c=True, typ="joint")[0])
             jntB = mmod.joint(side=side, name=phalangeName[i], parent=fingerBaseJnt[i+1])
 
             # AIM CONSTRAINTS
-            print "aim", fingerBaseJnt[i], fingerBaseJnt[i+1]
             mc.aimConstraint(fingerBaseJnt[i+1], fingerBaseJnt[i], aim=[1, 0, 0], u=[0, 1, 0])
 
             
             # JOINT STRETCHING
             distanceBetweenNode = mc.createNode("distanceBetween", name=side+"_distance"+fingerName+str(i)+"_DST")
+            #print fingerBaseJnt[i], "jnt"
             mc.connectAttr(fingerBaseJnt[i]+".worldMatrix", distanceBetweenNode+".inMatrix1")
             mc.connectAttr(fingerBaseJnt[i+1]+".worldMatrix", distanceBetweenNode+".inMatrix2")
 
@@ -143,24 +150,58 @@ class finger(object):
             mc.connectAttr(fingerBaseJnt[i+1]+".radius", minusNode+".input1D[1]")
             mc.connectAttr(minusNode+".output1D", fn.getChildren(fingerBaseJnt[i])[0]+".translateX")
 
+            # POSITIONING END JNT
+            if (jnt==guidJntList[-2]):
+                translateX = mc.getAttr(guidJntList[-1]+".translateX")
+                mc.setAttr(fn.getChildren(fingerBaseJnt[-1])[0]+".translateX", translateX)
 
-        
+
+        self.fingerJntChain = fingerBaseJnt
 
         # DELETING GUIDES
-        mc.delete(jntHierarchy)
-        # mc.hide(jntHierarchy)
-
-
+        #mc.delete(jntHierarchy)
+ 
 
 
 class hand():
 
-    def __init__(self, jntHierarchy, side):
-        pass
+    def __init__(self, handJnt=None, side="C", parent=None, root=None):
+        '''
+        Hand Module
+
+        Creating a finger obj for each of the jnt Chain in the hierarchy 
+        '''
+        # SELF
+        self.side = side
+        self.handJnt = hand
+        self.parent = parent
+        self.root = root
+
+        # GLOBALS
+        mmod.resetCount()
+
 
         # CREATING HIERARCHY
+        handGrp = mmod.transform(side=self.side, name="hand", type="GRP", parent=self.root)
 
+        # CREATING FINGERS
+        fingerJntList = fn.getChildren(handJnt)
+        fingers=[]
+        for jnt in fingerJntList:
+            name = fn.concat_str(jnt, s1_begin = 2, s1_end=6)
+            fingerObj = finger(jnt, fingerName=name, side=self.side, parent=handGrp)
+            fingers.append(fingerObj)
 
-L_finger1 = finger("L_metacarpal00_JNT", fingerName="index", side="L")
-
-R_finger1 = finger("R_metacarpal00_JNT", fingerName="index", side="R")
+        # CREATE GLOBAL ROTATE
+        for i, f in enumerate(fingers):
+            '''if (i==0):
+                mmod.connectAttr(finger.globalCtrl.name+'.rotateZ', fn.getParent(f.fingerJntChain[0])+'.rotateZ')
+            else:'''
+        
+            # CREATING SCALING FACTOR
+            multNode = mNode.multDoubleLinear(side=self.side, name="globalRotateScalingFactor")
+            mmod.connectAttr(finger.globalCtrl.name+'.rotateZ', multNode.getInput1())
+            mc.setAttr(multNode.getInput2(), (i*20)/100.0+0.05)
+            mmod.connectAttr(multNode.getOutput(), fn.getParent(f.fingerJntChain[0])+'.rotateZ')
+        # DELETING GUIDES
+        mc.delete(handJnt)

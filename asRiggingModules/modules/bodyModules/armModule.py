@@ -9,6 +9,12 @@ def resetArmMod():
     arm.rigParent = None
 
 class arm(blendFKIK.blendFKIK):
+    '''
+    side = Arm side (L, R, C)
+    armJnt = guideJnt (first jnt in chain)
+    parent = rig class 
+    root = parent of bind Jnts (under what jnt does the user want the joints to be created)
+    '''
     rigParent=None
     def __init__(self, side="C", armJnt = None, parent=None, root=None):
         if (parent!=None):

@@ -2,6 +2,7 @@ import maya.cmds as mc
 import shutil 
 import os 
 
+mc.file(new = True, f=True)
 
 plugIn = "asRivet"
 

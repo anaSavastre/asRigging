@@ -7,12 +7,12 @@ import asNodes as asNode
 mc.file(new = True, f=True)
 
 
-def createGuides(side, numberOfGuides):
+def createGuides(side, numberOfGuides, spacing=1):
     mmod.locator.elemIndex=0
     guideList=[]
     for i in range (numberOfGuides):
         guideList.append(mmod.locator(side=side, name= "locGuide"))
-        mc.xform(guideList[i], t=[i, 0, 0])
+        mc.xform(guideList[i], t=[i*spacing, 0, 0])
     return guideList
 
 def loftSurfaceFromGuides(side="C",name="matloft",guides=None):    
@@ -23,6 +23,9 @@ def loftSurfaceFromGuides(side="C",name="matloft",guides=None):
 
         for k, obj in enumerate(guides):
             mc.connectAttr(obj.name+".worldMatrix", matloft.name+".inputMatrix["+str(k)+"]")
+
+        
+        
         return matloft
 
 
@@ -42,25 +45,31 @@ class ribbon(object):
         surface = mc.createNode("nurbsSurface")
         # Connecting surface
         mc.connectAttr(matloftNode.getOutputSurface(), surface+".create") 
+        mc.rebuildSurface(surface, su=len(guides)*2, sv=1, kr=2)
 
         # RIVETS
         numbGuides = len(guides)
         for i in range (numbGuides-1):
+            parentGroup = mmod.transform(side=self.side, name=self.name+"Parent")
             rivet = asNode.asRivet(side=self.side, name=self.name)
-            group = mmod.transform(side=self.side, name=self.name)
+            group = mmod.transform(side=self.side, name=self.name, parent=parentGroup)
             rivet.percentage = 1
             coef = 1.0/(numbGuides*2.0)
             rivet.parameterU = coef*(i*2+1)
-            mmod.connectPlugs(matloftNode.outputSurface, rivet.inputSurface)
+            mmod.connectAttr(surface+".worldSpace", rivet.getInputSurface())
             mmod.connectPlugs(rivet.outRotation, group.rotate)
             mmod.connectPlugs(rivet.outTranslation, group.translate)
             mc.setAttr(rivet.name+".forward", 0, 1, 0, type="double3")
             mc.setAttr(rivet.name+".up", 1, 0, 0, type="double3")
+            # Parent Inverse Matrix
+            mmod.connectAttr(parentGroup.name+".worldInverseMatrix", rivet.name+".parentInverseMatrix")
+            # Creating the joints
+            joint = mmod.joint(name=self.name, side=self.side, parent=group)
 
 
 
 def testProject():
-    guides = createGuides("C", 9)
+    guides = createGuides("C", 5, spacing=3)
     asRibbon = ribbon(guides=guides)
 
 testProject()

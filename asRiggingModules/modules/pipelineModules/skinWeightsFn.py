@@ -44,7 +44,7 @@ def saveSkinWeight(weightsFile="skinWeights", path="D:/Bournemouth University/as
 
         mc.deformerWeights(weightsFile+version+".xml", path=weightsFile, ex=True, deformer=deformerList)
 
-saveSkinWeight()
+# saveSkinWeight()
 def loadSkinWeights(weightsFile="skinWeights", path="D:/Bournemouth University/asRigging/tmp/tmpSkinWeights", deformer="skinCluster*"):
 
     if (projectEnv):
@@ -63,3 +63,5 @@ def loadSkinWeights(weightsFile="skinWeights", path="D:/Bournemouth University/a
 
 
 loadSkinWeights()
+
+# saveSkinWeight()

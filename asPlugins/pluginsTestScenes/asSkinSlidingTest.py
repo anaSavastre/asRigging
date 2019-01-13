@@ -31,6 +31,58 @@ def skinSlidingSetup ():
 
     mc.setAttr(deformer+".vertexId", 381)
 
+    # APPLY NEW SKIN SLIDING DEFORMER
+    deformer  = mc.deformer(nianBody, type="asSlidingSkinning")[0]
+   
+    # position = mc.xform(nianBody+".vtx[381]", ws=True, q=True, t=True)
+    # grp = mmod.transform()
+    
+    # mc.xform(grp.name, t=position, ws=True)
+    # loc = mmod.locator(parent=grp)
+
+    # # TEMPORARY DECOMPOSE MATRIX
+    # decompMatrix = mNode.decomposeMatrix()
+    # mmod.connectAttr(loc.name+".worldMatrix[0]", decompMatrix.getInputMatrix())
+    # # mmod.connectAttr(decompMatrix.getOutputTranslate(), deformer+".translate")
+    # mmod.connectAttr(loc.name+".translate", deformer+".translate")
+
+    # mc.setAttr(deformer+".vertexId", 381)
+    # mc.setAttr(deformer+".elasticity", 0.3)
+
+    # # APPLY NEW SKIN SLIDING DEFORMER
+    # deformer  = mc.deformer(nianBody, type="asSurfaceSliding")[0]
+    # position = mc.xform(nianBody+".vtx[381]", ws=True, q=True, t=True)
+    # # grp = mmod.transform()
+    
+    # # mc.xform(grp.name, t=position, ws=True)
+    # # loc = mmod.locator(parent=grp)
+
+    # # # TEMPORARY DECOMPOSE MATRIX
+    # # decompMatrix = mNode.decomposeMatrix()
+    # # mmod.connectAttr(loc.name+".worldMatrix[0]", decompMatrix.getInputMatrix())
+    # # # mmod.connectAttr(decompMatrix.getOutputTranslate(), deformer+".translate")
+    # # mmod.connectAttr(loc.name+".translate", deformer+".translate")
+
+    # mc.setAttr(deformer+".vertexId", 381)
+    # mc.setAttr(deformer+".elasticity", 0.3)
+
+    # # APPLY NEW SKIN SLIDING DEFORMER
+    # deformer  = mc.deformer(nianBody, type="asSurfaceSliding")[0]
+    # position = mc.xform(nianBody+".vtx[381]", ws=True, q=True, t=True)
+    # # grp = mmod.transform()
+    
+    # # mc.xform(grp.name, t=position, ws=True)
+    # # loc = mmod.locator(parent=grp)
+
+    # # # TEMPORARY DECOMPOSE MATRIX
+    # # decompMatrix = mNode.decomposeMatrix()
+    # # mmod.connectAttr(loc.name+".worldMatrix[0]", decompMatrix.getInputMatrix())
+    # # # mmod.connectAttr(decompMatrix.getOutputTranslate(), deformer+".translate")
+    # # mmod.connectAttr(loc.name+".translate", deformer+".translate")
+
+    # mc.setAttr(deformer+".vertexId", 381)
+    # mc.setAttr(deformer+".elasticity", 0.3)
+
 
 skinSlidingSetup()
 

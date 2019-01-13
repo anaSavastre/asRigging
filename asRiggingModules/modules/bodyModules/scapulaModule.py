@@ -10,7 +10,6 @@ def resetScapulaMod():
     scapula.ikHandleGrp = None
     scapula.controlGrp = None
 
-
 class scapula(object):
     rigParent=None
     ikHandleGrp = None
@@ -22,8 +21,9 @@ class scapula(object):
         1. Creating Main Hierarchy from guides
         2. Scapula Set-Up
             2.1. Create IK Handle from start to end
-            2.2. Create Ctrl
+            2.2. Create Ctrls
             2.3. Orient+point Constraint Ctrl > { ScapulaStartJNT, ArmStartJNT}
+           
         '''
         # self
         self.side = side
@@ -60,10 +60,17 @@ class scapula(object):
             mc.parent(ik, scapula.ikHandleGrp)
             # 2.2. Creating CTRL
             # Creating guide
+            #guideJnt = mmod.joint(side=self.side, name="scapulaGuide")
+            #fn.snapTool(scapulaJnt, fn.getChildren(guideJnt))
+            #mc.setAttr(guideJnt.name+".radius",  mc.getAttr(scapulaJnt+".radius"))
+            scapulaFKCtl = rigFn.constructCTL(self.jntGuideList[1], side=self.side, name=self.name, parent=scapula.controlGrp)
+            #mc.delete(guideJnt)
+            
+            # Creating guide
             guideJnt = mmod.joint(side=self.side, name="scapulaGuide")
             fn.snapTool(scapulaJnt, guideJnt)
             mc.setAttr(guideJnt.name+".radius",  mc.getAttr(scapulaJnt+".radius"))
-            scapulaCtl = rigFn.constructCTL(guideJnt.name, side=self.side, name=self.name, parent=scapula.controlGrp)
+            scapulaCtl = rigFn.constructCTL(guideJnt.name, side=self.side, name=self.name, parent=scapulaFKCtl)
             mc.delete(guideJnt)
 
             # Cleaning CTL
@@ -84,7 +91,7 @@ class scapula(object):
                 # mc.orientConstraint(scapulaCtl, armJnt.bindJntChain[0], mo=True)
 
             # Constraining scapula Ctrl to Chest
-            mc.parentConstraint(self.root, fn.getParent(scapulaCtl.name), mo=True)
+            mc.parentConstraint(self.root, fn.getParent(scapulaFKCtl.name), mo=True)            
 
 
         # DELETING GUIDES

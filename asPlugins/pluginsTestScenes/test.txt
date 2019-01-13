@@ -1,0 +1,52 @@
+	//////////////////////////////////////////////////////////////////////////////////////////
+				////////////////////////////////	EDGE RESISTANCE FORCE	//////////////////////////////
+				// SET INDEX: for meshVertexIterator
+				int prevVertex;
+				meshVertIt.setIndex(index, prevVertex);
+
+				// GET CONNECTION EDGES: of current vertex
+				MIntArray connectingEdges;
+				meshVertIt.getConnectedEdges(connectingEdges);
+
+
+				// GET RESULTING FORCE APPLIED ON VERTEX
+				
+				for (int edge = 0; edge < connectingEdges.length(); edge++)
+				{
+					int edgeIndex = connectingEdges[edge];
+					// GET VERT ID FOR EDGE I
+					int2 vertID;
+					fnInputMesh.getEdgeVertices(edgeIndex, vertID);
+					currentEdgeLength[edgeIndex] = allPoints[vertID[1]].distanceTo(allPoints[vertID[0]]);
+					// CALCULATING FORCE
+					if (currentEdgeLength[edgeIndex] < restEdgeLength[edgeIndex] * 0.5 || currentEdgeLength[edgeIndex] > restEdgeLength[edgeIndex] * 0.5)
+					{
+						/*cerr << "differenceFound \n";
+						cerr << "restEdge: " << restEdgeLength[edgeIndex]<<"\n";
+						cerr << "currentEdge: " << currentEdgeLength[edgeIndex] << "\n";*/
+						double deltaLen = currentEdgeLength[edgeIndex] - restEdgeLength[edgeIndex];
+						double elasticForce = inElasticity * deltaLen *0.5;
+						int endPointIndex;
+						MVector direction;
+
+						// CHECKING WHICH OF THE POINTS FORMING THE EDGE IS NOT THE CURRENT VERTEX
+						if (vertID[0] != index)
+						{
+							endPointIndex = vertID[0];
+						}
+						else
+						{
+							endPointIndex = vertID[1];
+						}
+						// CLACULATING DIRECTION VECTOR OF FORCE
+						direction = allPoints[endPointIndex] - allPoints[index];
+
+						// UPDATING VERTEX FORCE
+						vertexForce += direction * elasticForce;
+
+
+					}
+
+				}
+				////////////////////////////////	EDGE RESISTANCE FORCE	//////////////////////////////
+				//////////////////////////////////////////////////////////////////////////////////////////

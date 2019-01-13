@@ -11,7 +11,7 @@ import mayaNode as node
 
   
 class spine(object):
-    def __init__(self, side="C", name="spine" , spineJnt=None, root=None, parent=None):
+    def __init__(self, side="C", name="spine", revolveVector = [1, 0, 0], spineJnt=None, root=None, parent=None):
         '''
         SPINE MODULE
 
@@ -29,6 +29,7 @@ class spine(object):
         self.parent = parent
         self.guides = fn.descendentsList(root=spineJnt)
         self.spineJnt = []
+        self.revolveVector = revolveVector
         self.forward = [0, -1, 0]
         self.up = [-1, 0, 0]
         mmod.resetCount() 
@@ -107,9 +108,13 @@ class spine(object):
     def createRivet(self, parameterU, parent=None):
         rivet = asNode.asRivet(side=self.side, name=self.name)
         group = mmod.transform(side=self.side, name=self.name, type="GRP", parent=parent)
+        spineParent = mmod.transform(side=self.side, name="bind"+self.name.capitalize(), type="GRP", parent=self.pelvisCtl)
+        fn.align(group, spineParent)
         # self.spineJnt.append(mmod.joint(side=self.side, name="bind"+self.name, parent= self.pelvisCtl))
 
-        self.spineJnt.append(mmod.joint(side=self.side, name="bind"+self.name.capitalize(), parent=self.spineJnt[-1] if len(self.spineJnt)>0 else self.pelvisCtl))
+        # self.spineJnt.append(mmod.joint(side=self.side, name="bind"+self.name.capitalize(), parent=self.spineJnt[-1] if len(self.spineJnt)>0 else self.pelvisCtl))
+        self.spineJnt.append(mmod.joint(side=self.side, name="bind"+self.name.capitalize(), parent= spineParent))
+
         rivet.percentage = 1
         rivet.parameterU = parameterU
 
@@ -149,8 +154,7 @@ class spine(object):
             # Create matLoft node
             self.matloftNode = asNode.asMatloft(side=self.side, name=self.name+"Surface")
             # REVOLVE ORDER
-            mc.setAttr(self.matloftNode.name+".revolveX", 1)
-            mc.setAttr(self.matloftNode.name+".revolveZ", 0)
+            mc.setAttr(self.matloftNode.name+".revolveVector", self.revolveVector[0], self.revolveVector[1], self.revolveVector[2], type="double3")
 
             for k, obj in enumerate(self.surfaceCtlPoints):
                 mc.connectAttr(obj.name+".worldMatrix", self.matloftNode.name+".inputMatrix["+str(k)+"]")

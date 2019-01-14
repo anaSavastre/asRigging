@@ -6,7 +6,7 @@ import rigFn as rigFn
 import controlFn as ctlFn
 
 
-   
+     
 class blendFKIK(object):
     def __init__(self, side, jnt = None, name="segment", segmentsList=["base", "midPoint", "effector"], parent=None, root=None, hook=None):
         '''
@@ -241,9 +241,7 @@ class blendFKIK(object):
         self.IKjntChain=jntChain
         # 2.2. IK HANDLE
         ikHandle = rigFn.createIKHandle(jntChain[0], jntChain[len(jntChain)-1], side=self.side, name=self.name+"IK"+"IKHandle", parent=limitedEffectorGRP)
-        
-        # ikHandle = rigFn.createIKHandle(jntChain[0], jntChain[len(jntChain)-1], side=side, name=self.name+"IK"+"IKHandle")
-        
+                
         # 2.3. LIMITED IK
         # Settings GRP
         # Get bone length
@@ -308,7 +306,15 @@ class blendFKIK(object):
         # Clamp: distance to max = length(baseSegment.len+midSegment.len)
         distancedClamp = mNode.clamp(side=self.side, name="baseEndDist")
         mmod.connectPlugs(baseEndDist.distance, distancedClamp.inputR)
-        mmod.connectPlugs(maxLength.output, distancedClamp.maxR)
+        # Checking if "maxLength.output" is negative
+        if (mc.getAttr(maxLength.getOutput())<0):
+            # Creating multiply node
+            reverseNode = mNode.multDoubleLinear(side=self.side, name="absoluteLength")
+            reverseNode.input2 = -1
+            mmod.connectAttr(maxLength.getOutput(), reverseNode.getInput1())
+            mmod.connectAttr(reverseNode.getOutput(), distancedClamp.getMaxR())
+        else:
+            mmod.connectPlugs(maxLength.output, distancedClamp.maxR)
 
         # MultiplyDivide: baseEffectorVecDir*effectorHipMaxLength  
         multiplyDivideNode = mNode.multiplyDivide(side=self.side, name=self.segments[0]+self.segments[2].capitalize()+"Vect")
@@ -358,5 +364,3 @@ class blendFKIK(object):
         # Constraining Control to Hook
         mc.parentConstraint(self.hook.name, poleVectGlobal.name, mo=True)
         #mc.scaleConstraint(self.hook.name, poleVectGrp.name, mo=True)
-
-  

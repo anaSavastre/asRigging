@@ -6,9 +6,9 @@ import rigFn as rigFn
 import mayaNode as node
 import asNodes as asNode
 
- 
+
 class neck(object):
-    def __init__(self, side="C", name="neck" , neckJnt=None, root=None, parent=None, hook=None):
+    def __init__(self, side="C", name="neck" , revolveVector = [1, 0, 0], neckJnt=None, root=None, parent=None, hook=None):
         '''
         NECK MODULE
 
@@ -26,8 +26,7 @@ class neck(object):
         self.hook = hook
         self.guides = fn.descendentsList(root=neckJnt)
         self.neckJnt = []
-        self.forward = [0, -1, 0]
-        self.up = [-1, 0, 0]
+        self.revolveVector = revolveVector
         mmod.resetCount() 
         # 1. CREATE JNT HIERARCHY
         # 1.0. HEAD
@@ -36,24 +35,46 @@ class neck(object):
         fn.rotateShapePoints(self.headCtrl.name, rotationVector=[0, 0, 90], pivot=mc.xform(self.guides[-1], q=True, ws=True, t=True))
         fn.translateShapePoints(self.headCtrl.name, [0, mc.getAttr(self.guides[-1]+".radius"), 0], pivot=mc.xform(self.guides[-1], q=True, ws=True, t=True))
 
-                
-        # # # 1.2. Neck FK
-        # self.fkCtl1 = rigFn.constructCTL(self.guides[len(self.guides)/2-2], name = self.name+"FKCtl", parent = self.root)
-        # self.fkCtl2 = rigFn.constructCTL(self.guides[len(self.guides)/2+2], name = self.name+"FKCtl", parent = self.fkCtl1)
-
         # 1.2. NECK RIBBON
         # Creating the Global Group
         self.neckGlobalGrp =  mmod.transform(side=self.side, name=self.name+"Global", type="GRP", parent=self.parent.rigGrp)
+        # Extracting the forward and up vectors
+        self.getRivetAlignmentVectors()
         # Create Surface Loft Guides
-        # self.createLoftSurface(self.guides[1:-1])
         self.createLoftSurface(self.guides)
         # Attaching Joints
         self.attachJoinnts(parent=self.neckGlobalGrp)
 
-        # # 2.0 TWIST INTERPOLATOR
-        self.twistDeformation()
         # DELETING GUIDES
         mc.delete(self.guides)
+    
+    def getRivetAlignmentVectors(self):
+    
+        # GETTING THE LOCAL SPACE OF THE ROOT JNT
+        multMatrix = mNode.multMatrix(side=self.side, name=self.name+"ObjectSpace")
+        mmod.connectAttr(self.root.name+".parentInverseMatrix", multMatrix.name+".matrixIn[0]")
+        mmod.connectAttr(self.root.name+".worldMatrix", multMatrix.name+".matrixIn[1]")
+
+        # Vector Product 
+        forward = mNode.vectorProduct(side=self.side, name=self.name+"ForwardVector")
+        up = mNode.vectorProduct(side=self.side, name=self.name+"UpVector")
+        mc.setAttr(forward.getInput1(), 0, 1, 0, type="double3")
+        mc.setAttr(up.getInput1(), 1, 0, 0, type="double3")
+        forward.operation = 3
+        up.operation = 3
+        forward.normalizeOutput = 1
+        up.normalizeOutput = 1
+        mmod.connectAttr(multMatrix.getMatrixSum(), forward.name+".matrix")
+        mmod.connectAttr(multMatrix.getMatrixSum(), up.name+".matrix")
+        # Reverse Forward Vector
+        revNode = mNode.multiplyDivide(side=self.side, name=self.name+"ReverseForwardVector")
+        mc.setAttr(revNode.getInput2(), -1, -1, -1, type="double3")
+        mmod.connectAttr(forward.getOutput(), revNode.getInput1())
+
+        # OUTPUTS
+        self.forward = revNode.getOutput() 
+        self.up = up.getOutput()
+    
     def createGuideFromObj(self, obj, parent=None):        
         ofs = mmod.transform(side=self.side, name=self.name+"offsetPoint", type="OFS", parent=parent)
         fn.align(obj, ofs)
@@ -85,53 +106,7 @@ class neck(object):
             mc.delete(midGuide)
         self.createGuideFromObj(guides[gLen-2], parent=grp)
         self.createGuideFromObj(guides[gLen-1], parent=grp)  
-    def twistDeformation(self):
-        '''
-        For Creating the twist deformation we need to duplicate the surface twice and apply all the transformations in local space and then apply
-        them to the deformation surface through because otherwise we encounter double transformations 
 
-        '''
-        # Duplicating the surface
-
-        matloftSurface = mc.duplicate(self.surface, name="C_neckSurfaceDeformation01_NRB", rc=True)[0]
-        mc.rename( fn.getChildren(matloftSurface)[0], "C_neckSurfaceDeformationShape01_SHP" )
-        twistSurface = mc.duplicate(self.surface, name="C_neckTwistDeformation01_NRB" , rc=True)[0]
-        mc.rename( fn.getChildren(twistSurface)[0], "C_neckTwistDeformationShape01_NRB")
-
-        # Reconnecting matloft
-        mmod.connectAttr(self.matloftNode.getOutputSurface(), fn.getChildren(matloftSurface)[0]+".create")
-        mc.disconnectAttr(self.matloftNode.getOutputSurface(), self.surface+".create")
-
-        # Applying Twist Deformation
-        # lowBound=-1, highBound=1, startAngle=0, endAngle=0
-        twistHandle = mc.nonLinear(twistSurface, type="twist")
-        # aimConstraint -offset 0 0 0 -weight 1 -aimVector 0 1 0 -upVector 0 0 1 -worldUpType "vector" -worldUpVector 0 1 0;
-        mc.delete(mc.aimConstraint(self.headCtrl.name, twistHandle, aim=[0, 1, 0], u=[0, 0, 1]))
-        mc.parent(twistHandle, self.surfaceGuidesGrp)
-        twistHandle[0] = mc.rename(twistHandle[0], "C_neckTwistNode00_TWS")
-        twistHandle[1] = mc.rename(twistHandle[1], "C_neckTwistHandle00_HND")
-
-        # Applying the surfaces as blendShapes to the main surface
-        self.bShpName = "C_neckDeformation_BSHP"
-        bShp = mc.blendShape(matloftSurface,  self.surface, n=self.bShpName)
-        mc.blendShape(bShp, edit=True, t=(fn.getParent(self.surface), 1, twistSurface, 1.0))
-        # Making infuence 1
-        mc.setAttr(self.bShpName+"."+matloftSurface, 1)
-        mc.setAttr(self.bShpName+"."+twistSurface, 1)
-
-        # Connecting the Twist Handke to ChestCTL and Pelvis Ctl
-        multNode = mNode.multDoubleLinear(side=self.side, name=self.name+"ReverseRot")
-        mmod.connectAttr(self.root.name+".rotateX", multNode.getInput1())
-        mc.setAttr(multNode.getInput2(), -1)
-        mmod.connectAttr(multNode.getOutput(), twistHandle[1]+".startAngle")
-        
-        multNode = mNode.multDoubleLinear(side=self.side, name=self.name+"ReverseRot")
-        mmod.connectAttr(self.headCtrl.name+".rotateX", multNode.getInput1())
-        mc.setAttr(multNode.getInput2(), -1)
-        mmod.connectAttr(multNode.getOutput(), twistHandle[1]+".endAngle")
-
-        # HIDING TWIST HANDLE
-        mc.hide(twistHandle)
 
     def createLoftSurface(self, guides):
         self.surfaceGuides(guides)
@@ -140,8 +115,8 @@ class neck(object):
             # Create matLoft node
             self.matloftNode = asNode.asMatloft(side=self.side, name=self.name+"Surface")
             # REVOLVE ORDER
-            mc.setAttr(self.matloftNode.name+".revolveX", 1)
-            mc.setAttr(self.matloftNode.name+".revolveZ", 0)
+            mc.setAttr(self.matloftNode.name+".revolveVector", self.revolveVector[0], self.revolveVector[1], self.revolveVector[2], type="double3")
+
 
             for k, obj in enumerate(self.surfaceCtlPoints):
                 mc.connectAttr(obj.name+".worldMatrix", self.matloftNode.name+".inputMatrix["+str(k)+"]")
@@ -151,6 +126,8 @@ class neck(object):
             mc.parent (self.surface, self.surfaceGuidesGrp)
             # Connecting surface
             mc.connectAttr(self.matloftNode.getOutputSurface(), self.surface+".create") 
+            # REBUILD SURFACE FOR HIGHER DENSITY
+            mc.rebuildSurface(self.surface, su=len(guides)+2, sv=1, kr=2)
 
             # Creating the Controls
             # MIDDLE
@@ -160,16 +137,14 @@ class neck(object):
             fn.rotateShapePoints(middleCtl.name, rotationVector=mc.xform(guides[len(guides)/2], q=True, ws=True, ro=True), pivot=mc.xform(guides[len(guides)/2], q=True, ws=True, t=True))
             mc.parent(self.surfaceOfsPoints[2], middleCtl)
             # START
+            mc.parent(self.surfaceOfsPoints[1], self.surfaceOfsPoints[0])
             mc.parentConstraint(self.root, self.surfaceOfsPoints[0], mo=True)
             # END
+            mc.parent(self.surfaceOfsPoints[3], self.surfaceOfsPoints[4])
             mc.parentConstraint(self.headCtrl, self.surfaceOfsPoints[4], mo=True)
-            # INBETWEEN POINTS
-            # mc.parentConstraint(middleCtl, self.surfaceOfsPoints[1])
-            # mc.parentConstraint(self.surfaceOfsPoints[0], self.surfaceOfsPoints[1])
-            # mc.parentConstraint(middleCtl, self.surfaceOfsPoints[3])
-            # mc.parentConstraint(self.surfaceOfsPoints[4], self.surfaceOfsPoints[3])
-            self.influenceBlend(middleCtl, self.surfaceOfsPoints[0], self.surfaceOfsPoints[1])
-            self.influenceBlend(middleCtl, self.surfaceOfsPoints[4], self.surfaceOfsPoints[3])
+            # # INBETWEEN POINTS
+            # self.influenceBlend(middleCtl, self.surfaceOfsPoints[0], self.surfaceOfsPoints[1])
+            # self.influenceBlend(middleCtl, self.surfaceOfsPoints[4], self.surfaceOfsPoints[3])
             
     def influenceBlend(self, influence1=mmod.transform(), influence2=mmod.transform(), child=mmod.transform()):
         '''
@@ -179,13 +154,10 @@ class neck(object):
         1. Adding up the transformations of the two influences
             matrixMult.input1 < influence1.worldMatrix
             matrixMult.input2 < influence2.worldMatrix
-
         2. Decompose transformations
-
         3. Averaging the transformation
             multiplyDivide.input1 < matrixMult.matrixSum
             multiplyDivide.input2 = [0.5, 0.5, 0.5]
-
         4. Connect output to child
             multiplyDivide.output > child.translate
         
@@ -203,30 +175,28 @@ class neck(object):
         average.operation = 3
         # Connect Child
         mmod.connectAttr(average.getOutput3D(), child.name+".translate")
+     
     def attachJoinnts(self, parent=None):
         group = mmod.transform(side=self.side, name=self.name+"BindJnt", type="GRP", parent=parent)
 
-        for i in range (5):
-            if (i==0):
-                self.createRivet(0.030, parent=group)
-            else:
-                self.createRivet((i*2)/10.0, parent=group)
-            
+        for i in range (1, len(self.guides)-1):
+            self.createRivet(i, parent=group)
 
     def createRivet(self, parameterU, parent=None):
         rivet = asNode.asRivet(side=self.side, name=self.name)
         group = mmod.transform(side=self.side, name=self.name, type="GRP", parent=parent)
-        # self.neckJnt.append(mmod.joint(side=self.side, name="bind"+self.name, parent= self.pelvisCtl))
-
-        self.neckJnt.append(mmod.joint(side=self.side, name="bind"+self.name.capitalize(), parent=self.neckJnt[-1] if len(self.neckJnt)>0 else self.root))
-        rivet.percentage = 1
+        neckParent = mmod.transform(side=self.side, name="bind"+self.name.capitalize(), type="GRP", parent=self.root)
+        fn.align(group, neckParent)
+        self.neckJnt.append(mmod.joint(side=self.side, name="bind"+self.name.capitalize(), parent= neckParent))
         rivet.parameterU = parameterU
 
         mmod.connectAttr(self.surface+".worldSpace", rivet.getInputSurface())
         mmod.connectPlugs(rivet.outRotation, group.rotate)
         mmod.connectPlugs(rivet.outTranslation, group.translate)
-        mc.setAttr(rivet.name+".forward", self.forward[0], self.forward[1], self.forward[2], type="double3")
-        mc.setAttr(rivet.name+".up", self.up[0], self.up[1], self.up[2], type="double3")
+        mmod.connectAttr(parent.name+".worldInverseMatrix", rivet.name+".parentInverseMatrix")
+        mmod.connectAttr(self.forward, rivet.name+".forward")
+        mmod.connectAttr(self.up, rivet.name+".up")
+
         # GET GRP WORLD TRANSFORM
         matrixMult   = mNode.multMatrix(side=self.side, name=self.name)
         mmod.connectAttr(group.name+".worldMatrix", matrixMult.name+".matrixIn[0]")
@@ -234,6 +204,6 @@ class neck(object):
         decompMatrix = mNode.decomposeMatrix(side=self.side, name=self.name)
         mmod.connectAttr(matrixMult.getMatrixSum(), decompMatrix.getInputMatrix())
         mmod.connectAttr(decompMatrix.getOutputTranslate(), self.neckJnt[-1].name+".translate" )
-        mmod.connectAttr(decompMatrix.getOutputRotate(), self.neckJnt[-1].name+".rotate" )
-        mmod.connectAttr(decompMatrix.getOutputScale(), self.neckJnt[-1].name+".scale" )
-
+        mmod.connectAttr(decompMatrix.getOutputRotate() , self.neckJnt[-1].name+".rotate" )
+        mmod.connectAttr(self.root.name+".scale", self.neckJnt[-1].name+".scale" )
+      

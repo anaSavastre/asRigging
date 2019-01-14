@@ -406,7 +406,7 @@ class angleBetween(utilityNode):
 class multMatrix(utilityNode):
     elemIndex = 0
     nodeType = "multMatrix"
-    def __init__(self, side="C", name="multMatrix", type ="AddDA"):
+    def __init__(self, side="C", name="multMatrix", type ="MatMult"):
         super(multMatrix, self).__init__(self.nodeType, side, name, type)
         multMatrix.elemIndex+=1
     # OUTPUT ATTRIBUTES

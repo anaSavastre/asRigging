@@ -159,9 +159,7 @@ class finger(object):
         self.fingerJntChain = fingerBaseJnt
 
         # DELETING GUIDES
-        #mc.delete(jntHierarchy)
- 
-
+        mc.delete(jntHierarchy)
 
 class hand():
 

@@ -25,6 +25,7 @@ class jaw(object):
         # 1.0. JAW 
         self.jawJnt = rigFn.constructJNT(self.guides[0], side=self.side, name="bind"+self.name.capitalize(), parent = self.root)
         self.jawCtrl = rigFn.constructCTL(self.guides[-1], name = "bind"+self.name.capitalize(), parent = self.root)
+        print fn.getChildren(self.jawCtrl.name)[1]
         mc.parent (fn.getChildren(self.jawCtrl.name)[1], self. jawJnt.name)
 
         # 2. CONNECT CTRL TO JAW ROTATION
@@ -33,7 +34,13 @@ class jaw(object):
         mc.parent (jawRest.name, fn.getChildren(self.root)[1])
         jawCtrlRest = mmod.transform(side=self.side, name="jawCtrlRestGuide", type="GRP", parent = self.guides[1])
         mc.parent (jawCtrlRest.name, fn.getChildren(self.root)[1])
-        
+        # GET REST POSE VECTOR
+        # ctrlPoz = mc.xform(self.jawCtrl.name, q=True, t=True, ws=True) 
+        # jntPoz = mc.xform(self.jawJnt.name, q=True, t=True, ws=True)
+        # restPoseVector = [ctrlPoz[0]-jntPoz[0], ctrlPoz[1]-jntPoz[1], ctrlPoz[2]-jntPoz[2]]
+        # print restPoseVector
+
+
         worldMatrixCtrl = mNode.decomposeMatrix(side=self.side, name=self.name+"RestCtlWM")
         mmod.connectAttr(jawCtrlRest.name+".worldMatrix", worldMatrixCtrl.getInputMatrix())        
         worldMatrixJnt = mNode.decomposeMatrix(side=self.side, name=self.name+"RestJntWM")
@@ -47,7 +54,7 @@ class jaw(object):
         worldMatrixCtrl = mNode.decomposeMatrix(side=self.side, name=self.name+"CtlWM")
         mmod.connectAttr(self.jawCtrl.name+".worldMatrix", worldMatrixCtrl.getInputMatrix())        
         # worldMatrixJnt = mNode.decomposeMatrix(side=self.side, name=self.name+"JntWM")
-        mmod.connectAttr(jawRest.name+".worldMatrix", worldMatrixJnt.getInputMatrix())
+        mmod.connectAttr(self.jawJnt.name+".worldMatrix", worldMatrixJnt.getInputMatrix())
         transformVect = mNode.plusMinusAverage(side=self.side, name=self.name+"TransformationVect")
         mc.setAttr(transformVect.getOperation(), 2)
         mmod.connectAttr(worldMatrixCtrl.getOutputTranslate(), transformVect.name+".input3D[0]")
@@ -66,5 +73,4 @@ class jaw(object):
         mmod.connectAttr(inverseX.getOutput() , self.jawJnt.name+".rotateZ")
 
         # DELETING GUIDE
-        mc.delete(self.guides)
-
+        mc.delete(self.guides[0])

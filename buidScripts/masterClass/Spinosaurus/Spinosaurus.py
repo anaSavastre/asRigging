@@ -1,3 +1,4 @@
+
 ''' 
 Ana Maria Savastre
 Bournemouth University 
@@ -48,9 +49,6 @@ if (hostName == "DESKTOP-CM0E2QL"):
 if (hostName == "DESKTOP-PQV0HOV"):
     projectEnv = "C:/Users/AnaMaria/Documents/asRigging/projects/masterClass/"
 
- 
- 
-
 class spinosaurus(loadFn.rigSceneSetup):    
     character = "spinosaurus"
 
@@ -77,7 +75,7 @@ class spinosaurus(loadFn.rigSceneSetup):
         roolGuides.reverse()
         footJnt1 = rigFn.createJntChain(roolGuides, side =side, name="footRollDuplicate", segmentList=["Heel", "Toes", "Tarsal", "Ankle"], parent=None)
         mc.parent(fn.getParent(fn.getParent(footJnt1[0])), side+"_legIKAnkle03_GRP")
-        globalEffectorAimGrp = mmod.transform(side =side, name="tarsalAimEffectorGlobalMove", parent=side+"_ankle010_GRP")
+        globalEffectorAimGrp = mmod.transform(side =side, name="tarsalAimEffectorGlobalMove", parent=side+"_ankle*_GRP")
         
         aimEffectorObj = mmod.transform(side =side, name="tarsalAimAnkleObj", parent= self.m_leg.effectorCtrl)
         upEffectorObj = mmod.transform(side =side, name="tarsalUpAnkleObj", parent=self.m_leg.effectorCtrl)
@@ -234,17 +232,17 @@ class spinosaurus(loadFn.rigSceneSetup):
 
             
             # HAND
-            self.m_hand =handMod.hand(handJnt=s+"_hand00_JNT", side=s, root=self.m_arm.effectorCtrl)
+            self.m_hand =handMod.hand(handJnt=s+"_hand00_JNT", side=s, root=self.m_arm, parent= s+"_bindArm00_GRP", hook = self.rootJnt)
 
             # SPRING SOLVER
             self.springSolverLeg(side=s)
             # TOES
-            m_thumbToe = handMod.finger(s+"_footThumb00_JNT", fingerName="thumbToe", side=s)#, parent=s+"_footFK_Ankle00_JNT")
+            m_thumbToe = handMod.finger(s+"_footThumb00_JNT", fingerName="thumbToe", side=s, hook = self.rootJnt)#, parent=s+"_footFK_Ankle00_JNT")
             mc.parent(m_thumbToe.fingerGRP, s+"_footFK_Ankle00_JNT" )
             self.fingerGrp = mmod.transform(side=s, name="toes", type="GRP")
-            m_indexToe = handMod.finger(s+"_footIndex00_JNT", fingerName="indexToe", side=s, parent=self.fingerGrp)
-            m_middleToe = handMod.finger(s+"_footMiddle00_JNT", fingerName="middleToe", side=s, parent=self.fingerGrp)
-            m_pinkyToe = handMod.finger(s+"_footPinky00_JNT", fingerName="pinkyToe", side=s, parent=self.fingerGrp)
+            m_indexToe = handMod.finger(s+"_footIndex00_JNT", fingerName="indexToe", side=s, parent=self.fingerGrp, hook = self.rootJnt)
+            m_middleToe = handMod.finger(s+"_footMiddle00_JNT", fingerName="middleToe", side=s, parent=self.fingerGrp, hook = self.rootJnt)
+            m_pinkyToe = handMod.finger(s+"_footPinky00_JNT", fingerName="pinkyToe", side=s, parent=self.fingerGrp, hook = self.rootJnt)
             mc.parent(self.fingerGrp, s+"_footFK_Tarsals01_JNT")
 
             # CONNECT ANKLE TO TARSAL FK

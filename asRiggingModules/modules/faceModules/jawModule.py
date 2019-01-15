@@ -54,7 +54,7 @@ class jaw(object):
         worldMatrixCtrl = mNode.decomposeMatrix(side=self.side, name=self.name+"CtlWM")
         mmod.connectAttr(self.jawCtrl.name+".worldMatrix", worldMatrixCtrl.getInputMatrix())        
         # worldMatrixJnt = mNode.decomposeMatrix(side=self.side, name=self.name+"JntWM")
-        mmod.connectAttr(self.jawJnt.name+".worldMatrix", worldMatrixJnt.getInputMatrix())
+        mmod.connectAttr(jawRest.name+".worldMatrix", worldMatrixJnt.getInputMatrix())
         transformVect = mNode.plusMinusAverage(side=self.side, name=self.name+"TransformationVect")
         mc.setAttr(transformVect.getOperation(), 2)
         mmod.connectAttr(worldMatrixCtrl.getOutputTranslate(), transformVect.name+".input3D[0]")

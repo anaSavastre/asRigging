@@ -7,6 +7,7 @@ import mayaNode as mNode
 
 def resetTailMod():
     tail.rigParent = None
+    
 class tail (object):
     rigParent=None
     def __init__(self, side="C", tailJnt = None, numbControlPoints=3, name="tail", parent = None, root=None):

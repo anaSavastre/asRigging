@@ -78,10 +78,9 @@ def constructJNT(guideJNT, side="C", name="name", parent=None):
     return jnt
 
 
-
 class finger(object):
     globalCtrl=None
-    def __init__(self, jntHierarchy, fingerName="finger", side="C", parent=None, worldUpVector=""):
+    def __init__(self, jntHierarchy, fingerName="finger", side="C", parent=None, hook=None, worldUpVector=""):
         '''
         NAMES
         fingerName ={thumb, index, middle, ring, pinky}
@@ -97,6 +96,10 @@ class finger(object):
         '''
 
         # GLOBALS
+        self.side = side
+        self.parent = parent
+        self.hook = hook
+        self.worldUpVector = worldUpVector
         mmod.resetCount()
 
         metacarpalName = fingerName+"Metacarpal"
@@ -134,7 +137,10 @@ class finger(object):
             jntB = mmod.joint(side=side, name=phalangeName[i], parent=fingerBaseJnt[i+1])
 
             # AIM CONSTRAINTS
-            mc.aimConstraint(fingerBaseJnt[i+1], fingerBaseJnt[i], aim=[1, 0, 0], u=[0, 1, 0])
+            # Creating WorldUpObject
+            worldUpObj = mmod.transform(side=self.side, name=fingerName+str(i)+"WorldUpObject", parent=fn.getParent(fingerBaseJnt[i]))
+            fn.snapTool(fingerBaseJnt[i], worldUpObj)
+            mc.aimConstraint(fingerBaseJnt[i+1], fingerBaseJnt[i], aim=[1, 0, 0], u=[0, 1, 0], worldUpType="objectrotation", worldUpVector=[0, 1, 0], worldUpObject=worldUpObj)
 
             
             # JOINT STRETCHING
@@ -148,7 +154,14 @@ class finger(object):
             mc.setAttr(minusNode+".operation", 2)
             mc.connectAttr(distanceBetweenNode+".distance", minusNode+".input1D[0]")
             mc.connectAttr(fingerBaseJnt[i+1]+".radius", minusNode+".input1D[1]")
-            mc.connectAttr(minusNode+".output1D", fn.getChildren(fingerBaseJnt[i])[0]+".translateX")
+            # Scalingby global scale
+            divide = mNode.multiplyDivide(side=self.side, name=fingerName+str(i)+"GlobalScale")
+            worldTransformation = mNode.decomposeMatrix(side=self.side, name = "rootGlobalTransformation")
+            mmod.connectAttr(self.hook.name+".worldMatrix", worldTransformation.getInputMatrix())
+            mmod.connectAttr(minusNode+".output1D", divide.name+".input1X")
+            divide.operation = 2
+            mmod.connectAttr(worldTransformation.getOutputScale(), divide.getInput2())
+            mc.connectAttr(divide.name+".outputX", fn.getChildren(fingerBaseJnt[i])[0]+".translateX")
 
             # POSITIONING END JNT
             if (jnt==guidJntList[-2]):
@@ -163,31 +176,40 @@ class finger(object):
 
 class hand():
 
-    def __init__(self, handJnt=None, side="C", parent=None, root=None):
+    def __init__(self, handJnt=None, side="C", name="hand", parent=None, root=None, hook=None):
         '''
         Hand Module
+        parent = object to parent too
+        root = arm 
+        hook = rootJnt for global scale
 
         Creating a finger obj for each of the jnt Chain in the hierarchy 
         '''
         # SELF
         self.side = side
+        self.name = name
         self.handJnt = hand
         self.parent = parent
         self.root = root
+        self.hook = hook
 
         # GLOBALS
         mmod.resetCount()
 
 
         # CREATING HIERARCHY
-        handGrp = mmod.transform(side=self.side, name="hand", type="GRP", parent=self.root)
+        handGrp = mmod.transform(side=self.side, name="hand", type="GRP", parent=self.parent)
+        self.handGrp = handGrp
+
+        # CONNECTING HAND GROUP TO WRIST MOVEMENT
+        self.connectToWristMovement()
 
         # CREATING FINGERS
         fingerJntList = fn.getChildren(handJnt)
         fingers=[]
         for jnt in fingerJntList:
             name = fn.concat_str(jnt, s1_begin = 2, s1_end=6)
-            fingerObj = finger(jnt, fingerName=name, side=self.side, parent=handGrp)
+            fingerObj = finger(jnt, fingerName=name, side=self.side, parent=handGrp, hook=self.hook)
             fingers.append(fingerObj)
 
         # CREATE GLOBAL ROTATE
@@ -203,3 +225,19 @@ class hand():
             mmod.connectAttr(multNode.getOutput(), fn.getParent(f.fingerJntChain[0])+'.rotateZ')
         # DELETING GUIDES
         mc.delete(handJnt)
+    def connectToWristMovement(self):
+        # CONNECTING TRANSLATION
+        # Getting Local Space
+        matrixMult = mNode.multMatrix(side=self.side, name=self.name+"LocalSpace")
+        decopMatrix = mNode.decomposeMatrix(side=self.side, name=self.name+"LocalSpace")
+        mmod.connectAttr(self.root.bindJntChain[-1].name+".worldMatrix", matrixMult.name+".matrixIn[0]")
+        mmod.connectAttr(self.parent+".worldInverseMatrix", matrixMult.name+".matrixIn[1]")
+        mmod.connectPlugs(matrixMult.matrixSum, decopMatrix.inputMatrix)
+        mmod.connectPlugs(decopMatrix.outputTranslate, self.handGrp.translate)
+        # CONNECTING ROTATION
+        additive = mNode.animBlendNodeAdditiveDA(side=self.side, name=self.name+"ReverseRotationX")
+        mmod.connectAttr(self.root.effectorCtrl.name+".rotateX", additive.getInputA())
+        additive.weightA = -1
+        mmod.connectAttr(additive.getOutput(), self.handGrp.name+".rotateZ")
+        mmod.connectAttr(self.root.effectorCtrl.name+".rotateY", self.handGrp.name+".rotateY")
+        mmod.connectAttr(self.root.effectorCtrl.name+".rotateZ", self.handGrp.name+".rotateX")

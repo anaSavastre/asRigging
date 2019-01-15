@@ -4,8 +4,7 @@ import functions as fn
 import mayaNode as mNode
 import rigFn as rigFn 
 
-
-
+ 
 class foot(object):
     def __init__(self, side="C", footJnt=None, root=None, parent=None, hook=None):
         ''' 
@@ -33,10 +32,7 @@ class foot(object):
             orientConstraint =mc.orientConstraint(self.legRoot.FKjntChain[-1], fn.getParent(self.footFKJnt[0]), mo=True)[0]
             ocWeightAlias = mc.orientConstraint(orientConstraint, q=True, wal=True)[0]
             mmod.connectAttr( self.legRoot.reverseBlend.getOutput(), orientConstraint+"."+ocWeightAlias)
-            # # CONSTRAINING FOOT TO  IK ANKLE (temporary done with orient constraint)
-            # orientConstraint =mc.orientConstraint(self.legRoot.IKjntChain[-1], fn.getParent(self.footFKJnt[0]), mo=True)[0]
-            # ocWeightAlias = mc.orientConstraint(orientConstraint, q=True, wal=True)[1]
-            # mmod.connectAttr( self.legRoot.effectorCtrl.name+".fkIkBlend", orientConstraint+"."+ocWeightAlias)
+            
             # Making Scaleable
             mmod.connectAttr(fn.getParent(self.hook)+".scale", fn.getParent(self.footFKJnt[0])+".scale")
             
@@ -181,57 +177,11 @@ class foot(object):
         mmod.connectAttr(subtractingTransformations.getOutput3D(), mc.listRelatives(self.ankleCtrl, c=True)[1] +".translate")
 
 
-        # # 5. CONNECT FOOTROLL TO FK FOOT (WITH CONSTRAINTS)
-        # # ROLL TOES > FK TARSAL
-        # toeOrientConstraint = mc.orientConstraint(footRolljnt[1].name, fn.getParent(self.footFKJnt[1].name), mo=True)[0]
-        # tarsalOrientConstraint = mc.orientConstraint(footRolljnt[2].name, fn.getParent(fn.getParent(self.footFKJnt[0].name)), mo=True)[0]
-        # # Set influence to be active just in IK mode
-        # weight = mc.orientConstraint(toeOrientConstraint, q=True, wal=True)[0]
-        # mmod.connectAttr(self.legRoot.settingCtl.name+".fkIkBlend", toeOrientConstraint+"."+weight)
-        # weight = mc.orientConstraint(tarsalOrientConstraint, q=True, wal=True)[0]
-        # mmod.connectAttr(self.legRoot.settingCtl.name+".fkIkBlend", tarsalOrientConstraint+"."+weight)
-
-        # self.legRoot.blendAttr
-
-        # 5. CONNECT FOOTROLL TO FK FOOT (WITH NODES)
-        # 5.0. Get Heel Toe Vector (bind pose value)
-        heelToeVect=[]
-        pHeel = mc.xform(footRolljnt[0].name, q=True, t=True, ws=True)
-        pToes = mc.xform(footRolljnt[1].name, q=True, t=True, ws=True)
-        for i in range (3):
-            heelToeVect.append(pToes[i]-pHeel[i])
-
-        # 5.1. Get Ankle Tarsal Vector 
-        plusMinAnkleTarsalVect = mNode.plusMinusAverage(side=self.side, name="footRoll"+"ankleTarsalVect")
-        decompMtxFootRollTarsal = mNode.decomposeMatrix(side=self.side, name="footRoll"+"footRollTarsal")
-        mmod.connectAttr(footRolljnt[2].name+".worldMatrix", decompMtxFootRollTarsal.name+".inputMatrix") 
-        mc.setAttr(plusMinAnkleTarsalVect.getOperation(), 2)
-        mmod.connectAttr(decompMtxFootRollTarsal.getOutputTranslate(), plusMinAnkleTarsalVect.name+".input3D[0]")
-        mmod.connectAttr(decompMtxFootRollAnkle.getOutputTranslate(), plusMinAnkleTarsalVect.name+".input3D[1]")
-
-        # 5.2. Angle Between vectors
-        angleBetweenVect = mNode.angleBetween(side=self.side, name="footRoll"+"angleBetween")
-        mc.setAttr(angleBetweenVect.getVector1(), heelToeVect[0], heelToeVect[1], heelToeVect[2], type="double3")
-        mmod.connectAttr(plusMinAnkleTarsalVect.getOutput3D(), angleBetweenVect.getVector2())
-        
-        # 5.3. Hook Foot GRP
-        # Getting World Transformations
-        decompMtxAnkeCtl = mNode.decomposeMatrix(side=self.side, name="legAnkleCtrlWM")
-        mmod.connectAttr(self.legRoot.effectorCtrl.name+".worldMatrix", decompMtxAnkeCtl.getInputMatrix())
-        animBlendRotX = mNode.animBlendNodeAdditiveDA(side=self.side, name="footRoll"+"ankleAddingRotationX")
-        animBlendRotY = mNode.animBlendNodeAdditiveDA(side=self.side, name="footRoll"+"ankleAddingRotationY")
-        mmod.connectAttr(decompMtxAnkeCtl.name+".outputRotateX", animBlendRotX.getInputA())
-        mmod.connectAttr(angleBetweenVect.name+".eulerX", animBlendRotX.getInputB())
-
-        mmod.connectAttr(decompMtxAnkeCtl.name+".outputRotateY", animBlendRotY.getInputA())
-        mmod.connectAttr(angleBetweenVect.name+".eulerY", animBlendRotY.getInputB())
-        
-        mmod.connectAttr(animBlendRotX.getOutput(), self.footFKGRP+".rotateX")
-        mmod.connectAttr(animBlendRotY.getOutput(), self.footFKGRP+".rotateY")
-        #mmod.connectAttr(decompMtxAnkeCtl.name+".outputRotateY", self.footFKGRP+".rotateY")
-        mmod.connectAttr(decompMtxAnkeCtl.name+".outputRotateZ", self.footFKGRP+".rotateZ")
-        # Reorient Ankle OFS
-        mc.delete(mc.orientConstraint(footJNTList[3], fn.getParent(self.footFKJnt[0]), mo=False))
+        # 5. CONNECT FOOTROLL TO FK FOOT 
+        # ROLL TOES > FK TARSAL
+        tarsalOrientConstraint = mc.orientConstraint(footRolljnt[2].name, fn.getParent(fn.getParent(self.footFKJnt[0].name)), mo=True)[0]
+        weight = mc.orientConstraint(tarsalOrientConstraint, q=True, wal=True)[0]
+        mmod.connectAttr(self.legRoot.settingCtl.name+".fkIkBlend", tarsalOrientConstraint+"."+weight)
         
         # 5.4. Hook Toes
         hook = fn.getParent(self.footFKJnt[1].name)
@@ -244,8 +194,6 @@ class foot(object):
         # 6. Connecting FootRoll to leg Ctrl
         mmod.connectPlugs(self.legRoot.footRollAttr, self.footRoll)
 
-        # CONSTRAINT FOOT ROLL JNT TO ROOT
-        # constr = mc.parentConstraint(fn.getParent(self.hook.name), fn.getParent(footRolljnt[0].name), mo=True)
         # DELETING GUIDS
         mc.delete(heelJnt)
 

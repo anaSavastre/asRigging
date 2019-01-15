@@ -40,13 +40,14 @@ class scapula(object):
         if (self.parent!=None):
             if (scapula.rigParent==None):
                 scapula.rigParent=mmod.transform(name="scapulaGlobal", type="GRP", parent=parent.rigGrp)
+                mmod.connectAttr(fn.getParent(self.parent.rootJnt)+".scale", scapula.rigParent.name+".scale")
 
         if (scapulaJnt!=None):
             # 1. CREATING THE HIERARCHY
             if (scapula.ikHandleGrp==None):
                 scapula.ikHandleGrp = mmod.transform(name="IKHandle", type="GRP", parent = scapula.rigParent)
                 mc.parentConstraint (self.root, scapula.ikHandleGrp.name, mo=True)
-                mmod.connectAttr(fn.getParent(self.parent.rootJnt)+".scale", scapula.ikHandleGrp.name+".scale")
+               
             if(scapula.controlGrp==None):
                 scapula.controlGrp  = mmod.transform(name=self.name+"Controller", type="GRP", parent = scapula.rigParent)
             

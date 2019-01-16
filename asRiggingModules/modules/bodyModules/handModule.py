@@ -204,12 +204,14 @@ class hand():
         # CONNECTING HAND GROUP TO WRIST MOVEMENT
         self.connectToWristMovement()
 
+        handFingersGRP = mmod.transform(side=self.side, name="handFingers", type="GRP", parent=handGrp)
+        self.handFingersGRP = handFingersGRP
         # CREATING FINGERS
         fingerJntList = fn.getChildren(handJnt)
         fingers=[]
         for jnt in fingerJntList:
             name = fn.concat_str(jnt, s1_begin = 2, s1_end=6)
-            fingerObj = finger(jnt, fingerName=name, side=self.side, parent=handGrp, hook=self.hook)
+            fingerObj = finger(jnt, fingerName=name, side=self.side, parent=handFingersGRP, hook=self.hook)
             fingers.append(fingerObj)
 
         # CREATE GLOBAL ROTATE
@@ -223,6 +225,11 @@ class hand():
             mmod.connectAttr(finger.globalCtrl.name+'.rotateZ', multNode.getInput1())
             mc.setAttr(multNode.getInput2(), (i*20)/100.0+0.05)
             mmod.connectAttr(multNode.getOutput(), fn.getParent(f.fingerJntChain[0])+'.rotateZ')
+        
+        # MATCHING GLOBAL ORIENTATION
+        decomMatrix = mNode.decomposeMatrix(side=self.side, name="rootGlobalTransformations")
+        mmod.connectAttr(self.hook.name+".worldMatrix", decomMatrix.getInputMatrix())
+        mmod.connectAttr(decomMatrix.getOutputRotate(),  self.handFingersGRP.name+".rotate")
         # DELETING GUIDES
         mc.delete(handJnt)
     def connectToWristMovement(self):

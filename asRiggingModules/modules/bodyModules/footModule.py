@@ -4,7 +4,6 @@ import functions as fn
 import mayaNode as mNode
 import rigFn as rigFn 
 
- 
 class foot(object):
     def __init__(self, side="C", footJnt=None, root=None, parent=None, hook=None):
         ''' 
@@ -24,12 +23,17 @@ class foot(object):
         if (footJnt):
             # FK Foot            
             footJNTList = fn.descendentsList(root=footJnt)
+            self.footJNTList = []
+            for elem in footJNTList:
+                self.footJNTList.append(elem)
+        
+
             self.FKfoot_setUp(footJNTList=footJNTList, parent=self.parent)
             # FOOT ROLL
             self.footRoll_setUp(footJNTList=footJNTList, parent=root.segmentGRP)
 
             # CONSTRAINING FOOT TO  FK ANKLE (temporary done with orient constraint)
-            orientConstraint =mc.orientConstraint(self.legRoot.FKjntChain[-1], fn.getParent(self.footFKJnt[0]), mo=True)[0]
+            orientConstraint =mc.orientConstraint(self.legRoot.FKjntChain[-1], fn.getParent(fn.getParent(self.footFKJnt[0])), mo=True)[0]
             ocWeightAlias = mc.orientConstraint(orientConstraint, q=True, wal=True)[0]
             mmod.connectAttr( self.legRoot.reverseBlend.getOutput(), orientConstraint+"."+ocWeightAlias)
             
@@ -177,20 +181,23 @@ class foot(object):
         mmod.connectAttr(subtractingTransformations.getOutput3D(), mc.listRelatives(self.ankleCtrl, c=True)[1] +".translate")
 
 
-        # 5. CONNECT FOOTROLL TO FK FOOT 
-        # ROLL TOES > FK TARSAL
-        tarsalOrientConstraint = mc.orientConstraint(footRolljnt[2].name, fn.getParent(fn.getParent(self.footFKJnt[0].name)), mo=True)[0]
+        # # 5. CONNECT FOOTROLL TO FK FOOT (WITH CONSTRAINTS)
+        # 5.0. DUPLICATING FK FOOT
+        localFKGrp = mmod.transform(side=self.side, name="footRoll"+"LocalFK", parent=jointsGrp)
+        localFkJnt = rigFn.createJntChain(self.footJNTList, side=self.side, name="footRoll"+"LocalFK", segmentList=self.footSegments, parent=localFKGrp)
+        # 5.1. ORIENT CONSTRAINT OFS GRPs
+        toeOrientConstraint = mc.orientConstraint(footRolljnt[1].name, fn.getParent(localFkJnt[1].name), mo=True)[0]
+        tarsalOrientConstraint = mc.orientConstraint(footRolljnt[2].name, fn.getParent(localFkJnt[0].name), mo=True)[0]
+        # 5.2. SET INFLUENCES TO BE ACTIVE JUST IN IK MODE
+        weight = mc.orientConstraint(toeOrientConstraint, q=True, wal=True)[0]
+        mmod.connectAttr(self.legRoot.settingCtl.name+".fkIkBlend", toeOrientConstraint+"."+weight)
         weight = mc.orientConstraint(tarsalOrientConstraint, q=True, wal=True)[0]
         mmod.connectAttr(self.legRoot.settingCtl.name+".fkIkBlend", tarsalOrientConstraint+"."+weight)
-        
-        # 5.4. Hook Toes
-        hook = fn.getParent(self.footFKJnt[1].name)
-        animBlend = mNode.animBlendNodeAdditiveDA(side=self.side, name="footRoll"+"tarsalRotationX")
-        mmod.connectPlugs(footRolljnt[2].rotateZ, animBlend.inputA)
-        # mc.setAttr(animBlend.getWeightA(), -1)
-        mc.setAttr(animBlend.getInputB(), mc.getAttr(hook+".rotateZ"))
-        mmod.connectAttr(animBlend.getOutput(), hook+".rotateZ")
-
+        # 5.3. CONNECTING ROTATION TO FK OFS GRPs
+        mmod.connectAttr(fn.getParent(localFkJnt[1].name)+".rotate", fn.getParent(self.footFKJnt[1].name)+".rotate")
+        mmod.connectAttr(fn.getParent(localFkJnt[0].name)+".rotate", fn.getParent(self.footFKJnt[0].name)+".rotate")
+        # 5.4. HIDING GRP
+        mc.hide(localFKGrp)
         # 6. Connecting FootRoll to leg Ctrl
         mmod.connectPlugs(self.legRoot.footRollAttr, self.footRoll)
 
@@ -221,3 +228,9 @@ class foot(object):
         jntChain = rigFn.createFKChain(footJNTList, side=self.side, name=self.footName+"FK", segmentList=self.footSegments, parent=footFKJntGRP)
         self.footFKJnt = jntChain
         self.footFKGRP = footFKJntGRP.name
+
+        # MATCHING GLOBAL ORIENTATION
+        decomMatrix = mNode.decomposeMatrix(side=self.side, name="rootGlobalTransformations")
+        mmod.connectAttr(self.hook.name+".worldMatrix", decomMatrix.getInputMatrix())
+        mmod.connectAttr(decomMatrix.getOutputRotate(), footFKJntGRP.name+".rotate")
+  

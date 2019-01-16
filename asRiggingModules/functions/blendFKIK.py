@@ -349,7 +349,7 @@ class blendFKIK(object):
 
         
         poleVectGrp = mmod.transform(side=self.side, name=self.name+"PoleVector", type="GRP", parent=poleVectGlobal)
-        poleCtrl = mmod.circle(side=self.side, name="poleVector", parent=poleVectGrp)
+        poleCtrl = mmod.circle(side=self.side, name=self.name+"poleVector", parent=poleVectGrp)
         # position ctrl
         fn.scaleShapePoints(poleCtrl.name, mc.getAttr(jntList[2]+".radius")*0.25)
         
@@ -359,8 +359,8 @@ class blendFKIK(object):
         # Aim Constraint: Ctrl Alwais Oriented towarsd JNT
         # Creating obj parented to jnt
         aimObj = mmod.transform(side=self.side, name=self.name+"AimObj", type="GRP", parent=self.IKjntChain[1])
-        # aimConstraint -mo -weight 1 -aimVector 0 0 -1 -upVector 0 1 0 -worldUpType "object" -worldUpObject C_root00_CTL
-        mc.aimConstraint(aimObj, poleCtrl, aim=[0, 0, -1], u=[0, 1, 0], wut="object", wuo=self.hook.name, mo=True)
+        # # aimConstraint -mo -weight 1 -aimVector 0 0 -1 -upVector 0 1 0 -worldUpType "object" -worldUpObject C_root00_CTL
+        # mc.aimConstraint(aimObj, poleCtrl, aim=[0, 0, -1], u=[0, 1, 0], wut="object", wuo=self.hook.name, mo=True)
         # Constraining Control to Hook
         mc.parentConstraint(self.hook.name, poleVectGlobal.name, mo=True)
         #mc.scaleConstraint(self.hook.name, poleVectGrp.name, mo=True)

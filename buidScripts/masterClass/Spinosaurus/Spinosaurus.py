@@ -24,7 +24,7 @@ import rigFn as rigFn
 import mayaNode as node
 import asNodes as asNode
 import controlFn as ctlFn
-
+import blendFKIK as blendFKIK
 
 
 # Body Modules
@@ -50,7 +50,162 @@ if (hostName == "DESKTOP-PQV0HOV"):
     projectEnv = "C:/Users/AnaMaria/Documents/asRigging/projects/masterClass/"
 
 
- 
+def createGuides(side, numberOfGuides, spacing=1):
+    mmod.locator.elemIndex=0
+    guideList=[]
+    for i in range (numberOfGuides):
+        guideList.append(mmod.locator(side=side, name= "locGuide"))
+        mc.xform(guideList[i], t=[i*spacing, 0, 0])
+    return guideList
+
+def loftSurfaceFromGuides(side="C",name="matloft",guides=None):    
+    if (guides!=None):
+            
+        # Create matLoft node
+        matloft = asNode.asMatloft(side=side, name=name)
+
+        for k, obj in enumerate(guides):
+            mc.connectAttr(obj.name+".worldMatrix", matloft.name+".inputMatrix["+str(k)+"]")
+
+        
+        
+        return matloft
+
+
+class ribbon(object):
+    def __init__(self, side="C", name="ribbon", guides=None, parent=None):
+        # GLOBALS
+        asNode.asRivet.elemIndex=0
+        asNode.asMatloft.elemIndex=0
+        mmod.resetCount()
+
+        self.side=side
+        self.name = name
+        self.parent = parent
+        if (guides!=None):
+            matloftNode = loftSurfaceFromGuides(side=side, name=name, guides=guides)
+        
+        # For VISUALIZATION        
+        surface = mc.createNode("nurbsSurface")
+        # Connecting surface
+        mc.connectAttr(matloftNode.getOutputSurface(), surface+".create") 
+        mc.rebuildSurface(surface, su=len(guides)*2, sv=1, kr=2)
+
+        # RIVETS
+        numbGuides = len(guides)
+        parentGroup = mmod.transform(side=self.side, name=self.name+"Joints", parent = self.parent)
+        for i in range (numbGuides-1):
+           
+            rivet = asNode.asRivet(side=self.side, name=self.name)
+            group = mmod.transform(side=self.side, name=self.name, parent=parentGroup)
+            rivet.percentage = 1
+            coef = 1.0/(numbGuides*2.0)
+            rivet.parameterU = coef*(i*2+1)
+            mmod.connectAttr(surface+".worldSpace", rivet.getInputSurface())
+            mmod.connectPlugs(rivet.outRotation, group.rotate)
+            mmod.connectPlugs(rivet.outTranslation, group.translate)
+            mc.setAttr(rivet.name+".forward", 0, 1, 0, type="double3")
+            mc.setAttr(rivet.name+".up", 1, 0, 0, type="double3")
+            # Parent Inverse Matrix
+            mmod.connectAttr(parentGroup.name+".worldInverseMatrix", rivet.name+".parentInverseMatrix")
+            # Creating the joints
+            joint = mmod.joint(name=self.name, side=self.side, parent=group)
+
+
+
+def testProject():
+    guides = createGuides("C", 5, spacing=3)
+    asRibbon = ribbon(guides=guides)
+
+
+
+class ribbonLimbs(object):
+    def generateGuides(self):
+        '''
+        1. GET SEGMENT DIRECTION VECTOR
+        2. NORMALIZE VECTOR
+        3. CREATE GUIDES
+
+        '''
+        # 0. GLOBAL GROUP
+        self.guideGrp = mmod.transform(side=self.side, name=self.name+"Guides", parent = self.parent, type="GRP")
+        self.controlGrp = mmod.transform(side=self.side, name=self.name+"ControlGuides", parent = self.guideGrp, type="GRP")
+
+        # 1. GET SEGMENT DIRECTION VECTOR
+        # 1.0. Get Start and End Positions
+        guide0 = mc.xform(self.startJnt, ws=True, q=True, t=True)
+        guide4 = mc.xform(self.endJnt, ws=True, q=True, t=True)
+        # 1.1. Get Vector
+        directionVector = []
+        for component0, component4 in zip(guide0, guide4):
+            directionVector.append(component4-component0)
+        # 2. NORMALIZE VECTOR
+        # 2.0. Get Vector Length
+        vectorLength = fn.deistBetween(guide0, guide4)
+        # 2.1. Normalize directionVector
+        for i in range (len(directionVector)):
+            directionVector[i] = directionVector[i]/vectorLength
+        # 3. CREATE GUIDES
+        for i in range (self.numbGuides):
+            self.guides.append(mmod.transform(side=self.side, name=self.name+"Guide", type="GRP", parent=self.controlGrp))
+            transformation =[] 
+            for p0, v0 in zip(guide0, directionVector):
+                transformation.append(p0+v0*(i*vectorLength/(self.numbGuides-1)))
+            mc.xform(self.guides[i], ws=True, t=transformation )
+
+    def __init__(self, side="C", name="ribbbonLimb", numberOfGuides=5, endJnt=None, startJnt=None, parent=None, root=None):
+        # self
+        self.side = side
+        self.name = name
+        self.endJnt = endJnt
+        self.startJnt = startJnt
+        self.parent = parent
+        self.root = root
+        self.guides = []
+        self.numbGuides = numberOfGuides
+        # GLOBALS
+        mmod.resetCount()
+        # SET UP
+        if (endJnt!=None, startJnt!=None):
+            self.generateGuides()
+            # CREATING THE RIBBONS
+            ribbon(side=self.side, name=self.name, guides=self.guides, parent=self.root)
+
+
+
+
+class leg(blendFKIK.blendFKIK):
+    rigParent = None
+    def __init__(self, side="C", legJnt=None, parent=None, root=None):
+        if (parent!=None):
+            if(leg.rigParent==None):
+                leg.rigParent=mmod.transform(name="legGlobal", type="GRP", parent=parent.rigGrp)
+        super(leg, self).__init__(side=side, jnt=legJnt, name="leg", segmentsList=["Hip", "Knee", "Ankle"], parent=leg.rigParent, root=root,  hook=parent.rootJnt)
+        # FootRoll Attribute
+        self.footRollAttr = self.effectorCtrl.addAttr(longName="footRoll", softMinValue=-1.7, defaultValue=0, softMaxValue=3.14, attrType="doubleAngle", keyable=True)
+        # RIBBON LIMBS
+        ribbonLimbs(side=self.side, endJnt=self.bindJntChain[1], startJnt=self.bindJntChain[0], name= "femurRibbon", parent=leg.rigParent, root=root)
+        # ribbonLimbs(side=self.side, endJnt=self.bindJntChain[2], startJnt=self.bindJntChain[1], name= "tibiaRibbon")
+
+class arm(blendFKIK.blendFKIK):
+    '''
+    side = Arm side (L, R, C)
+    armJnt = guideJnt (first jnt in chain)
+    parent = rig class 
+    root = parent of bind Jnts (under what jnt does the user want the joints to be created)
+    '''
+    rigParent=None
+    def __init__(self, side="C", armJnt = None, parent=None, root=None):
+        if (parent!=None):
+            if (arm.rigParent==None):
+                arm.rigParent=mmod.transform(name="armGlobal", type="GRP", parent=parent.rigGrp)
+
+        super(arm, self).__init__(side=side, jnt=armJnt, name="arm", segmentsList=["Shoulder", "Elbow", "Wrist"], parent=arm.rigParent, root=root, hook=parent.rootJnt)
+        # RIBBON LIMBS
+        # ribbonLimbs(side=self.side, endJnt=self.bindJntChain[1], startJnt=self.bindJntChain[0], name= "humerusRibbon")
+        # ribbonLimbs(side=self.side, endJnt=self.bindJntChain[2], startJnt=self.bindJntChain[1], name= "radiusRibbon")
+    
+
 
 class spinosaurus(loadFn.rigSceneSetup):    
     character = "spinosaurus"
@@ -228,10 +383,10 @@ class spinosaurus(loadFn.rigSceneSetup):
         side =["L", "R"]
         for s in side:
 
-            self.m_arm =armMod.arm(side=s, armJnt=s+"_armShoulder00_JNT", parent=self, root=self.m_spine.chestCtl)
+            self.m_arm =arm(side=s, armJnt=s+"_armShoulder00_JNT", parent=self, root=self.m_spine.chestCtl)
             self.m_scapula =scapulaMod.scapula(side=s, scapulaJnt=s+"_scapula00_JNT", parent = self, root=self.m_spine.chestCtl, armJnt=self.m_arm)
-            self.m_leg = legMod.leg(legJnt=s+"_legHip00_JNT", side=s, parent=self, root=self.m_spine.pelvisCtl)
-            self.m_foot = foot(footJnt=s+"_footAnkle00_JNT", side=s, root=self.m_leg, parent=s+"_bindLeg00_GRP", hook=self.rootJnt)
+            self.m_leg = leg(legJnt=s+"_legHip00_JNT", side=s, parent=self, root=self.m_spine.pelvisCtl)
+            self.m_foot = footMod.foot(footJnt=s+"_footAnkle00_JNT", side=s, root=self.m_leg, parent=s+"_bindLeg00_GRP", hook=self.rootJnt)
 
             
             # HAND

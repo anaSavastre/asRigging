@@ -228,11 +228,13 @@ class hand():
     def connectToWristMovement(self):
         # CONNECTING TRANSLATION
         # Getting Local Space
-        matrixMult = mNode.multMatrix(side=self.side, name=self.name+"LocalSpace")
+        mc.setAttr(self.handGrp.name+".inheritsTransform" , 0)
+        # matrixMult = mNode.multMatrix(side=self.side, name=self.name+"LocalSpace")
         decopMatrix = mNode.decomposeMatrix(side=self.side, name=self.name+"LocalSpace")
-        mmod.connectAttr(self.root.bindJntChain[-1].name+".worldMatrix", matrixMult.name+".matrixIn[0]")
-        mmod.connectAttr(self.parent+".worldInverseMatrix", matrixMult.name+".matrixIn[1]")
-        mmod.connectPlugs(matrixMult.matrixSum, decopMatrix.inputMatrix)
+        # mmod.connectAttr(self.root.bindJntChain[-1].name+".worldMatrix", matrixMult.name+".matrixIn[0]")
+        # mmod.connectAttr(self.parent+".worldInverseMatrix", matrixMult.name+".matrixIn[1]")
+        # mmod.connectPlugs(matrixMult.matrixSum, decopMatrix.inputMatrix)
+        mmod.connectAttr(self.root.bindJntChain[-1].name+".worldMatrix", decopMatrix.getInputMatrix())
         mmod.connectPlugs(decopMatrix.outputTranslate, self.handGrp.translate)
         # CONNECTING ROTATION
         additive = mNode.animBlendNodeAdditiveDA(side=self.side, name=self.name+"ReverseRotationX")

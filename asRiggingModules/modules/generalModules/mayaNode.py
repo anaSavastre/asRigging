@@ -509,6 +509,17 @@ class condition(utilityNode):
     @firstTerm.setter
     def firstTerm(self, value):
         mc.setAttr(self.name+".firstTerm", value)
+
+
+    def getSecondTerm(self):
+        return self.name+".secondTerm"
+    @property
+    def secondTerm(self):
+        ''' returns node's plug '''
+        return self.getPlug("secondTerm")
+    @secondTerm.setter
+    def secondTerm(self, value):
+        mc.setAttr(self.name+".secondTerm", value)
     
     # INPUT ATTRIBUTES
     def getColorIfFalse(self):

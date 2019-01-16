@@ -7,10 +7,19 @@ import mayaNode as mNode
 
 def resetTailMod():
     tail.rigParent = None
+
+
     
-class tail (object):
+class tail (object): 
     rigParent=None
     def __init__(self, side="C", tailJnt = None, numbControlPoints=3, name="tail", parent = None, root=None):
+        '''
+        Tail Types of Controls:
+            > Normal FK Controls
+            > Global Curl Control
+            > Segment Curl Control
+        > Switch Between Controls Using a Visibility Switch 
+        '''
         # self
         self.side = side
         self.jntGuide = tailJnt
@@ -49,10 +58,13 @@ class tail (object):
             curlCtrlParent = mmod.transform(side=self.side, name=self.name+"CurlCtrl", type="GRP", parent=tail.rigParent) 
             mainCtrlList = []
             curlCtrlList = []
+            # GLOBAL CURL CTRL
+            globalCurlCtrl = rigFn.constructCTL(self.jntGuideList[1], side=self.side, name=self.name+"globalCurlCtrl", parent=curlCtrlParent)
+            fn.scaleShapePoints(globalCurlCtrl.name, 1.5)
             for i in range (1, len(self.jntChain)-2, offset):
                 # MAIN CTRL
                 ctrl = rigFn.constructCTL(self.jntGuideList[i], side=self.side, name="control"+self.name, parent=mainCtrlParent)
-                fn.scaleShapePoints(ctrl.name, 1.5)
+                fn.scaleShapePoints(ctrl.name, 1.3)
                 
                 newGrp = mmod.transform(side=self.side, name="bind"+self.name.capitalize(), parent=fn.getParent(self.jntChain[i-1].name), type="GRP")
                 mc.parent(self.jntChain[i-1].name, newGrp)
@@ -76,25 +88,26 @@ class tail (object):
                 mmod.connectAttr(decompMatrix.name+".outputScale", fn.getParent(curlCtrl.name)+".scale")
                 # Curl Effect
                 # Creating add nodes
-                if (i>1):
+                if (i>=1):
                     if (i==offset+1):
                         addNode = mNode.plusMinusAverage(side=self.side, name=self.name+"CurlAddition")
-                        mmod.connectAttr(curlCtrlList[-1].name+".rotate", addNode.name+".input3D[0]")
+                        mmod.connectAttr(globalCurlCtrl.name+".rotate", addNode.name+".input3D[0]")
                         mmod.connectAttr(curlCtrl.name+".rotate", addNode.name+".input3D[1]")
                         addObj = addNode
 
                     else:
                         addNode = mNode.plusMinusAverage(side=self.side, name=self.name+"CurlAddition")
-                        mmod.connectAttr(addObj.getOutput3D(), addNode.name+".input3D[0]")
+                        mmod.connectAttr(globalCurlCtrl.name+".rotate", addNode.name+".input3D[0]")
                         mmod.connectAttr(curlCtrl.name+".rotate", addNode.name+".input3D[1]")
                         addObj = addNode
                 # Connecting add nodes to jnt Rotation
                 for j in range (offset+1):
-                    if (i==1):
-                        mmod.connectAttr(curlCtrl.name+".rotate", fn.getParent(self.jntChain[i+j].name)+".rotate")
+                    mmod.connectAttr(addNode.getOutput3D(), fn.getParent(self.jntChain[i+j].name)+".rotate")
 
-                    else:
-                        mmod.connectAttr(addNode.getOutput3D(), fn.getParent(self.jntChain[i+j].name)+".rotate")
+                    # if (i==1):
+                    #     mmod.connectAttr(curlCtrl.name+".rotate", fn.getParent(self.jntChain[i+j].name)+".rotate")
+
+                    # else:
 
                 curlCtrlList.append(curlCtrl)
 
@@ -104,16 +117,34 @@ class tail (object):
                 
 
             # Creating Visibility ATTR
-            visibility = mainCtrlList[0].addAttr(longName="secondaryCtl", softMinValue=0, defaultValue=0, softMaxValue=1, attrType="short")
-
+            visibility = globalCurlCtrl.addAttr(longName="secondaryCtl", softMinValue=0, defaultValue=0, softMaxValue=1, attrType="short")
+            curlCtrlVisibility = globalCurlCtrl.addAttr(longName="curlCtrl", softMinValue=0, defaultValue=1, softMaxValue=1, attrType="short")
+            # fkCtrlVisibility = mainCtrlList[0].addAttr(longName="curlCtrl", softMinValue=0, defaultValue=1, softMaxValue=1, attrType="short")
             for jnt in (self.jntChain):
                 mmod.connectPlugs(visibility, jnt.visibility)
+            # # Switchin visibility off from MainCtrls
+            # subtractNode = mNode.plusMinusAverage(side=self.side, name=self.name+"ReverseVisibilitySwitch")
+            # subtractNode.operation = 2
+            # mc.setAttr(subtractNode.name+".input1D[0]", 1)
+            # mmod.connectAttr(mainCtrlList[0].name+".secondaryCtl", subtractNode.name+".input1D[1]")
+            # mmod.connectAttr(subtractNode.name+".output1D", mainCtrlList[1].name+".visibility")
 
-
-
+            # Curl Control Visibility
+            for ctrl in curlCtrlList:
+                mmod.connectPlugs(curlCtrlVisibility, ctrl.visibility)
+            
+            # FK Control Visibility
+            addition = mNode.addDoubleLinear(side = self.side, name=self.name+"curlSecondaryAdd")
+            mmod.connectAttr(globalCurlCtrl.name+".secondaryCtl", addition.getInput1())
+            mmod.connectAttr(globalCurlCtrl.name+".curlCtrl", addition.getInput2())
+            condition = mNode.condition(side=self.side, name=self.name+"FKControlVisibility")
+            condition.operation = 0
+            mmod.connectPlugs(addition.output, condition.firstTerm)
+            mc.setAttr(condition.getSecondTerm(), 0)
+            mc.setAttr(condition.getColorIfFalse(), 0, 0, 0, type = "double3")
+            mc.setAttr(condition.getColorIfTrue(), 1, 1, 1, type = "double3")
+            mmod.connectAttr(condition.name+".outColorR", mainCtrlList[0].name+".visibility")
                 
         # DELETING GUIDES
         mc.delete(tailJnt)
-
-
 

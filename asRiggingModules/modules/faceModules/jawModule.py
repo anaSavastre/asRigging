@@ -25,7 +25,6 @@ class jaw(object):
         # 1.0. JAW 
         self.jawJnt = rigFn.constructJNT(self.guides[0], side=self.side, name="bind"+self.name.capitalize(), parent = self.root)
         self.jawCtrl = rigFn.constructCTL(self.guides[-1], name = "bind"+self.name.capitalize(), parent = self.root)
-        print fn.getChildren(self.jawCtrl.name)[1]
         mc.parent (fn.getChildren(self.jawCtrl.name)[1], self. jawJnt.name)
 
         # 2. CONNECT CTRL TO JAW ROTATION

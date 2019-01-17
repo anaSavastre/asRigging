@@ -3,9 +3,15 @@ import os
 import sys
 import math as math
 import fileinput
+import mayaNode as mNode
 # import maya.openMaya as om
 
 ##########################    Functions    ##########################
+
+def parentConstraint(targetParent, objParent, object):
+    # Matrix Mult
+    matrix = mN
+
 
 def deleting_pointConstraint(obj):
     ''' This function delets the point constraint from the given obj'''

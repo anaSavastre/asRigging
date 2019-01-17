@@ -1,7 +1,12 @@
 import maya.cmds as mc
+import functions as fn
 import mayaModule as mmod
 import asNodes as asNode
+import mayaNode as mNode
 
+
+import rigFn as rigFn
+import mayaNode as node
 
 # New File
 mc.file(new = True, f=True)
@@ -47,13 +52,18 @@ class ribbon(object):
         # GET GRP WORLD TRANSFORM
         matrixMult   = mNode.multMatrix(side=self.side, name=self.name)
         mmod.connectAttr(group.name+".worldMatrix", matrixMult.name+".matrixIn[0]")
-        mmod.connectAttr(self.spineJnt[-1].name+".parentInverseMatrix", matrixMult.name+".matrixIn[1]")
+        mmod.connectAttr(self.ribbonJoints[-1].name+".parentInverseMatrix", matrixMult.name+".matrixIn[1]")
         decompMatrix = mNode.decomposeMatrix(side=self.side, name=self.name)
         mmod.connectAttr(matrixMult.getMatrixSum(), decompMatrix.getInputMatrix())
-        mmod.connectAttr(decompMatrix.getOutputTranslate(), self.spineJnt[-1].name+".translate" )
-        mmod.connectAttr(decompMatrix.getOutputRotate() , self.spineJnt[-1].name+".rotate" )
-        mmod.connectAttr(self.root.name+".scale", self.spineJnt[-1].name+".scale" )
-    
+        mmod.connectAttr(decompMatrix.getOutputTranslate(), self.ribbonJoints[-1].name+".translate" )
+        mmod.connectAttr(decompMatrix.getOutputRotate() , self.ribbonJoints[-1].name+".rotate" )
+        mmod.connectAttr(self.root.name+".scale", self.ribbonJoints[-1].name+".scale" )
+       
+    def attachJoinnts(self, parent=None):
+        group = mmod.transform(side=self.side, name=self.name+"BindJnt", type="GRP", parent=parent)
+
+        for i in range (1, len(self.guides)-1):
+            self.createRivet(i, parent=group)
     def getRivetAlignmentVectors(self):
     
         # GETTING THE LOCAL SPACE OF THE ROOT JNT
@@ -80,6 +90,42 @@ class ribbon(object):
         # OUTPUTS
         self.forward = revNode.getOutput() 
         self.up = up.getOutput() 
+
+    def createLoftSurface(self):
+        # Create surface from guides
+        if (self.guides!=None):
+            # Create matLoft node
+            self.matloftNode = asNode.asMatloft(side=self.side, name=self.name+"Surface")
+            # REVOLVE ORDER
+            mc.setAttr(self.matloftNode.name+".revolveVector", self.revolveVector[0], self.revolveVector[1], self.revolveVector[2], type="double3")
+
+            for k, obj in enumerate(self.guides):
+                mc.connectAttr(obj.name+".worldMatrix", self.matloftNode.name+".inputMatrix["+str(k)+"]")
+
+            self.surface = mc.createNode("nurbsSurface", name="C_spineSurfaceShape00_SHP")
+            mc.rename(fn.getParent(self.surface), "C_spineSurface00_NRB" )
+            mc.parent (self.surface, self.surfaceGuidesGrp)
+            
+            # CREATING SURFACE
+            mc.connectAttr(self.matloftNode.getOutputSurface(), self.surface+".create") 
+            # REBUILD SURFACE FOR HIGHER DENSITY
+            mc.rebuildSurface(self.surface, su=self.numberOfJoints+2, sv=1, kr=2)
+
+            # Creating the Controls
+            # # MIDDLE
+            # middleCtl = rigFn.constructCTL(self.surfaceOfsPoints[2], name = self.name+"IKmiddle", parent = self.fkCtl1)
+            # mc.delete(mc.listRelatives(middleCtl.name, c=True)[1])
+            # fn.scaleShapePoints(middleCtl.name, mc.getAttr(guides[len(guides)/2]+".radius"))
+            # fn.rotateShapePoints(middleCtl.name, rotationVector=mc.xform(guides[len(guides)/2], q=True, ws=True, ro=True), pivot=mc.xform(guides[len(guides)/2], q=True, ws=True, t=True))
+            # mc.parent(self.surfaceOfsPoints[2], middleCtl)
+
+            # # # START
+            # mc.parent(self.surfaceOfsPoints[1], self.surfaceOfsPoints[0])
+            # mc.parentConstraint(self.pelvisCtl, self.surfaceOfsPoints[0], mo=True)
+            # # # END
+            # mc.parent(self.surfaceOfsPoints[3], self.surfaceOfsPoints[4])
+            # mc.parentConstraint(self.chestCtl, self.surfaceOfsPoints[4], mo=True)
+     
     def __init__(self, side="C", name="ribbon", guides=None, numberOfJoints=5, revolveVector= [1, 0, 0], parent=None, root=None):
         # GLOBALS
         asNode.asRivet.elemIndex=0
@@ -90,42 +136,22 @@ class ribbon(object):
         self.name = name
         self.parent = parent
         self.root =root
+        self.guides = guides
         self.revolveVector = revolveVector
         self.ribbonJoints=[]
+        self.numberOfJoints = numberOfJoints
         if (guides!=None):
+            # Creating the Global Group
+            self.ribbonGlobalGrp =  mmod.transform(side=self.side, name=self.name+"Global", type="GRP")#, parent=self.parent)
+            self.surfaceGuidesGrp = mmod.transform(side=self.side, name=self.name+"SurfaceGuides")#, parent=self.spineGlobalGrp.name)
+            # Extracting the forward and up vectors
             self.getRivetAlignmentVectors()
-            matloftNode = loftSurfaceFromGuides(side=side, name=name, guides=guides)
-
-            # For VISUALIZATION        
-            self.surface = mc.createNode("nurbsSurface")
-            # Connecting surface
-            mc.connectAttr(matloftNode.getOutputSurface(), self.surface+".create") 
-            mc.rebuildSurface(self.surface, su=len(guides)*2, sv=1, kr=2)
-
-            # RIVETS
-            numbGuides = len(guides)
-            parentGroup = mmod.transform(side=self.side, name=self.name+"Joints", parent = self.parent)
-            for i in range (numbGuides-1):
-                coef = 1.0/(numbGuides*2.0)
-                self.createRivet(coef*(i*2+1), parent=parentGroup)
-
-
-
-            
-                # rivet = asNode.asRivet(side=self.side, name=self.name)
-                # group = mmod.transform(side=self.side, name=self.name, parent=parentGroup)
-                # rivet.percentage = 1
-                # coef = 1.0/(numbGuides*2.0)
-                # rivet.parameterU = coef*(i*2+1)
-                # mmod.connectAttr(surface+".worldSpace", rivet.getInputSurface())
-                # mmod.connectPlugs(rivet.outRotation, group.rotate)
-                # mmod.connectPlugs(rivet.outTranslation, group.translate)
-                # mc.setAttr(rivet.name+".forward", 0, 1, 0, type="double3")
-                # mc.setAttr(rivet.name+".up", 1, 0, 0, type="double3")
-                # # Parent Inverse Matrix
-                # mmod.connectAttr(parentGroup.name+".worldInverseMatrix", rivet.name+".parentInverseMatrix")
-                # # Creating the joints
-                # joint = mmod.joint(name=self.name, side=self.side, parent=group)
+            # Create Surface Loft Guides
+            self.createLoftSurface()   
+            # matloftNode = loftSurfaceFromGuides(side=side, name=name, guides=guides)
+            # Attaching Joints
+            self.attachJoinnts(parent=self.ribbonGlobalGrp)
+           
 
 def testProject():
     guides = createGuides("C", 3, spacing=3)

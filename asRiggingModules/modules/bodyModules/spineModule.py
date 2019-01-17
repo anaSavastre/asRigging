@@ -45,6 +45,8 @@ class spine(object):
         self.chestCtl = rigFn.constructCTL(self.guides[-1], name="chest", parent = self.fkCtl2)
 
         # 2.0. SPINE RIBBON
+        # Bind Joints Groug
+        self.spineBind =  mmod.transform(side=self.side, name=self.name+"BindJoints", type="GRP", parent=self.pelvisCtl)
         # Creating the Global Group
         self.spineGlobalGrp =  mmod.transform(side=self.side, name=self.name+"Global", type="GRP", parent=self.parent.rigGrp)
         # Extracting the forward and up vectors
@@ -87,7 +89,7 @@ class spine(object):
     def createRivet(self, parameterU, parent=None):
         rivet = asNode.asRivet(side=self.side, name=self.name)
         group = mmod.transform(side=self.side, name=self.name, type="GRP", parent=parent)
-        spineParent = mmod.transform(side=self.side, name="bind"+self.name.capitalize(), type="GRP", parent=self.pelvisCtl)
+        spineParent = mmod.transform(side=self.side, name="bind"+self.name.capitalize(), type="GRP", parent=self.spineBind)
         fn.align(group, spineParent)
         self.spineJnt.append(mmod.joint(side=self.side, name="bind"+self.name.capitalize(), parent= spineParent))
         rivet.parameterU = parameterU

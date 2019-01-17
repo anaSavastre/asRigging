@@ -61,6 +61,9 @@ class tail (object):
             # GLOBAL CURL CTRL
             globalCurlCtrl = rigFn.constructCTL(self.jntGuideList[1], side=self.side, name=self.name+"globalCurlCtrl", parent=curlCtrlParent)
             fn.scaleShapePoints(globalCurlCtrl.name, 1.5)
+            # Constraining Global Curl to root
+            mc.parentConstraint(self.root.name, globalCurlCtrl.name, mo=True)
+            # rigFn.parentConstraint(self.root.name, fn.getParent(globalCurlCtrl.name), globalCurlCtrl.name)
             for i in range (1, len(self.jntChain)-2, offset):
                 # MAIN CTRL
                 ctrl = rigFn.constructCTL(self.jntGuideList[i], side=self.side, name="control"+self.name, parent=mainCtrlParent)
@@ -122,13 +125,6 @@ class tail (object):
             # fkCtrlVisibility = mainCtrlList[0].addAttr(longName="curlCtrl", softMinValue=0, defaultValue=1, softMaxValue=1, attrType="short")
             for jnt in (self.jntChain):
                 mmod.connectPlugs(visibility, jnt.visibility)
-            # # Switchin visibility off from MainCtrls
-            # subtractNode = mNode.plusMinusAverage(side=self.side, name=self.name+"ReverseVisibilitySwitch")
-            # subtractNode.operation = 2
-            # mc.setAttr(subtractNode.name+".input1D[0]", 1)
-            # mmod.connectAttr(mainCtrlList[0].name+".secondaryCtl", subtractNode.name+".input1D[1]")
-            # mmod.connectAttr(subtractNode.name+".output1D", mainCtrlList[1].name+".visibility")
-
             # Curl Control Visibility
             for ctrl in curlCtrlList:
                 mmod.connectPlugs(curlCtrlVisibility, ctrl.visibility)

@@ -1,9 +1,23 @@
 import maya.cmds as mc
 import functions as fn
 import mayaModule as mmod
+import mayaNode as mNode
 
 
 
+def parentConstraint(targetParent, objParent, object):
+    # Matrix Mult
+    side = fn.concat_str(str1 = object, s1_begin=0, s1_end=len(object)-1 )
+    matrix = mNode.multMatrix(side=side, name="transformationMatrix")
+    mmod.connectAttr(targetParent+".worldMatrix", matrix.name+".matrixIn[0]")
+    mmod.connectAttr(objParent+".worldInverseMatrix", matrix.name+".matrixIn[1]")
+    decomposeMatrix = mNode.decomposeMatrix(side=side, name="transformation")
+    mmod.connectAttr(matrix.getMatrixSum(), decomposeMatrix.getInputMatrix())
+    mmod.connectAttr(decomposeMatrix.getOutputTranslate(), object+".translate")
+    mmod.connectAttr(decomposeMatrix.getOutputRotate(), object+".rotate")
+    mmod.connectAttr(decomposeMatrix.getOutputScale(), object+".scale")
+
+    
 def constructJNT(guideJNT, side="C", name="name", parent=None):
     '''
     Function that creates the following hierarchy 

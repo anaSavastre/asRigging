@@ -16,6 +16,7 @@ class foot(object):
         self.legRoot = root
         self.ankleCtrl = root.effectorCtrl
         self.parent = parent
+        self.root = root
         self.hook = hook
         self.footSegments = ["Ankle", "Tarsals", "Toes"]
         self.footName="foot"
@@ -40,9 +41,30 @@ class foot(object):
             # Making Scaleable
             mmod.connectAttr(fn.getParent(self.hook)+".scale", fn.getParent(self.footFKJnt[0])+".scale")
             
-            # 
+            # Connecting Ankle Twist to Ribbon Leg
+            self.twistLeg()
+
             # DELETING GUIDES
             mc.delete(footJnt)
+
+    def twistConnection(self, targetParent, object):
+        objParent = fn.getParent(object)
+        # Matrix Mult
+        side = fn.concat_str(str1 = object, s1_begin=0, s1_end=len(object)-1 )
+        matrix = mNode.multMatrix(side=side, name="transformationMatrix")
+        # GETTING LOCAL OFFSET
+        localOffset = fn.getLocalOffset(objParent, object)
+        mc.setAttr(matrix.name+".matrixIn[0]", [localOffset(i, j) for i in range(4) for j in range(4)], type="matrix")
+
+
+        mmod.connectAttr(targetParent+".worldMatrix", matrix.name+".matrixIn[1]")
+        mmod.connectAttr(objParent+".worldInverseMatrix", matrix.name+".matrixIn[2]")
+        decomposeMatrix = mNode.decomposeMatrix(side=side, name="transformation")
+        mmod.connectAttr(matrix.getMatrixSum(), decomposeMatrix.getInputMatrix())
+        mmod.connectAttr(decomposeMatrix.name+".outputRotateX", object+".rotateX")
+    def twistLeg(self):
+        self.twistConnection(self.footFKJnt[0].name, self.root.tibiaRibbon.guides[-1].name )
+      
 
 
     def footRoll_setUp(self, footJNTList=[], parent=None):

@@ -62,7 +62,7 @@ class tail (object):
             globalCurlCtrl = rigFn.constructCTL(self.jntGuideList[1], side=self.side, name=self.name+"globalCurlCtrl", parent=curlCtrlParent)
             fn.scaleShapePoints(globalCurlCtrl.name, 1.5)
             # Constraining Global Curl to root
-            mc.parentConstraint(self.root.name, globalCurlCtrl.name, mo=True)
+            mc.parentConstraint(self.root.name, fn.getParent(globalCurlCtrl.name), mo=True)
             # rigFn.parentConstraint(self.root.name, fn.getParent(globalCurlCtrl.name), globalCurlCtrl.name)
             for i in range (1, len(self.jntChain)-2, offset):
                 # MAIN CTRL

@@ -1,4 +1,5 @@
 import maya.cmds as mc
+import maya.OpenMaya as om
 import os
 import sys
 import math as math
@@ -8,9 +9,22 @@ import mayaNode as mNode
 
 ##########################    Functions    ##########################
 
-def parentConstraint(targetParent, objParent, object):
-    # Matrix Mult
-    matrix = mN
+# ref: https://bindpose.com/maya-matrix-based-functions-part-1-node-based-matrix-constraint/
+
+def getDagPath(node=None):
+    sel = om.MSelectionList()
+    sel.add(node)
+    d = om.MDagPath()
+    sel.getDagPath(0, d)
+    return d
+
+def getLocalOffset(parent, child):
+    parentWorldMatrix = getDagPath(parent).inclusiveMatrix()
+    childWorldMatrix = getDagPath(child).inclusiveMatrix()
+
+    return childWorldMatrix * parentWorldMatrix.inverse()
+
+
 
 
 def deleting_pointConstraint(obj):

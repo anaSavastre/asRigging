@@ -63,7 +63,7 @@ class blendFKIK(object):
             self.bindJnt_setUp(jntList=self.jntGuideList, parent=self.root) 
 
             # Creating settingsCtrl
-            self.settingsCtrl(jntList=self.jntGuideList, parent=self.bindJntChain[2])
+            self.settingsCtrlSetUp(jntList=self.jntGuideList, parent=self.bindJntChain[2])
            
             for ikJnt, fkJnt, bindJnt, segment in zip(self.IKjntChain, self.FKjntChain, self.bindJntChain, self.segments):
 
@@ -141,7 +141,7 @@ class blendFKIK(object):
             # DELETING GUIDES
             mc.delete(jnt)
 
-    def settingsCtrl(self, jntList=[], parent=None):
+    def settingsCtrlSetUp(self, jntList=[], parent=None):
         settingsCtrlGrp = mmod.transform(side=self.side, name=self.name+"Settings", parent=self.bindJntChain[2] )
         # Position Group
         pozX = mc.xform(settingsCtrlGrp, ws=True, q=True, t=True)[0]

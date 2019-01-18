@@ -9,6 +9,7 @@ def parentConstraint(targetParent, objParent, object):
     # Matrix Mult
     side = fn.concat_str(str1 = object, s1_begin=0, s1_end=len(object)-1 )
     matrix = mNode.multMatrix(side=side, name="transformationMatrix")
+    
     mmod.connectAttr(targetParent+".worldMatrix", matrix.name+".matrixIn[0]")
     mmod.connectAttr(objParent+".worldInverseMatrix", matrix.name+".matrixIn[1]")
     decomposeMatrix = mNode.decomposeMatrix(side=side, name="transformation")

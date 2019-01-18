@@ -1,6 +1,8 @@
 
 import maya.cmds as mc
 import mayaModule as mmod
+import mayaNode as mNode
+import functions as fn
 import blendFKIK as blendFKIK
 import ribbonLimbs as ribbonLimbs
 
@@ -33,3 +35,24 @@ class arm(blendFKIK.blendFKIK):
         for humerusControl, radiusControl  in zip(self.humerusRibbon.guides[1:-1], self.radiusRibbon.guides[1:-1]):
             mmod.connectPlugs(ribbonVisibility, humerusControl.visibility)
             mmod.connectPlugs(ribbonVisibility, radiusControl.visibility)
+        # WRIST TWIST TO RIBBON RADIUS
+        self.twistArm()
+    def twistConnection(self, targetParent, object):
+        objParent = fn.getParent(object)
+        # Matrix Mult
+        side = fn.concat_str(str1 = object, s1_begin=0, s1_end=len(object)-1 )
+        matrix = mNode.multMatrix(side=side, name="transformationMatrix")
+        # GETTING LOCAL OFFSET
+        localOffset = fn.getLocalOffset(objParent, object)
+        mc.setAttr(matrix.name+".matrixIn[0]", [localOffset(i, j) for i in range(4) for j in range(4)], type="matrix")
+
+
+        mmod.connectAttr(targetParent+".worldMatrix", matrix.name+".matrixIn[1]")
+        mmod.connectAttr(objParent+".worldInverseMatrix", matrix.name+".matrixIn[2]")
+        decomposeMatrix = mNode.decomposeMatrix(side=side, name="transformation")
+        mmod.connectAttr(matrix.getMatrixSum(), decomposeMatrix.getInputMatrix())
+        mmod.connectAttr(decomposeMatrix.name+".outputRotateX", object+".rotateX")
+    def twistArm(self):
+        # self.twistConnection(self.effectorCtrl.name, self.radiusRibbon.guides[-1].name )
+        mc.orientConstraint(self.effectorCtrl.name, self.radiusRibbon.guides[-1].name, mo=True)
+      

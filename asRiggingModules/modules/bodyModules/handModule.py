@@ -230,6 +230,8 @@ class hand():
         decomMatrix = mNode.decomposeMatrix(side=self.side, name="rootGlobalTransformations")
         mmod.connectAttr(self.hook.name+".worldMatrix", decomMatrix.getInputMatrix())
         mmod.connectAttr(decomMatrix.getOutputRotate(),  self.handFingersGRP.name+".rotate")
+
+       
         # DELETING GUIDES
         mc.delete(handJnt)
     def connectToWristMovement(self):
@@ -244,9 +246,10 @@ class hand():
         mmod.connectAttr(self.root.bindJntChain[-1].name+".worldMatrix", decopMatrix.getInputMatrix())
         mmod.connectPlugs(decopMatrix.outputTranslate, self.handGrp.translate)
         # CONNECTING ROTATION
-        additive = mNode.animBlendNodeAdditiveDA(side=self.side, name=self.name+"ReverseRotationX")
-        mmod.connectAttr(self.root.effectorCtrl.name+".rotateX", additive.getInputA())
-        additive.weightA = -1
-        mmod.connectAttr(additive.getOutput(), self.handGrp.name+".rotateZ")
+        # additive = mNode.animBlendNodeAdditiveDA(side=self.side, name=self.name+"ReverseRotationX")
+        # mmod.connectAttr(self.root.effectorCtrl.name+".rotateX", additive.getInputA())
+        # additive.weightA = -1
+        # mmod.connectAttr(additive.getOutput(), self.handGrp.name+".rotateZ")
+        mmod.connectAttr(self.root.effectorCtrl.name+".rotateX", self.handGrp.name+".rotateX")
         mmod.connectAttr(self.root.effectorCtrl.name+".rotateY", self.handGrp.name+".rotateY")
-        mmod.connectAttr(self.root.effectorCtrl.name+".rotateZ", self.handGrp.name+".rotateX")
+        mmod.connectAttr(self.root.effectorCtrl.name+".rotateZ", self.handGrp.name+".rotateZ")

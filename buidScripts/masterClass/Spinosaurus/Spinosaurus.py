@@ -257,6 +257,14 @@ class spinosaurus(loadFn.rigSceneSetup):
                                 toeRotationAttr=s+"_footRoll_configParameters*_GRP.toeRest")
             # self.addToePosesAttr(self.ankleCtrl)
 
+        # SAIL JOINTS
+        sails = fn.getChildren("C_sailJnt_GRP")
+        mc.parent (sails[0], sails[1], fn.getChildren( self.m_spine.pelvisCtl)[1])
+        # mc.parent (sails[2], "C_bindSpine06_JNT")
+        # mc.parent (sails[3], "C_bindSpine09_JNT")
+        # mc.parent (sails[4], "C_bindSpine011_JNT")
+        mc.parent(sails[2],sails[3],sails[4], "C_bindSpine08_JNT")#"C_spineIKmiddle05_CTL")
+        mc.parent (sails[5], fn.getChildren( self.m_spine.chestCtl)[1])
 
         ########################################################################################################################################################################################################################                              
         #        FACE 

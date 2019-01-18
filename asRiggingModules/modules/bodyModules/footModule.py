@@ -63,7 +63,8 @@ class foot(object):
         mmod.connectAttr(matrix.getMatrixSum(), decomposeMatrix.getInputMatrix())
         mmod.connectAttr(decomposeMatrix.name+".outputRotateX", object+".rotateX")
     def twistLeg(self):
-        self.twistConnection(self.footFKJnt[0].name, self.root.tibiaRibbon.guides[-1].name )
+        # self.twistConnection(self.footFKJnt[0].name, self.root.tibiaRibbon.guides[-1].name )
+        mc.orientConstraint(self.footFKJnt[0].name, self.root.tibiaRibbon.guides[-1].name, mo=True)
       
 
 

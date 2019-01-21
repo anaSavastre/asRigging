@@ -4,7 +4,6 @@ import mayaModule as mmod
 import mayaNode as mNode
 
 
-
 def parentConstraint(targetParent, objParent, object):
     # Matrix Mult
     side = fn.concat_str(str1 = object, s1_begin=0, s1_end=len(object)-1 )

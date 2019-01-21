@@ -40,7 +40,7 @@ class spine(object):
         fn.rotateShapePoints(self.cog.name, rotationVector=[0, 0, 90], pivot=mc.xform(self.guides[-1], q=True, ws=True, t=True))
         # 1.3. Spine FK
         self.fkCtl1 = rigFn.constructCTL(self.guides[len(self.guides)/2-2], name = self.name+"FKCtl", parent = self.cog)
-        self.fkCtl2 = rigFn.constructCTL(self.guides[len(self.guides)/2+2], name = self.name+"FKCtl", parent = self.fkCtl1)
+        self.fkCtl2 = rigFn.constructCTL(self.guides[len(self.guides)/2+1], name = self.name+"FKCtl", parent = self.fkCtl1)
         # 1.4. CHEST
         self.chestCtl = rigFn.constructCTL(self.guides[-1], name="chest", parent = self.fkCtl2)
 

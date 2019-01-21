@@ -41,7 +41,7 @@ def saveSkinWeight(weightsFile="skinWeights", path="D:/Bournemouth University/as
     else:
         # GET VERSION NUMBER
         version = getVersion(path)
-
+ 
         mc.deformerWeights(weightsFile+version+".xml", path=weightsFile, ex=True, deformer=deformerList)
 
 # saveSkinWeight()

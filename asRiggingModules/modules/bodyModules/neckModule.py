@@ -45,6 +45,15 @@ class neck(object):
         # Attaching Joints
         self.attachJoinnts(parent=self.neckGlobalGrp)
 
+        # SPACE SWITCH FOR MIDDLE CONTROL
+        self.middleCtrl.createSpaceSwitch()
+        self.middleCtrl.addSpaceSwitch(spaceName= "chest", parentObject = self.root)
+        
+        # SPACE SWITCH FOR HEAD CONTROL
+        self.headCtrl.createSpaceSwitch()
+        self.headCtrl.addSpaceSwitch(spaceName= "middle", parentObject = self.middleCtrl)
+
+
         # DELETING GUIDES
         mc.delete(self.guides)
     
@@ -142,6 +151,8 @@ class neck(object):
             # END
             mc.parent(self.surfaceOfsPoints[3], self.surfaceOfsPoints[4])
             mc.parentConstraint(self.headCtrl, self.surfaceOfsPoints[4], mo=True)
+
+            self.middleCtrl = middleCtl
             # # INBETWEEN POINTS
             # self.influenceBlend(middleCtl, self.surfaceOfsPoints[0], self.surfaceOfsPoints[1])
             # self.influenceBlend(middleCtl, self.surfaceOfsPoints[4], self.surfaceOfsPoints[3])

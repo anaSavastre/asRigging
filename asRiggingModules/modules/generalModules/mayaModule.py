@@ -2,6 +2,7 @@ import maya.cmds as mc
 import maya.OpenMaya as om
 
 import functions as fn
+import mayaNode as mNode
 
 def getParent(grp):
     '''
@@ -86,7 +87,8 @@ class transform(object):
             return mObj
         except:
             return None
-   
+    
+  
     # Translate
     def getTranslate(self):
         return mc.getAttr(self.name+".translate")
@@ -258,6 +260,30 @@ class transform(object):
     def __str__(self):
         return self.name
 
+    def createSpaceSwitch (self, attrName = "spaceSwitch", enumName="world"):
+        self.spaceSwitch = attrName
+        self.enumName = enumName
+        self.spaceIndex = 0
+        mc.addAttr(self.name, ln = attrName, enumName = self.enumName, at="enum", k=True)
+        return self.name+"."+self.spaceSwitch
+
+    def addSpaceSwitch(self, spaceName = "space", parentObject=None):
+        mc.addAttr (self.name+"."+self.spaceSwitch, e=True, enumName=self.enumName+":"+spaceName)
+        self.enumName += ":"+spaceName
+        self.spaceIndex += 1
+        if (parentObject!=None):
+            constraint = mc.parentConstraint(parentObject, fn.getParent(self.name), mo=True)[0]
+            constraintWeightAlias = mc.parentConstraint(constraint, q=True, wal=True)[self.spaceIndex-1]
+            conditionNode = mNode.condition(side=self.side, name="spaceSwitch"+spaceName.capitalize())
+            connectAttr(self.name+"."+self.spaceSwitch, conditionNode.getFirstTerm())
+            conditionNode.secondTerm = self.spaceIndex
+            mc.setAttr(conditionNode.name+".colorIfTrueR", 1)
+            mc.setAttr(conditionNode.name+".colorIfFalseR", 0)
+            connectAttr(conditionNode.name+".outColorR", constraint+"."+constraintWeightAlias)
+            
+
+
+
 
 class locator(transform):
 
@@ -360,4 +386,8 @@ class circle(transform):
 
         # DELETING HISTORY
         mc.delete(self.name, ch=True)
-   
+
+
+ # NEW SCENE
+
+

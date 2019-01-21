@@ -82,13 +82,14 @@ class spinosaurus(loadFn.rigSceneSetup):
         
         aimEffectorObj = mmod.transform(side =side, name="tarsalAimAnkleObj", parent= self.m_leg.effectorCtrl)
         upEffectorObj = mmod.transform(side =side, name="tarsalUpAnkleObj", parent=self.m_leg.effectorCtrl)
+        fn.align(side+"_footRollDuplicateTarsal011_JNT", upEffectorObj)
         
         
         mc.parent(aimEffectorObj, upEffectorObj, globalEffectorAimGrp)
-        mc.xform(upEffectorObj, t=[0, 0, 50], r=True)
-        mc.makeIdentity([aimEffectorObj, upEffectorObj], a=True, t=True, r=True)
+        # mc.xform(upEffectorObj, t=[0, 0, 50], r=True)
+        mc.makeIdentity([aimEffectorObj], a=True, t=True, r=True)
 
-        mc.aimConstraint(aimEffectorObj, footJnt1[2], aim=[1, 0, 0], u=[0, 1, 0], worldUpType="object", worldUpObject=upEffectorObj,  mo=True)
+        mc.aimConstraint(aimEffectorObj, footJnt1[2], aim=[1, 0, 0], u=[0, 1, 0], worldUpType="objectrotation", worldUpVector=[0, 1, 0], worldUpObject = upEffectorObj,  mo=True)
         
         # CONNECTING ROTATION
         addNode = mNode.animBlendNodeAdditiveDA(side =side, name="aimAddRotation")
@@ -108,7 +109,7 @@ class spinosaurus(loadFn.rigSceneSetup):
         addTranslation = mNode.plusMinusAverage(side =side, name="aimGlobalMove")
         # CONNECTIONS
         mmod.connectAttr(self.ankleCtrl.name+".translate", clampAnkle.getInput())
-        mc.setAttr(clampAnkle.getMax(), 0, 100, 75, type="double3")
+        mc.setAttr(clampAnkle.getMax(), 0, 100, 10, type="double3")
         mc.setAttr(clampAnkle.getMin(), 0, -50, -10, type="double3")
         mmod.connectAttr(self.m_spine.pelvisCtl.name+".translate", multPelvis.getInput1())
         mc.setAttr(multPelvis.getInput2(), 0.5, 0.5, 0.5, type="double3")
@@ -255,31 +256,85 @@ class spinosaurus(loadFn.rigSceneSetup):
                                 tarsalLockAttr=s+"_footRoll_animParameters*_GRP.tarsalLock", straightenAttr=s+"_footRoll_animParameters*_GRP.straighten",
                                 tarsalRotationAttr=s+"_footRoll_configParameters*_GRP.tarsalRest", 
                                 toeRotationAttr=s+"_footRoll_configParameters*_GRP.toeRest")
-            # self.addToePosesAttr(self.ankleCtrl)
+            # # self.addToePosesAttr(self.ankleCtrl)
 
-        # SAIL JOINTS
-        sails = fn.getChildren("C_sailJnt_GRP")
-        mc.parent (sails[0], sails[1], fn.getChildren( self.m_spine.pelvisCtl)[1])
-        # mc.parent (sails[2], "C_bindSpine06_JNT")
-        # mc.parent (sails[3], "C_bindSpine09_JNT")
-        # mc.parent (sails[4], "C_bindSpine011_JNT")
-        mc.parent(sails[2],sails[3],sails[4], "C_bindSpine08_JNT")#"C_spineIKmiddle05_CTL")
-        mc.parent (sails[5], fn.getChildren( self.m_spine.chestCtl)[1])
-
+        self.sailsSetUp(side="C")
+        # CLEAN UP
+        mc.delete("L_foot00_JNT", "R_foot00_JNT")
         ########################################################################################################################################################################################################################                              
         #        FACE 
         ########################################################################################################################################################################################################################
         # CREATING THE JAW
         self.m_jaw = jawMod.jaw(jawJnt="C_jaw00_JNT", root=self.m_neck.headCtrl)
-   
-
-
-
-
-
+        
        
         # TEMPORARY
-        mc.hide("C_geometry01_GRP", "L_foot00_JNT", "R_foot00_JNT")
+        mc.hide("C_geometry01_GRP")
+
+
+   
+    def connectTransformations(self, targetParent, objParent, object):
+        # Matrix Mult
+        side = fn.concat_str(str1 = object, s1_begin=0, s1_end=len(object)-1 )
+        matrix = mNode.multMatrix(side=side, name="transformationMatrix")
+        rotationX = mNode.animBlendNodeAdditiveDA(side=side, name="clampRotationX")
+        rotationY = mNode.animBlendNodeAdditiveDA(side=side, name="clampRotationY")       
+        rotationZ = mNode.animBlendNodeAdditiveDA(side=side, name="clampRotationZ")
+        clampTranslation = mNode.multiplyDivide(side=side, name="clampTranslation")
+        mmod.connectAttr(targetParent+".worldMatrix", matrix.name+".matrixIn[0]")
+        mmod.connectAttr(objParent+".worldInverseMatrix", matrix.name+".matrixIn[1]")
+        decomposeMatrix = mNode.decomposeMatrix(side=side, name="transformation")
+        mmod.connectAttr(matrix.getMatrixSum(), decomposeMatrix.getInputMatrix())
+
+        mmod.connectAttr(decomposeMatrix.getOutputTranslate(), clampTranslation.getInput1())
+        mmod.connectAttr(decomposeMatrix.name+".outputRotateX", rotationX.getInputA())
+        mmod.connectAttr(decomposeMatrix.name+".outputRotateY", rotationY.getInputA())
+        mmod.connectAttr(decomposeMatrix.name+".outputRotateZ", rotationZ.getInputA())
+        mmod.connectAttr (rotationX.getOutput(), object+".rotateX")
+        mmod.connectAttr (rotationY.getOutput(), object+".rotateY")
+        mmod.connectAttr (rotationZ.getOutput(), object+".rotateZ")
+        
+        mmod.connectAttr (clampTranslation.getOutput(), object+".translate")
+        # mmod.connectAttr(decomposeMatrix.getOutputTranslate(), object+".translate")
+        # mmod.connectAttr(decomposeMatrix.getOutputRotate(), object+".rotate")
+        mmod.connectAttr(decomposeMatrix.getOutputScale(), object+".scale")
+        return [rotationX, rotationY, rotationZ], clampTranslation
+
+    def middleSailSetUp(self, parent, joint, side, spineJnt):
+        sail02Grp = mmod.transform(side=side, name="sail02", type="GRP", parent=spineJnt)
+        mc.parent(sail02Grp, parent)
+        
+        clampRot, clampTrans = self.connectTransformations(spineJnt, parent.name, sail02Grp.name)
+
+        mc.parent (joint, sail02Grp)
+      
+
+        for node in clampRot:
+            mmod.connectAttr(self.m_spine.cog.name + ".sailRotationCoef", node.getWeightA())
+        # mmod.connectAttr(self.m_spine.cog.name + ".sailTranslationCoef", clampTrans.name+".input2X")
+        mmod.connectAttr(self.m_spine.cog.name + ".sailTranslationCoef", clampTrans.name+".input2Y")
+        mmod.connectAttr(self.m_spine.cog.name + ".sailTranslationCoef", clampTrans.name+".input2Z")
+
+    def sailsSetUp(self, side="C"):
+        # SAIL JOINTS
+        sails = fn.getChildren("C_sailJnt_GRP")
+        mc.parent (sails[0], sails[1], fn.getChildren( self.m_spine.pelvisCtl)[1])
+        middleSpineGlobalGrp = mmod.transform(side=side, name="sailMiddle", type="GRP", parent="C_spineBindJoints010_GRP")
+        # Adding Attr
+        rotCoef = self.m_spine.cog.addAttr(longName='sailRotationCoef', attrType='double' )
+        transCoef = self.m_spine.cog.addAttr(longName='sailTranslationCoef', attrType='double' )
+        self.middleSailSetUp(parent= middleSpineGlobalGrp, joint = sails[2], side = side, spineJnt = "C_bindSpine06_JNT")
+        self.middleSailSetUp(parent= middleSpineGlobalGrp, joint = sails[3], side = side, spineJnt = "C_bindSpine09_JNT")
+        self.middleSailSetUp(parent= middleSpineGlobalGrp, joint = sails[4], side = side, spineJnt = "C_bindSpine011_JNT")
+
+        # mc.parent(sails[2],sails[3],sails[4], "C_spineIKmiddle05_CTL")#"C_spineIKmiddle05_CTL")
+        mc.parent (sails[5], fn.getChildren( self.m_spine.chestCtl)[1])
+
+
+
+
+
+
 
 
 

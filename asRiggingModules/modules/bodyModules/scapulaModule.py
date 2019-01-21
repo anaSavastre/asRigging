@@ -50,7 +50,10 @@ class scapula(object):
                
             if(scapula.controlGrp==None):
                 scapula.controlGrp  = mmod.transform(name=self.name+"Controller", type="GRP", parent = scapula.rigParent)
-            
+                mc.parentConstraint (self.parent.rootJnt, scapula.controlGrp)
+                # scapula.controlGrp.addSpaceSwitch(spaceName = "root", parentObject=self.parent.rootJnt)
+                # scapula.controlGrp.addSpaceSwitch(spaceName = "chest", parentObject=self.root)
+                # mc.setAttr (spaceSwitch, 1)
             # GETTING GUIDE LIST
             self.jntGuideList = fn.descendentsList(root=self.jntGuide)
 
@@ -91,8 +94,12 @@ class scapula(object):
                 mc.pointConstraint(scapulaCtl, fn.getParent(armJnt.bindJntChain[0]), mo=True)
                 # mc.orientConstraint(scapulaCtl, armJnt.bindJntChain[0], mo=True)
 
-            # Constraining scapula Ctrl to Chest
-            mc.parentConstraint(self.root, fn.getParent(scapulaFKCtl.name), mo=True)            
+            # # Constraining scapula Ctrl to Chest
+            # mc.parentConstraint(self.root, fn.getParent(scapulaFKCtl.name), mo=True)     
+            spaceSwitch = scapulaFKCtl.createSpaceSwitch()
+            scapulaFKCtl.addSpaceSwitch(spaceName = "root", parentObject=self.parent.rootJnt)
+            scapulaFKCtl.addSpaceSwitch(spaceName = "chest", parentObject=self.root)
+            mc.setAttr (spaceSwitch, 1)       
 
 
         # DELETING GUIDES

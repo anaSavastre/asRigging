@@ -37,6 +37,12 @@ class arm(blendFKIK.blendFKIK):
             mmod.connectPlugs(ribbonVisibility, radiusControl.visibility)
         # WRIST TWIST TO RIBBON RADIUS
         self.twistArm()
+
+    
+        # SPACE SWITCH
+        self.effectorCtrl.createSpaceSwitch()
+        self.effectorCtrl.addSpaceSwitch (spaceName = "chest", parentObject = self.root)
+
     def twistConnection(self, targetParent, object):
         objParent = fn.getParent(object)
         # Matrix Mult

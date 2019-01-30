@@ -1,6 +1,7 @@
 import maya.cmds as mc
+import random as rand
 
-def randomAnimation (animationControls = None, startFrame=0, endFrame=10, frameDencity=3):
+def randomAnimation (animationControls = None, startFrame=0, endFrame=10, frameDensity=3):
     '''
     This is a function designes to create random animation to a set of control objects
 
@@ -12,9 +13,19 @@ def randomAnimation (animationControls = None, startFrame=0, endFrame=10, frameD
     '''
 
     for animControl in animationControls:
-        for frame in range (stratFrame, endFrame, frameDensity):
-            print frame
+        for frame in range (startFrame, endFrame+1, frameDensity):
+            currentTranslation = mc.xform(animControl, q=True, ws=True, t=True)
+            currentTranslation[0] += rand.random()*(1-frame%2)*frame/2
+            currentTranslation[1] += rand.random()*(1-frame%2)*frame/2
+            currentTranslation[2] += rand.random()*(1-frame%2)*frame/2
+            currentRotation = mc.xform(animControl, q=True, ws=True, ro=True)
+            currentRotation[0] += rand.random()*(1-frame%2)*frame/2
+            currentRotation[1] += rand.random()*(1-frame%2)*frame/2
+            currentRotation[2] += rand.random()*(1-frame%2)*frame/2
+            print frame%2
+            mc.xform(animControl, t=currentTranslation, ro=currentRotation, ws=True)
+            mc.setKeyframe(animControl, time=frame)
+            
 
-
-randomAnimation("polySphere1", endFrame = 10, frameDencity=1)
+randomAnimation(["pSphere1"], endFrame = 100, frameDensity=1)
 

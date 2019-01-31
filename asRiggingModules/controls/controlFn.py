@@ -118,7 +118,7 @@ def pasteCtrlShape(ctrl, copied, degree, form):
     
     mc.delete(fn.getChildren(ctrl)[0])
 
-# ctrl, degree, form = copyCtrlShape("C_centerOfGravity00_CTLShape")
-# pasteCtrlShape("nurbsCircle1", ctrl, degree, form)
+# ctrl, degree, form = copyCtrlShape("L_scapulaShape01_CTL")
+# pasteCtrlShape("R_scapula01_CTL", ctrl, degree, form)
 
 

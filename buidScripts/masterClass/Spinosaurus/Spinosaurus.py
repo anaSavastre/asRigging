@@ -15,19 +15,6 @@ import loadFn
 import socket
 
 
-
-# TEMP
-import mayaModule as mmod
-import functions as fn
-import mayaNode as mNode
-import rigFn as rigFn 
-import mayaNode as node
-import asNodes as asNode
-import controlFn as ctlFn
-import blendFKIK as blendFKIK
-import ribbonLimbs as ribbonLimbs
-
-
 # Body Modules
 import spineModule as spineMod
 import neckModule as neckMod
@@ -82,7 +69,7 @@ class spinosaurus(loadFn.rigSceneSetup):
         
         aimEffectorObj = mmod.transform(side =side, name="tarsalAimAnkleObj", parent= self.m_leg.effectorCtrl)
         upEffectorObj = mmod.transform(side =side, name="tarsalUpAnkleObj", parent=self.m_leg.effectorCtrl)
-        fn.align(side+"_footRollDuplicateTarsal011_JNT", upEffectorObj)
+        fn.align(side+"_footRollDuplicateTarsal*_JNT", upEffectorObj)
         
         
         mc.parent(aimEffectorObj, upEffectorObj, globalEffectorAimGrp)

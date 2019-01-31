@@ -14,14 +14,16 @@ import ribbon as ribbon
 # # for side in ["L", "R"]:
 # #     rigFn.constructCTL(side+"_upperEyeLid00_JNT", side=side, name="upperEyeLid", parent="C_head00_JNT" )
 
-guides = [u'C_bindLowerlip07_JNT', u'C_bindLowerlip05_JNT', u'C_bindLowerlip03_JNT', u'C_bindLowerlip010_JNT', u'C_bindLowerlip01_JNT', u'C_bindLowerlip00_JNT', u'C_bindLowerlip015_JNT', u'C_bindLowerlip014_JNT', u'C_bindLowerlip013_JNT', u'C_bindLowerlip012_JNT', u'C_bindLowerlip09_JNT']
+guides =[u'R_bindEyebrowribbon03_JNT', u'R_bindEyebrowribbon01_JNT', u'R_bindEyebrowribbon05_JNT']
+
+
 
 # for i in range (9):
 # 	guides.append("C_tongueGuides0"+str(i)+"_LOC")
 
 
 for guide in guides:
-    rigFn.constructCTL(guide, side="C", name="upperLip", parent="C_head00_JNT", ctrlScale=10 )
+    rigFn.constructCTL(guide, side="R", name="eyeBrow", parent="C_head00_JNT", ctrlScale=10 )
 
 
 class ribbon(object):

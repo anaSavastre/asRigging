@@ -14,6 +14,9 @@ import maya.cmds as mc
 import loadFn 
 import socket
 
+import rigFn as rigFn
+import mayaModule as mmod
+import mayaNode as mNode
 
 # Body Modules
 import spineModule as spineMod

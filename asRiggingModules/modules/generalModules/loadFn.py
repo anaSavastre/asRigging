@@ -79,7 +79,6 @@ class rigSceneSetup(object):
         '''
         files= os.listdir(path)
         latestFile = sorted(files)[-1];
-        
         mc.file( path+"/"+latestFile, i= True, type= "mayaAscii", usingNamespaces= False, f=True)
 
 
@@ -129,7 +128,7 @@ class rigSceneSetup(object):
         
         # IMITIALIZATION
         modelGrp = "C_"+rigName+"Model_GRP"
-        modelFile = projectEnv+"models/"+rigName+"/"+rigName+".ma"
+        modelFile = projectEnv+"models/"+rigName
         # modelFile = projectEnv+"models/"+rigName+"/scenes/s1_v.003.ma"
 
         mmod.transform.elemIndex = 0
@@ -141,7 +140,8 @@ class rigSceneSetup(object):
         mc.file(new = True, f=True)
         
         # IMPORT MODEL
-        mc.file(modelFile, i= True, type= "mayaAscii", usingNamespaces= False, f=True)
+        self.loadLatestFile(modelFile)
+        # mc.file(modelFile, i= True, type= "mayaAscii", usingNamespaces= False, f=True)
 
         # MODEL PARAMETERS
         geoCenter = self.getObjCenter()

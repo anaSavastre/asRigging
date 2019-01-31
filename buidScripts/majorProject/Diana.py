@@ -67,8 +67,15 @@ class diana(loadFn.rigSceneSetup):
 
 
         # CLEAN UP
-        # mc.select("*JNT")
-        # mc.setAttr()
+        mc.select("*JNT")
+        jntList = mc.ls(sl=True)
+        for jnt in jntList:
+            mc.setAttr(jnt+".radius", 0.1)
+
+        mc.select ("*MLFT")
+        matLoftList = mc.ls(sl=True)
+        for node in matLoftList:
+            mc.setAttr(node+".widthOffset", 0.05)
         # TEMPORARY
         mc.hide("C_geometry01_GRP")
 

@@ -91,7 +91,7 @@ class ribbon(object):
             self.matloftNode = asNode.asMatloft(side=self.side, name=self.name+"Surface")
             # REVOLVE ORDER
             mc.setAttr(self.matloftNode.name+".revolveVector", self.revolveVector[0], self.revolveVector[1], self.revolveVector[2], type="double3")
-
+            
             for k, obj in enumerate(self.guides):
                 mc.connectAttr(obj.name+".worldMatrix", self.matloftNode.name+".inputMatrix["+str(k)+"]")
 

@@ -41,7 +41,7 @@ class neck(object):
         # Extracting the forward and up vectors
         self.getRivetAlignmentVectors()
         # Create Surface Loft Guides
-        self.createLoftSurface(self.guides)
+        self.createLoftSurface(self.guides[:-1])
         # Attaching Joints
         self.attachJoinnts(parent=self.neckGlobalGrp)
 

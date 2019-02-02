@@ -128,7 +128,7 @@ def constructCTL(guideJNT, side="C", name="name", parent=None, ctrlScale=1):
     ctl = mmod.circle(side=side, name=name, parent=ofs)
     # Scaling Ctrl
     try:
-        fn.scaleShapePoints(ctl.name, mc.getAttr(guideJNT+".radius"))
+        fn.scaleShapePoints(ctl.name, mc.getAttr(guideJNT+".radius")/2)
         fn.rotateShapePoints(ctl.name, rotationVector=mc.xform(guideJNT, q=True, ws=True, ro=True), pivot=mc.xform(guideJNT, q=True, ws=True, t=True))
     except:
         # Scaling Ctrl
@@ -167,7 +167,7 @@ def createFKChain(jntList, side="C", name="name", segmentList=[], parent=None):
                 break
             circle = mmod.circle( side=side, name=name+"_"+segmentList[i], parent=None)
             # Scaling Ctrl
-            fn.scaleShapePoints(circle.name, mc.getAttr(jnt+".radius"))
+            fn.scaleShapePoints(circle.name, mc.getAttr(jnt+".radius")/2)
             # fn.rotateShapePoints(circle.name, rotationVector=[90, 0, 0], pivot=mc.xform(jnt, q=True, ws=True, t=True))
             fn.rotateShapePoints(circle.name, rotationVector=mc.xform(jnt, q=True, ws=True, ro=True), pivot=mc.xform(jnt, q=True, ws=True, t=True))
 
@@ -186,7 +186,7 @@ def createFKChain(jntList, side="C", name="name", segmentList=[], parent=None):
            
             circle = mmod.circle( side=side, name=name, parent=None)
             # Scaling Ctrl
-            fn.scaleShapePoints(circle.name, mc.getAttr(jnt+".radius"))
+            fn.scaleShapePoints(circle.name, mc.getAttr(jnt+".radius")/2)
             # fn.rotateShapePoints(circle.name, rotationVector=[90, 0, 0], pivot=mc.xform(jnt, q=True, ws=True, t=True))
             fn.rotateShapePoints(circle.name, rotationVector=mc.xform(jnt, q=True, ws=True, ro=True), pivot=mc.xform(jnt, q=True, ws=True, t=True))
 

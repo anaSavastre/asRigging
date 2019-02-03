@@ -1,5 +1,5 @@
 import maya.cmds as mc
-import finctions as fn
+import functions as fn
 import rigFn
 class clavicle(object):
     def __init__(self, side="C", name="clavicle", clavicleJnt=None, parent=None, root=None):

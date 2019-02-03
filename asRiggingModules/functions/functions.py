@@ -9,6 +9,9 @@ import mayaNode as mNode
 
 ##########################    Functions    ##########################
 
+##################################### REFERENCE #####################################
+
+
 # ref: https://bindpose.com/maya-matrix-based-functions-part-1-node-based-matrix-constraint/
 
 def getDagPath(node=None):
@@ -25,7 +28,7 @@ def getLocalOffset(parent, child):
     return childWorldMatrix * parentWorldMatrix.inverse()
 
 
-
+##################################### END REFERENCE #####################################
 
 def deleting_pointConstraint(obj):
     ''' This function delets the point constraint from the given obj'''

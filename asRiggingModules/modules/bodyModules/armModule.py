@@ -36,7 +36,7 @@ class arm(blendFKIK.blendFKIK):
             mmod.connectPlugs(ribbonVisibility, humerusControl.visibility)
             mmod.connectPlugs(ribbonVisibility, radiusControl.visibility)
         # WRIST TWIST TO RIBBON RADIUS
-        self.twistArm()
+        # self.twistArm()
 
     
         # SPACE SWITCH

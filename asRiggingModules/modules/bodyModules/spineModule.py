@@ -1,4 +1,5 @@
 import maya.cmds as mc
+import maya.OpenMaya as om
 import functions as fn
 import mayaModule as mmod
 import asNodes as asNode
@@ -36,17 +37,17 @@ class spine(object):
         # 1.2. COG CTRL
         self.cog = rigFn.constructCTL(self.guides[0], name = "COG", parent = self.root)
         fn.scaleShapePoints(self.cog.name, 1.3)
-        fn.rotateShapePoints(self.cog.name, rotationVector=[0, 90, 0], pivot=mc.xform(self.guides[-1], q=True, ws=True, t=True))
+        fn.rotateShapePoints(self.cog.name, rotationVector=[90, 0, 0], pivot=mc.xform(self.guides[-1], q=True, ws=True, t=True))
         # 1.0. PELVIS
         self.pelvisCtl = rigFn.constructCTL(self.guides[0], name = "pelvis", parent = self.cog)
-        fn.rotateShapePoints(self.pelvisCtl.name, rotationVector=[0, 90, 0], pivot=mc.xform(self.guides[-1], q=True, ws=True, t=True))
+        fn.rotateShapePoints(self.pelvisCtl.name, rotationVector=[90, 0, 0], pivot=mc.xform(self.guides[-1], q=True, ws=True, t=True))
 
         # 1.3. Spine FK
         self.fkCtl1 = rigFn.constructCTL(self.guides[len(self.guides)/2-2], name = self.name+"FKCtl", parent = self.cog)
         self.fkCtl2 = rigFn.constructCTL(self.guides[len(self.guides)/2+1], name = self.name+"FKCtl", parent = self.fkCtl1)
         # 1.4. CHEST
         self.chestCtl = rigFn.constructCTL(self.guides[-1], name="chest", parent = self.fkCtl2)
-        fn.rotateShapePoints(self.chestCtl.name, rotationVector=[0, 90, 0], pivot=mc.xform(self.guides[-1], q=True, ws=True, t=True))
+        fn.rotateShapePoints(self.chestCtl.name, rotationVector=[90, 0, 0], pivot=mc.xform(self.guides[-1], q=True, ws=True, t=True))
 
         # 2.0. SPINE RIBBON
         # Bind Joints Groug
@@ -117,10 +118,23 @@ class spine(object):
       
     def attachJoinnts(self, parent=None):
         group = mmod.transform(side=self.side, name=self.name+"BindJnt", type="GRP", parent=parent)
-
-        for i in range (1, len(self.guides)-1):
-            self.createRivet(i, parent=group)
-
+        self.getParameterList()
+        for i in range (0, len(self.guides)):
+            self.createRivet(self.parameterU[i], parent=group)
+    def getParameterList(self):
+        # CreatingCurve fromSurface
+        curveFromSurface = mc.createNode("curveFromSurfaceIso")
+        mmod.connectAttr(self.surface+".worldSpace", curveFromSurface+".inputSurface")
+        curve = mc.createNode("nurbsCurve")
+        mmod.connectAttr(curveFromSurface+".outputCurve", curve+".create")
+        curveFn = om.MFnNurbsSurface(getDagPath("C_ribbonSurface00_SHP"))
+        # GET CURVE DAG PATH
+        curveFn = om.MFnNurbsCurve(fn.getDagPath(curve))
+        step = 1.0/(self.numberOfJoints)
+        self.parameterU = []
+        for i in range (0, self.numberOfJoints+1):
+            self.parameterU.append(curveFn.findParamFromLength(curveFn.length()*step*i))
+        mc.delete(fn.getParent(curve), curveFromSurface)
     def createLoftSurface(self, guides):
         self.surfaceGuides(guides)
         # Create surface from guides
@@ -146,7 +160,7 @@ class spine(object):
             # MIDDLE
             middleCtl = rigFn.constructCTL(self.surfaceOfsPoints[2], name = self.name+"IKmiddle", parent = self.fkCtl1)
             mc.delete(mc.listRelatives(middleCtl.name, c=True)[1])
-            fn.scaleShapePoints(middleCtl.name, mc.getAttr(guides[len(guides)/2]+".radius"))
+            fn.scaleShapePoints(middleCtl.name, mc.getAttr(guides[len(guides)/2]+".radius")/2)
             fn.rotateShapePoints(middleCtl.name, rotationVector=mc.xform(guides[len(guides)/2], q=True, ws=True, ro=True), pivot=mc.xform(guides[len(guides)/2], q=True, ws=True, t=True))
             mc.parent(self.surfaceOfsPoints[2], middleCtl)
 

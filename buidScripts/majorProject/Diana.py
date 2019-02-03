@@ -34,7 +34,7 @@ import legModule as legMod
 import footModule as footMod
 import tailModule as tailMod
 import handModule as handMod
-
+import clavicleModule as clavicleMod
 # Face Module
 import jawModule as jawMod
 # GLOBALS
@@ -59,13 +59,18 @@ class diana(loadFn.rigSceneSetup):
         legMod.resetLegMod()
         armMod.resetArmMod()
         # Creating the spine
-        self.m_spine = spineMod.spine(spineJnt="C_spine00_JNT", root=self.rootJnt, parent=self, revolveVector=[0, 0, 1])
+        self.m_spine = spineMod.spine(spineJnt="C_spine01_JNT", root=self.rootJnt, parent=self, revolveVector=[0, 0, 1])
+        self.m_neck = neckMod.neck (neckJnt="C_neck00_JNT", root=self.m_spine.chestCtl, parent=self, hook=self.m_spine.cog, revolveVector=[1, 0, 0])
+        
 
         side=["L", "R"]
         for s in side:
+            # LEG 
             self.m_leg = legMod.leg(legJnt=s+"_leg00_JNT", side=s, parent=self, root=self.m_spine.pelvisCtl)
-
-
+            self.m_foot = footMod.foot(footJnt=s+"_foot00_JNT", side=s, root=self.m_leg, parent=s+"_bindLeg00_GRP", hook=self.rootJnt)
+            # ARM
+            self.m_clavicle = clavicleMod.clavicle(side=s, clavicleJnt=s+"_clavicle00_JNT", root=self.m_spine.chestCtl)
+            self.m_arm = armMod.arm(side=s, armJnt=s+"_arm00_JNT", parent=self, root=self.m_clavicle.clavicleControl[1])
         # CLEAN UP
         mc.select("*JNT")
         jntList = mc.ls(sl=True)
@@ -75,7 +80,11 @@ class diana(loadFn.rigSceneSetup):
         mc.select ("*MLFT")
         matLoftList = mc.ls(sl=True)
         for node in matLoftList:
-            mc.setAttr(node+".widthOffset", 0.05)
+            mc.setAttr(node+".widthOffset", 1)
+
+        # POSITIONING JOINTS AT RIGHT PLACES
+        # SPINE
+        
         # TEMPORARY
         mc.hide("C_geometry01_GRP")
 

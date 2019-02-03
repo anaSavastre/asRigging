@@ -31,7 +31,7 @@ def saveSkinWeight(weightsFile="skinWeights", path="D:/Bournemouth University/as
     # GET ALL DEFORMERS IN SCENE
     deformerList = mc.ls( typ="skinCluster")
     if (projectEnv):
-        path = projectEnv+"rigging/Spinosaurus/wip/skinWeights"
+        path = projectEnv+"rigging/Diana/wip/skinWeights"
         # GET VERSION NUMBER
         version = getVersion(path)
 

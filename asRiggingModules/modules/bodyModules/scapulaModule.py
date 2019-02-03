@@ -97,7 +97,6 @@ class scapula(object):
             # # Constraining scapula Ctrl to Chest
             # mc.parentConstraint(self.root, fn.getParent(scapulaFKCtl.name), mo=True)     
             spaceSwitch = scapulaFKCtl.createSpaceSwitch()
-            scapulaFKCtl.addSpaceSwitch(spaceName = "root", parentObject=self.parent.rootJnt)
             scapulaFKCtl.addSpaceSwitch(spaceName = "chest", parentObject=self.root)
             mc.setAttr (spaceSwitch, 1)       
 

@@ -48,7 +48,7 @@ def saveSkinWeight(weightsFile="skinWeights", path="D:/Bournemouth University/as
 def loadSkinWeights(weightsFile="skinWeights", path="D:/Bournemouth University/asRigging/tmp/tmpSkinWeights", deformer="skinCluster*"):
 
     if (projectEnv):
-        path = projectEnv+"rigging/Spinosaurus/wip/skinWeights"
+        path = projectEnv+"rigging/Diana/wip/skinWeights"
         # GET FILE
         file = getLatestVersion(path)
 

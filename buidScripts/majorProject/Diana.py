@@ -22,6 +22,13 @@ import sys
 import mayaModule as mmod
 import functions as fn
 import pipeline 
+import asNodes as asNode
+import mayaNode as mNode
+
+
+import rigFn as rigFn
+import mayaNode as node
+
 import controlFn as ctlFn
 
 
@@ -50,6 +57,8 @@ if (hostName == "DESKTOP-PQV0HOV"):
 controlShapesPath = "D:/Bournemouth University/asRigging/controlShapes"
 
 
+ 
+
 class diana(loadFn.rigSceneSetup):    
     character = "Diana"
     def __init__(self, rigName, projectEnv):
@@ -75,7 +84,7 @@ class diana(loadFn.rigSceneSetup):
         mc.select("*JNT")
         jntList = mc.ls(sl=True)
         for jnt in jntList:
-            mc.setAttr(jnt+".radius", 0.1)
+            mc.setAttr(jnt+".radius", 1)
 
         mc.select ("*MLFT")
         matLoftList = mc.ls(sl=True)
@@ -87,6 +96,8 @@ class diana(loadFn.rigSceneSetup):
         
         # TEMPORARY
         mc.hide("C_geometry01_GRP")
+        mc.select("C_spineFKCtl0*_JNT")
+        mc.delete()
 
 
 

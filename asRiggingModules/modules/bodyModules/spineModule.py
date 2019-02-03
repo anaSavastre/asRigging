@@ -10,7 +10,6 @@ import rigFn as rigFn
 import mayaNode as node
 
 
- 
 class spine(object):
     def __init__(self, side="C", name="spine", revolveVector = [1, 0, 0], spineJnt=None, root=None, parent=None):
         '''
@@ -127,12 +126,11 @@ class spine(object):
         mmod.connectAttr(self.surface+".worldSpace", curveFromSurface+".inputSurface")
         curve = mc.createNode("nurbsCurve")
         mmod.connectAttr(curveFromSurface+".outputCurve", curve+".create")
-        curveFn = om.MFnNurbsSurface(getDagPath("C_ribbonSurface00_SHP"))
         # GET CURVE DAG PATH
         curveFn = om.MFnNurbsCurve(fn.getDagPath(curve))
-        step = 1.0/(self.numberOfJoints)
+        step = 1.0/(len(self.guides)-1)
         self.parameterU = []
-        for i in range (0, self.numberOfJoints+1):
+        for i in range (0, len(self.guides)):
             self.parameterU.append(curveFn.findParamFromLength(curveFn.length()*step*i))
         mc.delete(fn.getParent(curve), curveFromSurface)
     def createLoftSurface(self, guides):

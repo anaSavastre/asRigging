@@ -148,7 +148,7 @@ class blendFKIK(object):
         grpSign = 1 if pozX>0 else -1
         guideJntRad = mc.getAttr(jntList[2]+".radius")
         pozX = grpSign*(abs(pozX)+guideJntRad) *0.4
-        mc.xform(settingsCtrlGrp, t=[pozX, 0, 0], r=True)
+        # mc.xform(settingsCtrlGrp, t=[pozX, 0, 0], r=True)
         # Creating CTRL
         self.settingCtl = ctlFn.settingCtl(side=self.side, name=self.name+"Settings")#, parent=settingsCtrlGrp)
         mc.parent (self.settingCtl, settingsCtrlGrp)
@@ -160,8 +160,10 @@ class blendFKIK(object):
         mc.setAttr(self.settingCtl.name+".rotateY",0)
         mc.setAttr(self.settingCtl.name+".rotateZ",0)
 
+
         # Scaling CTRL
         fn.scaleShapePoints(self.settingCtl.name, mc.getAttr(jntList[2]+".radius")*0.6)
+        fn.translateShapePoints(self.settingCtl.name, [pozX, 0, 0], 0)
     
         # Creating attribute on ctrl
         self.blendAttr = self.settingCtl.addAttr(longName="fkIkBlend", softMinValue=0, defaultValue=1, softMaxValue=1, attrType="short", keyable=True)
@@ -343,7 +345,7 @@ class blendFKIK(object):
         # Finding x of poleVectGlobal grp
         y = mc.xform(jntChain[1], ws=True, q=True, t=True)[1]
         offset = mc.xform(jntChain[1].name, ws=True, q=True, t=True)[2]-mc.xform(jntChain[0].name, ws=True, q=True, t=True)[2]
-        z = mc.xform(jntChain[1], ws=True, q=True, t=True)[2]+offset
+        z = mc.xform(jntChain[1], ws=True, q=True, t=True)[2]+(offset*mc.getAttr(self.jntGuideList[1]+".radius"))
         x = -(plane[3] + plane[2]*z + plane[1]*y)/plane[0]
         mc.xform(poleVectGlobal, t=[x, y, z], ws=True)
 

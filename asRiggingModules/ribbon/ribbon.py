@@ -140,7 +140,6 @@ class ribbon(object):
         self.getParameterList()
         for i in range (0, self.numberOfJoints+1):
             self.createRivet(self.parameterU[i], parent=group)
-        mc.delete(fn.getParent(curve), curveFromSurface)
 
     def getParameterList(self):
         # CreatingCurve fromSurface
@@ -148,7 +147,6 @@ class ribbon(object):
         mmod.connectAttr(self.surface+".worldSpace", curveFromSurface+".inputSurface")
         curve = mc.createNode("nurbsCurve")
         mmod.connectAttr(curveFromSurface+".outputCurve", curve+".create")
-        curveFn = om.MFnNurbsSurface(getDagPath("C_ribbonSurface00_SHP"))
         # GET CURVE DAG PATH
         curveFn = om.MFnNurbsCurve(fn.getDagPath(curve))
         step = 1.0/(self.numberOfJoints)
@@ -156,6 +154,3 @@ class ribbon(object):
         for i in range (0, self.numberOfJoints+1):
             self.parameterU.append(curveFn.findParamFromLength(curveFn.length()*step*i))
         mc.delete(fn.getParent(curve), curveFromSurface)
-
-guides = createGuides("C", 5, 2)
-m_ribbon = ribbon(guides=guides, numberOfJoints=5, revolveVector=[0, 0, 1])

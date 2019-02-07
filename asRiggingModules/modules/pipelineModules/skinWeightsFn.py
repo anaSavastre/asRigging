@@ -62,6 +62,6 @@ def loadSkinWeights(weightsFile="skinWeights", path="D:/Bournemouth University/a
         mc.deformerWeights(file, path=path, im=True, deformer=deformer)
 
 
-# loadSkinWeights()
+loadSkinWeights()
 #
-saveSkinWeight()
+# saveSkinWeight()

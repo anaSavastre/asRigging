@@ -25,7 +25,6 @@ def loadEnvironment():
     sys.path.append(asRigging+"/asRiggingModules/modules/faceModules")
     sys.path.append(asRigging+"/asRiggingModules/controls")
     sys.path.append(asRigging+"/asRiggingModules/ribbon")
-    
     loadPlugins()
 def loadPlugins():
     for plugIn in plugInList:

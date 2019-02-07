@@ -3,16 +3,13 @@ import shutil
 import os 
 
 
-plugIn = "asPlugin"
+plugIn = "asAnimationRetargeting"
 
 
-releasePath = "D:/Bournemouth University/asRelease/" +plugIn + ".mll"
-pluginPath = "D:/Bournemouth University/asNodes"
 
-if (mc.pluginInfo(pluginPath+"/"+plugIn, loaded=True, q=True)):
-    mc.unloadPlugin(plugIn, f=True)
+pluginPath = "D:/Bournemouth University/asRigging/scripts/asRigging/asPlugins/plugins"
 
-shutil.copy(releasePath, pluginPath)
+if (mc.pluginInfo(pluginPath+"/"+plugIn+".py", loaded=True, q=True)):
+    mc.unloadPlugin(plugIn+".py", f=True)
 
-# print "hello"
-mc.loadPlugin(pluginPath+"/"+plugIn)
+mc.loadPlugin(pluginPath+"/"+plugIn+".py")

@@ -135,7 +135,7 @@ class ribbonLimbs(object):
         if (endJnt!=None, startJnt!=None):
             self.generateGuides()
             # CREATING THE RIBBONS
-            ribbon.ribbon(side=self.side, name=self.name, guides=self.guides, revolveVector=self.revolveVector, parent=self.guideGrp, root=self.root)
+            ribbon.ribbon(side=self.side, name=self.name, guides=self.guides, revolveVector=self.revolveVector, parent=self.guideGrp, root=fn.getChhild(self.root)[0])
 
             # CREATING TWIST INTERPOLATION
             self.twistInterpolation()

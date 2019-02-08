@@ -30,6 +30,15 @@ def getLocalOffset(parent, child):
 
 ##################################### END REFERENCE #####################################
 
+def loadLatestFile(path):
+    '''
+    This function gets all the files in the given directory and loads the latest maya scene file
+    '''
+    files= os.listdir(path)
+    latestFile = sorted(files)[-1];
+    mc.file( path+"/"+latestFile, i= True, type= "mayaAscii", usingNamespaces= False, f=True)
+
+
 def deleting_pointConstraint(obj):
     ''' This function delets the point constraint from the given obj'''
     #get children
@@ -174,7 +183,7 @@ def getParent(grp):
     '''
     Returns parent of given transform node in the outliner 
     '''
-    return mc.listRelatives(grp, p=True)[0]
+    return mc.listRelatives(grp, p=True, f=True)[0]
 
 def translateShapePoints(shape, translationVector, pivot):
     shapeList= getChildren(shape)

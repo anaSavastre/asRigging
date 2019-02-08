@@ -24,6 +24,9 @@ import functions as fn
 import pipeline 
 import asNodes as asNode
 import mayaNode as mNode
+import blendFKIK as blendFKIK
+import ribbonLimbs as ribbonLimbs
+
 
 
 import rigFn as rigFn
@@ -57,7 +60,7 @@ if (hostName == "DESKTOP-PQV0HOV"):
 controlShapesPath = "D:/Bournemouth University/asRigging/controlShapes"
 
 
- 
+
 
 class diana(loadFn.rigSceneSetup):    
     character = "Diana"
@@ -79,6 +82,7 @@ class diana(loadFn.rigSceneSetup):
             self.m_foot = footMod.foot(footJnt=s+"_foot00_JNT", side=s, root=self.m_leg, parent=s+"_bindLeg00_GRP", hook=self.rootJnt)
             # ARM
             self.m_clavicle = clavicleMod.clavicle(side=s, clavicleJnt=s+"_clavicle00_JNT", root=self.m_spine.chestCtl)
+            print self.m_clavicle.clavicleControl[1]
             self.m_arm = armMod.arm(side=s, armJnt=s+"_arm00_JNT", parent=self, root=self.m_clavicle.clavicleControl[1])
         # CLEAN UP
         mc.select("*JNT")

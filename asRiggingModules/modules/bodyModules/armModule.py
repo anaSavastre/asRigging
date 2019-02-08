@@ -27,8 +27,8 @@ class arm(blendFKIK.blendFKIK):
 
         super(arm, self).__init__(side=side, jnt=armJnt, name="arm", segmentsList=["Shoulder", "Elbow", "Wrist"], parent=arm.rigParent, root=root, hook=parent.rootJnt)
         # RIBBON LIMBS
-        self.humerusRibbon = ribbonLimbs.ribbonLimbs(side=self.side, endJnt=self.bindJntChain[1], startJnt=self.bindJntChain[0], name= "humerusRibbon", parent=arm.rigParent, root=root, revolveVector=[0, 0, 1])
-        self.radiusRibbon = ribbonLimbs.ribbonLimbs(side=self.side, endJnt=self.bindJntChain[2], startJnt=self.bindJntChain[1], name= "radiusRibbon", parent=arm.rigParent, root=root, revolveVector=[0, 0, 1])
+        self.humerusRibbon = ribbonLimbs.ribbonLimbs(side=self.side, endJnt=self.bindJntChain[1], startJnt=self.bindJntChain[0], name= "humerusRibbon", parent=arm.rigParent, root=fn.getParent(root), revolveVector=[0, 0, 1])
+        self.radiusRibbon = ribbonLimbs.ribbonLimbs(side=self.side, endJnt=self.bindJntChain[2], startJnt=self.bindJntChain[1], name= "radiusRibbon", parent=arm.rigParent, root=fn.getParent(root), revolveVector=[0, 0, 1])
         # RIBBON VISIBILITY SWITCH
         mc.hide(self.humerusRibbon.guides[0], self.humerusRibbon.guides[-1], self.radiusRibbon.guides[0], self.radiusRibbon.guides[-1])
         ribbonVisibility = self.settingCtl.addAttr(longName = "secondaryControls", softMinValue=0, defaultValue=0, softMaxValue=1, attrType="short", keyable=True)

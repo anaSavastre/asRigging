@@ -66,8 +66,13 @@ class ribbon(object):
     def getRivetAlignmentVectors(self):
         # GETTING LOCAL SPACE OF ROOT
         multMatrix = mNode.multMatrix(side=self.side, name=self.name+"ObjectSpace")
-        mmod.connectAttr(self.root.name+".parentInverseMatrix", multMatrix.name+".matrixIn[0]")
-        mmod.connectAttr(self.root.name+".worldMatrix", multMatrix.name+".matrixIn[1]")
+        try:
+            mmod.connectAttr(self.root.name+".parentInverseMatrix", multMatrix.name+".matrixIn[0]")
+            mmod.connectAttr(self.root.name+".worldMatrix", multMatrix.name+".matrixIn[1]")
+        except:
+            mmod.connectAttr(self.root+".parentInverseMatrix", multMatrix.name+".matrixIn[0]")
+            mmod.connectAttr(self.root+".worldMatrix", multMatrix.name+".matrixIn[1]")
+
 
         # Vector Product 
         forward = mNode.vectorProduct(side=self.side, name=self.name+"ForwardVector")
@@ -133,7 +138,12 @@ class ribbon(object):
         mmod.connectAttr(matrixMult.getMatrixSum(), decompMatrix.getInputMatrix())
         mmod.connectAttr(decompMatrix.getOutputTranslate(), self.ribbonJoints[-1].name+".translate" )
         mmod.connectAttr(decompMatrix.getOutputRotate() , self.ribbonJoints[-1].name+".rotate" )
-        mmod.connectAttr(self.root.name+".scale", self.ribbonJoints[-1].name+".scale" )
+        try:
+            mmod.connectAttr(self.root.name+".scale", self.ribbonJoints[-1].name+".scale" )
+        except:
+            mmod.connectAttr(self.root+".scale", self.ribbonJoints[-1].name+".scale" )
+
+
       
     def attachJoinnts(self, parent=None):
         group = mmod.transform(side=self.side, name=self.name+"BindJnt", type="GRP", parent=parent)

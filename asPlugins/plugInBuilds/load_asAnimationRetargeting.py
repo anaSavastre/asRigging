@@ -4,7 +4,7 @@ import os
 
 mc.file(new = True, f=True)
 
-plugIn = "asPlugin"
+plugIn = "asAnimationRetargeting"
 
 
 releasePath = "D:/Bournemouth University/asRelease/" +plugIn + ".mll"

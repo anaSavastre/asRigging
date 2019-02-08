@@ -345,7 +345,7 @@ class blendFKIK(object):
         # Finding x of poleVectGlobal grp
         y = mc.xform(jntChain[1], ws=True, q=True, t=True)[1]
         offset = mc.xform(jntChain[1].name, ws=True, q=True, t=True)[2]-mc.xform(jntChain[0].name, ws=True, q=True, t=True)[2]
-        z = mc.xform(jntChain[1], ws=True, q=True, t=True)[2]+(offset*mc.getAttr(self.jntGuideList[1]+".radius"))
+        z = mc.xform(jntChain[1], ws=True, q=True, t=True)[2]+((offset+1)*mc.getAttr(self.jntGuideList[1]+".radius"))
         x = -(plane[3] + plane[2]*z + plane[1]*y)/plane[0]
         mc.xform(poleVectGlobal, t=[x, y, z], ws=True)
 

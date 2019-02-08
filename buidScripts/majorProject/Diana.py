@@ -68,7 +68,7 @@ class diana(loadFn.rigSceneSetup):
         legMod.resetLegMod()
         armMod.resetArmMod()
         # Creating the spine
-        self.m_spine = spineMod.spine(spineJnt="C_spine01_JNT", root=self.rootJnt, parent=self, revolveVector=[0, 0, 1])
+        self.m_spine = spineMod.spine(spineJnt="C_spine00_JNT", root=self.rootJnt, parent=self, revolveVector=[0, 0, 1])
         self.m_neck = neckMod.neck (neckJnt="C_neck00_JNT", root=self.m_spine.chestCtl, parent=self, hook=self.m_spine.cog, revolveVector=[1, 0, 0])
         
 

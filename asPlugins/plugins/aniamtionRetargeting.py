@@ -33,9 +33,10 @@ class asAnimationRetargeting(omMPx.MPxNode):
     as_outTranslateX = om.MObject()
     as_outTranslateY = om.MObject()
     as_outTranslateZ = om.MObject()
+
     as_outRotate = om.MObject()
     as_outTranslate = om.MObject()
-    
+    print "node"
     def __init__(self):
         omMPx.MPxNode.__init__(self)
     def compute(self, pPlug, pDataBlock):
@@ -49,10 +50,9 @@ class asAnimationRetargeting(omMPx.MPxNode):
             # dataHandleTranslate = dataBlock.inputValue(WheelNode.inTranslate)
             inParentWorldMatrix = pDataBlock.inputValue(asAnimationRetargeting.as_targetParentWorldMatrix).asMatrix()
             inParentInverseMatrix = pDataBlock.inputValue(asAnimationRetargeting.as_objectParentWorldInverseMatrix).asMatrix()
-            transformationMatrix = om.MTransformationMatrix()
-            transformationMatrix *= inParentInverseMatrix * inParentWorldMatrix
-
-            eulerRotation = transformationMatrix.eulerRotation();
+            transformationMatrix = om.MTransformationMatrix()#(inParentInverseMatrix * inParentWorldMatrix)
+            
+            # eulerRotation = transformationMatrix.eulerRotation();
 
             
             # OUTPUT 
@@ -61,9 +61,9 @@ class asAnimationRetargeting(omMPx.MPxNode):
             outTranslationHandle.setMVector(transformMatrix.getTranslation(om.MSpace.kWorld)+om.MVector(nrbS_point));
             outTranslationHandle.setClean();
 
-            dataHandleRotate = pDataBlock.outputValue(asAnimationRetargeting.as_outRotate)
-            dataHandleRotate.set3Double(eulerRotation.x, eulerRotation.y, eulerRotation.z)
-            pDataBlock.setClean(pPlug)
+            # dataHandleRotate = pDataBlock.outputValue(asAnimationRetargeting.as_outRotate)
+            # dataHandleRotate.set3Double(eulerRotation.x, eulerRotation.y, eulerRotation.z)
+            # pDataBlock.setClean(pPlug)
             
         else:
             return om.kUnknownParameter
@@ -76,6 +76,7 @@ def nodeCreator():
     return omMPx.asMPxPtr( asAnimationRetargeting())
 	
 def nodeInitializer():
+    print "node initializer"
     #  1. creating a function set for numeric attributes
     matrixAttrFn = om.MFnMatrixAttribute()
     numericAttrFn = om.MFnNumericAttribute()
@@ -94,27 +95,9 @@ def nodeInitializer():
     asAnimationRetargeting.as_objectParentWorldInverseMatrix = matrixAttrFn.create("parentInverseMatrix","pInvM",om.MFnMatrixAttribute.kDouble)
     matrixAttrFn.setReadable(1)
     matrixAttrFn.setWritable(1)
-    matrixAttrFn.setStorable(1)
+    matrixAttrFn.setStorable(1) 
     matrixAttrFn.setKeyable(1)	
     asAnimationRetargeting.addAttribute(asAnimationRetargeting.as_objectParentWorldInverseMatrix)
-
-    # OUTPUT ROTATE
-    # asAnimationRetargeting.as_outRotateX = numericAttrFn.create("outputRotateX","outRotX",om.MFnNumericData.kDouble, 0.0)
-    # numericAttrFn.setKeyable(1)
-    # asAnimationRetargeting.as_outRotateY = numericAttrFn.create("outputRotateY","outRotY",om.MFnNumericData.kDouble, 0.0)
-    # numericAttrFn.setKeyable(1)
-    # asAnimationRetargeting.as_outRotateZ = numericAttrFn.create("outputRotateZ","outRotZ",om.MFnNumericData.kDouble, 0.0)
-    # numericAttrFn.setKeyable(1)
-    asAnimationRetargeting.as_outRotate = compoundAttrFn.create("outputRotate","outRot")
-    compoundAttrFn.setReadable(1)
-    compoundAttrFn.setWritable(1)
-    compoundAttrFn.setStorable(1)
-    compoundAttrFn.setKeyable(1)
-    compoundAttrFn.addChild(asAnimationRetargeting.as_outRotateX)
-    compoundAttrFn.addChild(asAnimationRetargeting.as_outRotateY)    
-    compoundAttrFn.addChild(asAnimationRetargeting.as_outRotateZ)	
-    asAnimationRetargeting.addAttribute(asAnimationRetargeting.as_outRotate)
-
     # OUTPUT TRANSLATE
     asAnimationRetargeting.as_outTranslateX = numericAttrFn.create("outputTranslateX","outTransX",om.MFnNumericData.kDouble, 0.0)
     numericAttrFn.setKeyable(1)
@@ -128,6 +111,27 @@ def nodeInitializer():
     numericAttrFn.setStorable(1)
     numericAttrFn.setKeyable(1)	
     asAnimationRetargeting.addAttribute(asAnimationRetargeting.as_outTranslate)	
+    # OUTPUT ROTATE
+    asAnimationRetargeting.as_outRotateX = numericAttrFn.create("outputRotateX","outRotX",om.MFnNumericData.kDouble, 0.0)
+    numericAttrFn.setKeyable(1)
+    asAnimationRetargeting.as_outRotateY = numericAttrFn.create("outputRotateY","outRotY",om.MFnNumericData.kDouble, 0.0)
+    numericAttrFn.setKeyable(1)
+    asAnimationRetargeting.as_outRotateZ = numericAttrFn.create("outputRotateZ","outRotZ",om.MFnNumericData.kDouble, 0.0)
+    numericAttrFn.setKeyable(1)
+    asAnimationRetargeting.as_outRotate = numericAttrFn.create("outputRotate","outRot", asAnimationRetargeting.as_outRotateX, asAnimationRetargeting.as_outRotateY, asAnimationRetargeting.as_outRotateZ)
+
+    # asAnimationRetargeting.as_outRotate = compoundAttrFn.create("outputRotate","outRot")
+
+    # numericAttrFn.setReadable(1)
+    # numericAttrFn.setWritable(1)
+    # numericAttrFn.setStorable(1)
+    # numericAttrFn.setKeyable(1)
+    # compoundAttrFn.addChild(asAnimationRetargeting.as_outRotateX)
+    # compoundAttrFn.addChild(asAnimationRetargeting.as_outRotateY)    
+    # compoundAttrFn.addChild(asAnimationRetargeting.as_outRotateZ)	
+    asAnimationRetargeting.addAttribute(asAnimationRetargeting.as_outRotate)
+
+    
 
     # 4. Attribute Affects
     asAnimationRetargeting.attributeAffects(asAnimationRetargeting.as_targetParentWorldMatrix, asAnimationRetargeting.as_outRotate)
@@ -140,8 +144,10 @@ def nodeInitializer():
 def initializePlugin(mobject):
     mplugin = omMPx.MFnPlugin(mobject)
     try:
+        print "try"
         mplugin.registerNode(nodeName, nodeId, nodeCreator, nodeInitializer )
     except:
+        print "except"
         sys.stderr.write( "Failed to register command: %s\n" % nodeName )
 
 # Uninitialize the script plug-in

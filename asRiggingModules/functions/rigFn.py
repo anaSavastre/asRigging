@@ -2,14 +2,16 @@ import maya.cmds as mc
 import functions as fn
 import mayaModule as mmod
 import mayaNode as mNode
+import controlFn as ctlFn
 
-
-def parentConstraintMO(targetParent, objParent, object):
+def parentConstraintMO(targetParent, objParent, object, maintainOffset = True):
     # Matrix Mult
     side = fn.concat_str(str1 = object, s1_begin=0, s1_end=len(object)-1 )
     matrix = mNode.multMatrix(side=side, name="transformationMatrix")
-    localOffset = fn.getLocalOffset(objParent, object)
-    mc.setAttr(matrix.name+".matrixIn[0]", [localOffset(i, j) for i in range(4) for j in range(4)], type="matrix")
+    if (maintainOffset == True):
+            
+        localOffset = fn.getLocalOffset(objParent, object)
+        mc.setAttr(matrix.name+".matrixIn[0]", [localOffset(i, j) for i in range(4) for j in range(4)], type="matrix")
     
     mmod.connectAttr(targetParent+".worldMatrix", matrix.name+".matrixIn[1]")
     mmod.connectAttr(objParent+".worldInverseMatrix", matrix.name+".matrixIn[2]")
@@ -124,8 +126,14 @@ def createJntChain(jntList, side="C", name="name", segmentList=[], parent=None):
             root = newJnt
     return jntChainList
 
-def constructCTL(guideJNT, side="C", name="name", parent=None, ctrlScale=1):
+def constructCTL(guideJNT, side="C", name="name", parent=None, ctrlScale=1, ctrlShape=0):
     '''
+
+    ctrlShape - 0 -> circle
+                1 -> box
+                2 -> diamond 
+                3 -> locator
+                4 -> settings
     Function that creates the following hierarchy 
     mmod.transformNode_GRP
         mmod.transformNode_OFS : aligned with guideJNT
@@ -141,7 +149,16 @@ def constructCTL(guideJNT, side="C", name="name", parent=None, ctrlScale=1):
     fn.align(guideJNT, ofs)
 
     # Creating CTL
-    ctl = mmod.circle(side=side, name=name, parent=ofs)
+    if (ctrlShape == 1):
+        ctl = ctlFn.boxControl(side=side, name=name, parent=ofs)
+    elif (ctrlShape == 2):
+        ctl = ctlFn.diamondControl(side=side, name=name, parent=ofs)
+    elif (ctrlShape == 3):
+        ctl = ctlFn.locatorControl(side=side, name=name, parent=ofs)
+    elif (ctrlShape == 4):
+        ctl = ctlFn.settingCtl(side=side, name=name, parent=ofs)   
+    else:
+        ctl = mmod.circle(side=side, name=name, parent=ofs)
     # Scaling Ctrl
     try:
         fn.scaleShapePoints(ctl.name, mc.getAttr(guideJNT+".radius")/2)
@@ -255,3 +272,4 @@ def insetJnt(startJnt=None, endJnt=None, numbJnt=1):
 
 
 # insetJnt(startJnt="C_tail01_JNT", endJnt="C_tail029_JNT", numbJnt=)
+

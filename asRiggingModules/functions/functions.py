@@ -25,7 +25,16 @@ def getLocalOffset(parent, child):
     parentWorldMatrix = getDagPath(parent).inclusiveMatrix()
     childWorldMatrix = getDagPath(child).inclusiveMatrix()
 
-    return childWorldMatrix * parentWorldMatrix.inverse()
+    offsetMatrix = childWorldMatrix * parentWorldMatrix.inverse()
+    returnMatrix = om.MTransformationMatrix()
+    translationVector = om.MVector()
+    rotationVector = om.MVector()
+
+    transformMatrix = om.MTransformationMatrix(offsetMatrix)
+    translationVector = transformMatrix.getTranslation()
+    rotationVector = transformMatrix.getRotation()
+    returnMatrix *= translationVector()
+    return returnMatrix.asMatrix()
 
 
 ##################################### END REFERENCE #####################################

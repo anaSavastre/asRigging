@@ -84,14 +84,43 @@ class settingCtl(mmod.circle):
         # Creating Gear
         createNewCureveShape(self.name, self.gearShapeCV, degree=3, name=self.name+"Gear")
 
+class boxControl(mmod.circle):
+    boxControShapeCV = [[0.5, 0.5, -0.5], [0.5, 0.5, 0.5], [-0.5, 0.5, 0.5], [-0.5, 0.5, -0.5], [0.5, 0.5, -0.5], [0.5, -0.5, -0.5], [-0.5, -0.5, -0.5], [-0.5, 0.5, -0.5], [-0.5, 0.5, 0.5], [-0.5, -0.5, 0.5], [-0.5, -0.5, -0.5], [-0.5, -0.5, 0.5], [-0.5, 0.5, 0.5], [0.5, 0.5, 0.5], [0.5, -0.5, 0.5], [-0.5, -0.5, 0.5], [0.5, -0.5, 0.5], [0.5, 0.5, 0.5], [0.5, 0.5, -0.5], [0.5, -0.5, -0.5], [0.5, -0.5, 0.5]]
+    def __init__(self, side="C", name="boxControl", type="CTL", parent=None):
+        super(boxControl, self).__init__(side, name, type, parent)
 
+        # CREATING SQUARE SHAPE
+        mc.delete(fn.getChildren(self.name)[0])
+        createNewCureveShape(self.name, self.boxControShapeCV, degree=1, name=self.name)
+
+class locatorControl(mmod.circle):
+    locatorControlShapeCV = [[0.0, 0.0, 1.0], [0.0, 0.0, -1.0], [0.0, 0.0, 0.0], [-1.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, -1.0, 0.0]]
+    def __init__(self, side="C", name="locatorControl", type="CTL", parent=None):
+        super(locatorControl, self).__init__(side, name, type, parent)
+
+        # CREATING SQUARE SHAPE
+        mc.delete(fn.getChildren(self.name)[0])
+        createNewCureveShape(self.name, self.locatorControlShapeCV, degree=1, name=self.name+"L")
+class diamondControl(mmod.circle):
+    diamondControlShapeCV = [[0.0, 0.9990454912185669, 0.0], [0.9990454912185669, 0.0, 0.0], [1.3100898854645493e-07, 0.0, 0.9990454912185669], [0.0, 0.9990454912185669, 0.0], [-0.9990454912185669, 0.0, -8.733933754001555e-08], [-4.3669668770007775e-08, 0.0, 0.9990454912185669], [-0.9990454912185669, 0.0, -8.733933754001555e-08], [0.0, 0.9990454912185669, 0.0], [-4.3669668770007775e-08, 0.0, -0.9990454912185669], [-0.9990454912185669, 0.0, -8.733933754001555e-08], [1.3100898854645493e-07, 0.0, -0.9990454912185669], [0.9990454912185669, 0.0, 0.0], [0.0, -0.9990454912185669, 1.223477947117957e-16], [1.3100898854645493e-07, 0.0, -0.9990454912185669], [0.0, -0.9990454912185669, 1.223477947117957e-16], [-0.9990454912185669, 0.0, -8.733933754001555e-08], [0.0, -0.9990454912185669, 1.223477947117957e-16], [-4.3669668770007775e-08, 0.0, 0.9990454912185669]]
+
+    def __init__(self, side="C", name="diamond", type="CTL", parent=None):
+        super(diamondControl, self).__init__(side, name, type, parent)
+
+        # CREATING SQUARE SHAPE
+        mc.delete(fn.getChildren(self.name)[0])
+        createNewCureveShape(self.name, self.diamondControlShapeCV, degree=1, name=self.name+"D")
+   
 
 def copyCtrlShape(ctrl):
     form = mc.getAttr(ctrl+".form")
     shaleCv, degree = getCVFronShape(ctrl, r=True, ws=False)
     # GET TRANSFORMATION VECTOR
     # between transforme node center and shape center
-    trn = mc.xform(fn.getParent(ctrl), q=True, t=True, r=True)
+    try:
+        trn = mc.xform(fn.getParent(ctrl), q=True, t=True, r=True)
+    except:
+        trn = [0, 0, 0]
     
     
     return shaleCv, degree, form
@@ -118,7 +147,7 @@ def pasteCtrlShape(ctrl, copied, degree, form):
     
     mc.delete(fn.getChildren(ctrl)[0])
 
-# ctrl, degree, form = copyCtrlShape("L_scapulaShape01_CTL")
+# ctrl, degree, form = copyCtrlShape("curve1")
 # pasteCtrlShape("R_scapula01_CTL", ctrl, degree, form)
 
-
+# ctrl = locatorControl()

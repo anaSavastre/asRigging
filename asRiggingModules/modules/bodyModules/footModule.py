@@ -4,6 +4,8 @@ import functions as fn
 import mayaNode as mNode
 import rigFn as rigFn 
 
+
+
 class foot(object):
     def __init__(self, side="C", footJnt=None, root=None, parent=None, hook=None):
         ''' 
@@ -37,15 +39,108 @@ class foot(object):
             orientConstraint =mc.orientConstraint(self.legRoot.FKjntChain[-1], fn.getParent(fn.getParent(self.footFKJnt[0])), mo=True)[0]
             ocWeightAlias = mc.orientConstraint(orientConstraint, q=True, wal=True)[0]
             mmod.connectAttr( self.legRoot.reverseBlend.getOutput(), orientConstraint+"."+ocWeightAlias)
-            
+
+            # # CONNECTING FK ANKLE TO IK ANKLE
+            # parentConstraint = mc.parentConstraint(self.ankleCtrl, fn.getParent(self.footFKJnt[0]), mo=True)[0]
+            # pcWeightAlias = mc.parentConstraint(parentConstraint, q=True, wal=True)[0]
+            # mmod.connectAttr(self.legRoot.settingCtl.name+".fkIkBlend", parentConstraint+"."+pcWeightAlias)
+            orientConstraint =mc.orientConstraint(self.ankleCtrl, fn.getParent(fn.getParent(self.footFKJnt[0])), mo=True)[0]
+            ocWeightAlias = mc.orientConstraint(orientConstraint, q=True, wal=True)[0]
+            mmod.connectAttr( self.legRoot.settingCtl.name+".fkIkBlend", orientConstraint+"."+ocWeightAlias)
+
             # Making Scaleable
             mmod.connectAttr(fn.getParent(self.hook)+".scale", fn.getParent(self.footFKJnt[0])+".scale")
             
             # Connecting Ankle Twist to Ribbon Leg
             self.twistLeg()
 
+            # ANKLE - Adding Extra Attributes 
+            self.ankleAttributes()
+
             # DELETING GUIDES
             mc.delete(footJnt)
+
+    def ankleAttributes(self):
+        '''
+        Adding extra attributes on ankle control
+
+        LEG MOVEMENT
+            legTwist
+        FOOT ROOL CONFIGURATION
+            tarsalLock
+            straighten
+        FOOT MOVEMENT
+            toeRotation
+            tarsalRotation
+            HeelTwist
+            ToeTwist
+            TarsalTwist???
+
+        '''
+        # GLOBAL
+        ctrl = self.legRoot.effectorCtrl
+        twistAttr = self.legRoot.ikHandle+".twist"
+
+        # LEG MOVEMENT
+        # legTwist
+        ctrl.addAttr( longName='legTwist', attrType='double' )     
+        mmod.connectAttr(ctrl.name+".legTwist", twistAttr)
+
+        # FOOT ROOL CONFIGURATION
+        # tarsalLock
+        tarsalLock = ctrl.addAttr( longName='tarsalLock', softMinValue=-1.7, defaultValue=0.34, softMaxValue=3.14, attrType="doubleAngle", keyable=True)
+        # Set Tarsal Lock Attribute 
+        mc.setAttr(ctrl.name+".tarsalLock", mc.getAttr(self.animParameters.name+".tarsalLock"))
+        # Connect Attr
+        mmod.connectAttr(ctrl.name+".tarsalLock", self.animParameters.name+".tarsalLock")    
+
+        # straighten
+        straighten = ctrl.addAttr( longName='straighten',  softMinValue=-15, defaultValue=1.5, softMaxValue=15, attrType="double", keyable=True) 
+        # Set Attr Value
+        mc.setAttr(ctrl.name+".straighten", mc.getAttr(self.animParameters.name+".straighten"))
+        mmod.connectAttr(ctrl.name+".straighten", self.animParameters.name+".straighten")
+
+        # FOOT MOVEMENT
+        # heelRotation
+        # attrName = 'heelRotation'
+        # attribute = self.configParameters.name+".toeRest"
+        # toeRotation = ctrl.addAttr(longName=attrName, softMinValue=-1.7, defaultValue=0, softMaxValue=3.14, attrType="doubleAngle", keyable=True)
+        # addNode = mNode.addDoubleLinear(side=self.side, name=attrName+"AddToeRotToRestVal")
+        # mmod.connectAttr(ctrl.name+"."+attrName, addNode.getInput1())
+        # mc.setAttr(addNode.getInput2(), mc.getAttr(attribute))
+        # mmod.connectAttr(addNode.getOutput(), attribute)
+        # toeRotation
+        attrName = 'toeRotation'
+        attribute = self.configParameters.name+".toeRest"
+        toeRotation = ctrl.addAttr(longName=attrName, softMinValue=-3.14, defaultValue=0, softMaxValue=0, attrType="doubleAngle", keyable=True)
+        addNode = mNode.addDoubleLinear(side=self.side, name=attrName+"AddToeRotToRestVal")
+        mmod.connectAttr(ctrl.name+"."+attrName, addNode.getInput1())
+        mc.setAttr(addNode.getInput2(), mc.getAttr(attribute))
+        mmod.connectAttr(addNode.getOutput(), attribute)
+        # tarsalRotation
+        attrName = 'tarsalRotation'
+        attribute = self.configParameters.name+".tarsalRest"
+        toeRotation = ctrl.addAttr(longName=attrName, softMinValue=0, defaultValue=0, softMaxValue=3.14, attrType="doubleAngle", keyable=True)
+        addNode = mNode.addDoubleLinear(side=self.side, name=attrName+"AddToeRotToRestVal")
+        mmod.connectAttr(ctrl.name+"."+attrName, addNode.getInput1())
+        mc.setAttr(addNode.getInput2(), mc.getAttr(attribute))
+        mmod.connectAttr(addNode.getOutput(), attribute)
+        # heelTwist
+        attrName = 'heelTwist'
+        attribute = self.footRollJnt[0].name+".rotateY"
+        toeRotation = ctrl.addAttr(longName=attrName, softMinValue=-5, defaultValue=0, softMaxValue=5, attrType="doubleAngle", keyable=True)
+        addNode = mNode.addDoubleLinear(side=self.side, name=attrName+"AddToeRotToRestVal")
+        mmod.connectAttr(ctrl.name+"."+attrName, addNode.getInput1())
+        mc.setAttr(addNode.getInput2(), mc.getAttr(attribute))
+        mmod.connectAttr(addNode.getOutput(), attribute)
+        # toeTwist
+        attrName = 'toeTwist'
+        attribute = self.footRollJnt[1].name+".rotateY"
+        toeRotation = ctrl.addAttr(longName=attrName, softMinValue=-5, defaultValue=0, softMaxValue=5, attrType="doubleAngle", keyable=True)
+        addNode = mNode.addDoubleLinear(side=self.side, name=attrName+"AddToeRotToRestVal")
+        mmod.connectAttr(ctrl.name+"."+attrName, addNode.getInput1())
+        mc.setAttr(addNode.getInput2(), mc.getAttr(attribute))
+        mmod.connectAttr(addNode.getOutput(), attribute)
 
     def twistConnection(self, targetParent, object):
         objParent = fn.getParent(object)
@@ -123,6 +218,7 @@ class foot(object):
         animParameters = mmod.transform(side=self.side, name=self.footName+"Roll_animParameters", type="GRP", parent=controlGrp)
         configParameters = mmod.transform(side=self.side, name=self.footName+"Roll_configParameters", type="GRP", parent=controlGrp)
         self.animParameters = animParameters
+        self.configParameters = configParameters
         # 2.0. Creating Joints
         footJNTList.append(heelJnt)
         footJNTList.reverse()
@@ -257,3 +353,5 @@ class foot(object):
         mmod.connectAttr(self.hook.name+".worldMatrix", decomMatrix.getInputMatrix())
         mmod.connectAttr(decomMatrix.getOutputRotate(), footFKJntGRP.name+".rotate")
   
+
+ 

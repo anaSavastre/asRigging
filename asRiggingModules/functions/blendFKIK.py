@@ -244,7 +244,7 @@ class blendFKIK(object):
         self.IKjntChain=jntChain
         # 2.2. IK HANDLE
         ikHandle = rigFn.createIKHandle(jntChain[0], jntChain[len(jntChain)-1], side=self.side, name=self.name+"IK"+"IKHandle", parent=limitedEffectorGRP)
-                
+        self.ikHandle = ikHandle       
         # 2.3. LIMITED IK
         # Settings GRP
         # Get bone length

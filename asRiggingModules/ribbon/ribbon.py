@@ -164,3 +164,6 @@ class ribbon(object):
         for i in range (0, self.numberOfJoints+1):
             self.parameterU.append(curveFn.findParamFromLength(curveFn.length()*step*i))
         mc.delete(fn.getParent(curve), curveFromSurface)
+
+
+createGuides("C", 5)

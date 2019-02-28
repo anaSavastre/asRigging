@@ -92,20 +92,20 @@ class blendFKIK(object):
                 #########################################################################################################################################################
 
 
-                ######## ORIENT CONSTRAINT VERSION ########
+                ######## Parent CONSTRAINT VERSION ########
                 # Orient Constraint
-                fkOrientConstraint = mc.orientConstraint(fkJnt, bindJnt)[0]
-                ikOrientConstraint = mc.orientConstraint(ikJnt, bindJnt)[0]
+                fkParentConstraint = mc.parentConstraint(fkJnt, bindJnt)[0]
+                ikParentConstraint = mc.parentConstraint(ikJnt, bindJnt)[0]
                 
                 # Getting weight Alias
-                fkWeightAlias = mc.orientConstraint(fkOrientConstraint, q=True, wal=True)[0]
-                ikWeightAlias = mc.orientConstraint(ikOrientConstraint, q=True, wal=True)[1]
+                fkWeightAlias = mc.parentConstraint(fkParentConstraint, q=True, wal=True)[0]
+                ikWeightAlias = mc.parentConstraint(ikParentConstraint, q=True, wal=True)[1]
                 # Making Connections
 
                 # FK
                 # Reverse Node
                 try:
-                    mmod.connectAttr(self.reverseBlend.getOutput(), fkOrientConstraint+"."+fkWeightAlias)
+                    mmod.connectAttr(self.reverseBlend.getOutput(), fkParentConstraint+"."+fkWeightAlias)
                     mmod.connectAttr( self.reverseBlend.getOutput(), self.FKjntChain[0].name+".visibility")
             
                 except:
@@ -113,10 +113,10 @@ class blendFKIK(object):
                     mmod.connectPlugs(self.blendAttr, self.reverseBlend.input1)
                     mc.setAttr(self.reverseBlend.getInput2(), -1)
                     mmod.connectAttr(self.reverseBlend.getOutput(), self.FKjntChain[0].name+".visibility")
-                    mmod.connectAttr(self.reverseBlend.getOutput(), fkOrientConstraint+"."+fkWeightAlias)            
+                    mmod.connectAttr(self.reverseBlend.getOutput(), fkParentConstraint+"."+fkWeightAlias)            
                 
                 # IK
-                mmod.connectAttr(self.settingCtl.name+".fkIkBlend", ikOrientConstraint+"."+ikWeightAlias)
+                mmod.connectAttr(self.settingCtl.name+".fkIkBlend", ikParentConstraint+"."+ikWeightAlias)
                 mmod.connectPlugs(self.blendAttr, self.IKGRP.visibility)
 
 
@@ -146,11 +146,11 @@ class blendFKIK(object):
     def settingsCtrlSetUp(self, jntList=[], parent=None):
         settingsCtrlGrp = mmod.transform(side=self.side, name=self.name+"Settings", parent=self.bindJntChain[2] )
         # Position Group
-        pozX = mc.xform(settingsCtrlGrp, ws=True, q=True, t=True)[0]
-        grpSign = 1 if pozX>0 else -1
+        pozZ = mc.xform(settingsCtrlGrp, ws=True, q=True, t=True)[2]
+        grpSign = 1 if pozZ>0 else -1
         guideJntRad = mc.getAttr(jntList[2]+".radius")
-        pozX = grpSign*(abs(pozX)+guideJntRad) *0.4
-        # mc.xform(settingsCtrlGrp, t=[pozX, 0, 0], r=True)
+        pozZ = grpSign*(abs(pozZ)+guideJntRad) *0.4
+        # mc.xform(settingsCtrlGrp, t=[poxZ, 0, 0], r=True)
         # Creating CTRL
         self.settingCtl = ctlFn.settingCtl(side=self.side, name=self.name+"Settings")#, parent=settingsCtrlGrp)
         mc.parent (self.settingCtl, settingsCtrlGrp)
@@ -165,7 +165,9 @@ class blendFKIK(object):
 
         # Scaling CTRL
         fn.scaleShapePoints(self.settingCtl.name, mc.getAttr(jntList[2]+".radius")*0.6)
-        fn.translateShapePoints(self.settingCtl.name, [pozX, 0, 0], 0)
+        fn.rotateShapePoints(self.settingCtl.name, rotationVector=[0, 90, 0], pivot=mc.xform(self.settingCtl.name, q=True, t=True, ws=True))
+
+        fn.translateShapePoints(self.settingCtl.name, [0, 0, pozZ], 0)
     
         # Creating attribute on ctrl
         self.blendAttr = self.settingCtl.addAttr(longName="fkIkBlend", softMinValue=0, defaultValue=1, softMaxValue=1, attrType="short", keyable=True)

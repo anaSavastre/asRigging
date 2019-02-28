@@ -225,8 +225,8 @@ class spinosaurus(loadFn.rigSceneSetup):
             self.m_foot = footMod.foot(footJnt=s+"_footAnkle00_JNT", side=s, root=self.m_leg, parent=s+"_bindLeg00_GRP", hook=self.rootJnt)
 
             
-            # HAND
-            self.m_hand =handMod.hand(handJnt=s+"_hand00_JNT", side=s, root=self.m_arm, parent= s+"_bindArm00_GRP", hook = self.rootJnt)
+            # # HAND
+            # self.m_hand =handMod.hand(handJnt=s+"_hand00_JNT", side=s, root=self.m_arm, parent= s+"_bindArm00_GRP", hook = self.rootJnt)
 
             # SPRING SOLVER
             self.springSolverLeg(side=s)

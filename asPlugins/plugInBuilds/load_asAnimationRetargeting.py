@@ -2,9 +2,9 @@ import maya.cmds as mc
 import shutil 
 import os 
 
-mc.file(new = True, f=True)
+# mc.file(new = True, f=True)
 
-plugIn = "asAnimationRetargeting"
+plugIn = "asParentConstraint"
 
 
 releasePath = "D:/Bournemouth University/asRelease/" +plugIn + ".mll"

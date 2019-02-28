@@ -79,8 +79,10 @@ class rigSceneSetup(object):
         '''
         files= os.listdir(path)
         latestFile = sorted(files)[-1];
-        mc.file( path+"/"+latestFile, i= True, type= "mayaAscii", usingNamespaces= False, f=True)
-
+        try:
+            mc.file( path+"/"+latestFile, i= True, type= "mayaAscii", usingNamespaces= False, f=True)
+        except:
+            return
 
 
     
@@ -155,7 +157,9 @@ class rigSceneSetup(object):
 
         # MODEL GRP
         modelMasterGRP = mmod.transform(name="geometry", type="GRP", parent=mainGrpTransf)
+        
         mc.parent(modelGrp, modelMasterGRP)
+
         
         # CHARACTER CONTROL SHAPE
         globalMoveCTL= ctlFn.globalMoveCtrl()

@@ -6,6 +6,8 @@ import rigFn as rigFn
 import controlFn as ctlFn
 
 
+ 
+
      
 class blendFKIK(object):
     def __init__(self, side, jnt = None, name="segment", segmentsList=["base", "midPoint", "effector"], parent=None, root=None, hook=None):
@@ -167,8 +169,7 @@ class blendFKIK(object):
     
         # Creating attribute on ctrl
         self.blendAttr = self.settingCtl.addAttr(longName="fkIkBlend", softMinValue=0, defaultValue=1, softMaxValue=1, attrType="short", keyable=True)
-
-        # self.blendAttr = self.effectorCtrl.addAttr(longName="fkIkBlend", softMinValue=0, defaultValue=1, softMaxValue=1, attrType="short", keyable=True)
+        self.stretchyLimbs = self.settingCtl.addAttr(longName="stretchyLimb", softMinValue=0, defaultValue=0, softMaxValue=1, attrType="short", keyable=True)
         
 
 
@@ -351,7 +352,27 @@ class blendFKIK(object):
 
         
         poleVectGrp = mmod.transform(side=self.side, name=self.name+"PoleVector", type="GRP", parent=poleVectGlobal)
-        poleCtrl = mmod.circle(side=self.side, name=self.name+"poleVector", parent=poleVectGrp)
+        poleCtrl =ctlFn.diamondControl(side=self.side, name=self.name+"PoleVector", parent=poleVectGrp)
+        # Creating Aiming Curve
+        # curve -d 1 -p 1 0 13 -p 0 0 -23 -k 0 -k 1 ;
+        aimCUrveName = self.side+"_"+self.name+"PoleVectorAim"+"_CTL"
+        aimCurve = mc.curve(p=[(0, 0, -10), (0, 0, 10)], d=1)
+        mc.rename(aimCurve, aimCUrveName)
+        # Parenting Shape
+        aimCtrlShape = fn.getChildren(aimCUrveName)[0]
+        mc.parent(aimCtrlShape, poleCtrl, s=True, r=True)
+        mc.delete(aimCUrveName)
+        # Constraining Curve Points
+        # Knee Point
+        localSpace = mNode.multMatrix(side=self.side, name="poleVectorLocalSpace")
+        decompMatrix = mNode.decomposeMatrix(side=self.side, name="poleVectLocalSpace")
+        mmod.connectAttr(self.IKjntChain[1].name+".worldMatrix", localSpace.name+".matrixIn[0]")
+        mmod.connectAttr(poleCtrl.name+".worldInverseMatrix", localSpace.name+".matrixIn[1]")
+        mmod.connectAttr(localSpace.getMatrixSum(), decompMatrix.getInputMatrix())
+        mmod.connectAttr(decompMatrix.getOutputTranslate(), aimCtrlShape+".controlPoints[0]")
+        # Controller Point
+        mmod.connectAttr(fn.getChildren(poleCtrl)[0]+".controlPoints[8]", aimCtrlShape+".controlPoints[1]")
+
         # position ctrl
         fn.scaleShapePoints(poleCtrl.name, mc.getAttr(jntList[2]+".radius")*0.25)
         
@@ -364,4 +385,5 @@ class blendFKIK(object):
       
         # Constraining Control to Hook
         mc.parentConstraint(self.hook.name, poleVectGlobal.name, mo=True)
-      
+
+       

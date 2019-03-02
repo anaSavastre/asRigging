@@ -11,7 +11,8 @@ Character: Diana
 '''
 
 import maya.cmds as mc
-import loadFn 
+import majorProjectCharacter as mjChr 
+import loadFn
 import socket
 
 
@@ -58,6 +59,200 @@ if (hostName == "DESKTOP-PQV0HOV"):
     projectEnv = "C:/Users/AnaMaria/Documents/asRigging/projects/masterClass/"
 
 controlShapesPath = "D:/Bournemouth University/asRigging/controlShapes"
+
+def folderHierarchy(projectEnv, rigName):
+    # Creating Folder structures
+    ''' rigging>CharacterName>
+                    > RIG
+                        >rigVersions.ma
+                    > wip
+                        >rigWip
+                        >components
+                        >controlShapes
+                        >skinWeights
+
+    '''
+    rigEnv = projectEnv+"/rigging/"
+    characterRigFolder = rigEnv + rigName
+    if not os.path.exists(characterRigFolder):
+        os.makedirs(characterRigFolder)
+    # Rigging
+    finalRig = characterRigFolder + "/RIG"
+    if not os.path.exists(finalRig):
+        os.makedirs(finalRig)
+    # Work in progress
+    wipProject = characterRigFolder + "/wip"
+    if not os.path.exists(wipProject):
+        os.makedirs(wipProject)
+    # Component, controlShapes, skinWeights
+    rigWip = wipProject+"/rigWip"
+    if not os.path.exists(rigWip):
+        os.makedirs(rigWip)
+    componentsFile = wipProject+"/components"
+    if not os.path.exists(componentsFile):
+        os.makedirs(componentsFile)
+        # Create default ma files
+        # Components
+        file = mc.file(new = True, f=True)
+        pipeline.saveFile(projectEnv=componentsFile, saveName=rigName+"Components")
+    controlShapesFile = wipProject+"/controlShapes"
+    if not os.path.exists(controlShapesFile):
+        os.makedirs(controlShapesFile)
+    skinWeightsFile = wipProject+"/skinWeights"
+    if not os.path.exists(skinWeightsFile):
+        os.makedirs(skinWeightsFile)
+
+    
+
+    return rigWip, componentsFile, controlShapesFile, skinWeightsFile
+
+def createJointHY(side, name, parent):
+    grp = mmod.transform(side=side, name=name, type="GRP", parent=parent)
+    ofs = mmod.transform(side=side, name=name, type="OFS", parent=grp)
+    
+    ctrl = ctlFn.rootCtrl()
+    mc.parent(ctrl, ofs)
+    return ctrl.name
+    
+
+class rigSceneSetup(object):
+    def loadLatestFile(self, path):
+        '''
+        This function gets all the files in the given directory and loads the latest maya scene file
+        '''
+        files= os.listdir(path)
+        sortedFiles = sorted(list(set([item for item in files if item.endswith('.ma') or item.endswith('.mb')])));
+        print "sourted files", sortedFiles
+        print "files", files
+        latestFile = sortedFiles[-1]
+        # for index in range (2, len(files)):
+        #     if (".ma" in files[-index] ):
+        #         latestFile = files[index]
+        #         break
+        # if (latestFile == None):
+
+        #     print "No Maya file in directory"   
+                
+
+
+        try:
+            print "file to be loaded", path+"/"+latestFile
+            mc.file( path+"/"+latestFile, i= True, type= "mayaAscii", usingNamespaces= False, f=True)
+        except:
+            print "file not loaded"
+            return
+
+
+    
+    def getGeoBoundingBox(self):
+
+        geoList = mc.ls(geometry=True)
+        bBoxList = mc.polyEvaluate(geoList, boundingBox = True)
+        minCourner = om.MPoint()
+        maxCourner = om.MPoint()
+        
+        minCourner.x = bBoxList[0][0]
+        minCourner.y = bBoxList[1][0]
+        minCourner.z = bBoxList[2][0]
+        
+
+        maxCourner.x = bBoxList[0][1]
+        maxCourner.y = bBoxList[1][1]
+        maxCourner.z = bBoxList[2][1]
+
+        # Creating the bounding box
+        boundingBox = om.MBoundingBox(minCourner, maxCourner)
+
+        return boundingBox
+        
+
+    def getObjCenter(self):
+        boundingBox = self.getGeoBoundingBox()
+        centerPoint =[boundingBox.center().x, boundingBox.center().y, boundingBox.center().z]
+        return centerPoint
+
+    def getObjHeight(self):
+        boundingBox = self.getGeoBoundingBox()
+        return boundingBox.height()
+
+    def getObjDepth(self):
+        boundingBox = self.getGeoBoundingBox()
+        return boundingBox.height()
+
+    def getObjWidth(self):
+        boundingBox = self.getGeoBoundingBox()
+        return boundingBox.width()
+
+        
+    def __init__(self, rigName, projectEnv):
+        
+        # IMITIALIZATION
+        modelGrp = "C_"+rigName+"Model_GRP"
+        modelFile = projectEnv+"models/"+rigName+"/scenes"
+        # modelFile = projectEnv+"models/"+rigName+"/scenes/s1_v.003.ma"
+
+        mmod.transform.elemIndex = 0
+
+        # COMPONENT FILES
+        rigWip, componentsFile, controlShapesFile, skinWeightsFile = folderHierarchy(projectEnv, rigName)
+
+        # NEW SCENE
+        mc.file(new = True, f=True)
+        
+        # IMPORT MODEL
+        self.loadLatestFile(modelFile)
+
+        print "model Loaded", modelFile
+        # mc.file(modelFile, i= True, type= "mayaAscii", usingNamespaces= False, f=True)
+
+        # MODEL PARAMETERS
+        geoCenter = self.getObjCenter()
+        geoHeight = self.getObjHeight()
+        geoWidth = self.getObjWidth()
+        geoDepth = self.getObjDepth()
+
+        
+        # RIG NODE
+        mainGrpTransf = mmod.transform(name=rigName, type="GRP") 
+
+        # MODEL GRP
+        modelMasterGRP = mmod.transform(name="geometry", type="GRP", parent=mainGrpTransf)
+        
+        mc.parent(modelGrp, modelMasterGRP)
+
+        
+        # CHARACTER CONTROL SHAPE
+        globalMoveCTL= ctlFn.globalMoveCtrl()
+        mc.parent(globalMoveCTL, mainGrpTransf)
+       
+        # CHR CTRL: SCALE & POSITION
+        translationVector = [0, geoHeight+geoHeight*0.15, 0]
+        fn.scaleShapePoints(globalMoveCTL.name, geoWidth*0.4)
+        fn.translateShapePoints(globalMoveCTL.name, translationVector, [0, 0, 0])
+        
+        
+        # ROOT CONTROL
+        moveGrp = mmod.transform(name="moveGlobal", type="GRP", parent=globalMoveCTL)
+        rootCtrl = createJointHY(side= "C", name = "root", parent=moveGrp) 
+        # ROOT CTRL: SCALE & POSITION
+        shapes = fn.getChildren(rootCtrl)
+        for shp in shapes:
+            fn.scaleShapePoints(shp, max(geoWidth, geoDepth))
+
+        # Create Joint 
+        self.rootJnt = mmod.joint(name="root",  parent=rootCtrl)
+        # Position JNT: centre of character
+        # mc.xform(rootJnt.name, t=geoCenter, ws=True)
+        # chrMoveJnt.visibility=0
+        # mc.setAttr(jnt.name+".visibility", 0)
+
+        # Other GRP
+        self.rigGrp = mmod.transform(name="rig", type="GRP", parent=mainGrpTransf)
+        self.jntGRp = mmod.transform(name="jnt", type="GRP", parent=mainGrpTransf)
+
+        # LOAD COMPONENTS
+        self.loadLatestFile(componentsFile)
+
 
 
 class finger(object):
@@ -221,7 +416,7 @@ class hand():
 
        
         # DELETING GUIDES
-        # mc.delete(handJnt)
+        mc.delete(fingerGrp)
     def connectToWristMovement(self):
         # CONNECTING TRANSLATION
         # Getting Local Space
@@ -242,7 +437,7 @@ class hand():
         mmod.connectAttr(self.root.effectorCtrl.name+".rotateY", self.handGrp.name+".rotateY")
         mmod.connectAttr(self.root.effectorCtrl.name+".rotateZ", self.handGrp.name+".rotateZ")
 
-class diana(loadFn.rigSceneSetup):    
+class diana(rigSceneSetup):    
     character = "Diana"
     def __init__(self, rigName, projectEnv):
         super(diana, self).__init__(rigName, projectEnv)
@@ -279,13 +474,71 @@ class diana(loadFn.rigSceneSetup):
         for node in matLoftList:
             mc.setAttr(node+".widthOffset", 1)
 
+        # BIND JOINTS
+        bindJoints = [ u'C_chest04_JNT', u'C_bindSpine013_JNT', u'C_bindSpine012_JNT', u'C_bindSpine011_JNT',
+                       u'C_bindSpine010_JNT', u'C_bindSpine09_JNT', u'C_bindSpine08_JNT', u'C_bindSpine07_JNT',
+                       u'C_bindSpine06_JNT', u'C_pelvis01_JNT', u'L_bindFemurribbon01_JNT', u'L_bindFemurribbon00_JNT',
+                       u'L_bindFemurribbon02_JNT', u'L_bindFemurribbon03_JNT', u'L_bindFemurribbon04_JNT', u'L_bindFemurribbon05_JNT',
+                        u'L_bindTibiaribbon00_JNT',
+                        u'L_bindTibiaribbon01_JNT',
+                        u'L_bindTibiaribbon02_JNT',
+                        u'L_bindTibiaribbon03_JNT',
+                        u'L_bindTibiaribbon04_JNT',
+                        u'L_bindTibiaribbon05_JNT',
+                        u'R_bindFemurribbon00_JNT',
+                        u'R_bindFemurribbon01_JNT',
+                        u'R_bindFemurribbon02_JNT',
+                        u'R_bindFemurribbon03_JNT',
+                        u'R_bindFemurribbon04_JNT',
+                        u'R_bindFemurribbon05_JNT',
+                        u'R_bindTibiaribbon00_JNT',
+                        u'R_bindTibiaribbon01_JNT',
+                        u'R_bindTibiaribbon02_JNT',
+                        u'R_bindTibiaribbon03_JNT',
+                        u'R_bindTibiaribbon04_JNT',
+                        u'R_bindTibiaribbon05_JNT',
+                        u'L_footFK_Ankle00_JNT',
+                        u'R_footFK_Ankle00_JNT',
+                        u'R_footFK_Tarsals01_JNT',
+                        u'L_footFK_Tarsals01_JNT',
+                        u'L_bindHumerusribbon01_JNT',
+                        u'L_bindHumerusribbon00_JNT',
+                        u'L_bindHumerusribbon02_JNT',
+                        u'L_bindHumerusribbon03_JNT',
+                        u'L_bindHumerusribbon04_JNT',
+                        u'L_bindHumerusribbon05_JNT',
+                        u'L_bindRadiusribbon00_JNT',
+                        u'L_bindRadiusribbon01_JNT',
+                        u'L_bindRadiusribbon02_JNT',
+                        u'L_bindRadiusribbon03_JNT',
+                        u'L_bindRadiusribbon04_JNT',
+                        u'L_bindRadiusribbon05_JNT',
+                        u'R_bindHumerusribbon00_JNT',
+                        u'R_bindHumerusribbon01_JNT',
+                        u'R_bindHumerusribbon02_JNT',
+                        u'R_bindHumerusribbon03_JNT',
+                        u'R_bindHumerusribbon04_JNT',
+                        u'R_bindHumerusribbon05_JNT',
+                        u'R_bindRadiusribbon00_JNT',
+                        u'R_bindRadiusribbon01_JNT',
+                        u'R_bindRadiusribbon02_JNT',
+                        u'R_bindRadiusribbon03_JNT',
+                        u'R_bindRadiusribbon04_JNT',
+                        u'R_bindRadiusribbon05_JNT']
+
+
+
         # # POSITIONING JOINTS AT RIGHT PLACES
         # # SPINE
         
         # TEMPORARY
         mc.hide("C_geometry01_GRP")
+        mc.hide ("Groom")
         mc.select("C_spineFKCtl0*_JNT")
         mc.delete()
+
+        
+        mc.select(bindJoints, "Diana_Geo")
 
 
 

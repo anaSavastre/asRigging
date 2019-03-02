@@ -5,9 +5,6 @@ import mayaNode as mNode
 import rigFn as rigFn 
 import controlFn as ctlFn
 
-
- 
-
      
 class blendFKIK(object):
     def __init__(self, side, jnt = None, name="segment", segmentsList=["base", "midPoint", "effector"], parent=None, root=None, hook=None):

@@ -162,7 +162,9 @@ def constructCTL(guideJNT, side="C", name="name", parent=None, ctrlScale=1, ctrl
     # Scaling Ctrl
     try:
         fn.scaleShapePoints(ctl.name, mc.getAttr(guideJNT+".radius")/2)
-        fn.rotateShapePoints(ctl.name, rotationVector=mc.xform(guideJNT, q=True, ws=True, ro=True), pivot=mc.xform(guideJNT, q=True, ws=True, t=True))
+        # fn.rotateShapePoints(ctl.name, rotationVector=mc.xform(guideJNT, q=True, ws=True, ro=True), pivot=mc.xform(guideJNT, q=True, ws=True, t=True))
+
+        fn.rotateShapePoints(ctl.name, rotationVector=[0, 90, 0], pivot=mc.xform(guideJNT, q=True, ws=True, t=True))
     except:
         # Scaling Ctrl
         fn.scaleShapePoints(ctl.name, ctrlScale)

@@ -166,4 +166,5 @@ class ribbon(object):
         mc.delete(fn.getParent(curve), curveFromSurface)
 
 
-createGuides("C", 5)
+# guides = createGuides("C", 5, spacing=2)
+# ribbon  = ribbon(side="C", name="ribbon", guides=None, numberOfJoints=5, revolveVector= [1, 0, 0], parent=None, root=None)

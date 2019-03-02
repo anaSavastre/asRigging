@@ -15,8 +15,6 @@ controlShapesPath = "D:/Bournemouth University/asRigging/controlShapes"
 
 
 # def loadComponents():
-
-
 def folderHierarchy(projectEnv, rigName):
     # Creating Folder structures
     ''' rigging>CharacterName>
@@ -78,10 +76,25 @@ class rigSceneSetup(object):
         This function gets all the files in the given directory and loads the latest maya scene file
         '''
         files= os.listdir(path)
-        latestFile = sorted(files)[-1];
+        sortedFiles = sorted(list(set([item for item in files if item.endswith('.ma') or item.endswith('.mb')])));
+        print "sourted files", sortedFiles
+        print "files", files
+        latestFile = sortedFiles[-1]
+        # for index in range (2, len(files)):
+        #     if (".ma" in files[-index] ):
+        #         latestFile = files[index]
+        #         break
+        # if (latestFile == None):
+
+        #     print "No Maya file in directory"   
+                
+
+
         try:
+            print "file to be loaded", path+"/"+latestFile
             mc.file( path+"/"+latestFile, i= True, type= "mayaAscii", usingNamespaces= False, f=True)
         except:
+            print "file not loaded"
             return
 
 
@@ -143,6 +156,8 @@ class rigSceneSetup(object):
         
         # IMPORT MODEL
         self.loadLatestFile(modelFile)
+
+        print "model Loaded", modelFile
         # mc.file(modelFile, i= True, type= "mayaAscii", usingNamespaces= False, f=True)
 
         # MODEL PARAMETERS
@@ -181,10 +196,6 @@ class rigSceneSetup(object):
 
         # Create Joint 
         self.rootJnt = mmod.joint(name="root",  parent=rootCtrl)
-        # Position JNT: centre of character
-        # mc.xform(rootJnt.name, t=geoCenter, ws=True)
-        # chrMoveJnt.visibility=0
-        # mc.setAttr(jnt.name+".visibility", 0)
 
         # Other GRP
         self.rigGrp = mmod.transform(name="rig", type="GRP", parent=mainGrpTransf)
@@ -192,5 +203,3 @@ class rigSceneSetup(object):
 
         # LOAD COMPONENTS
         self.loadLatestFile(componentsFile)
-
-

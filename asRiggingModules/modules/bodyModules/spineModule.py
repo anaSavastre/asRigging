@@ -36,17 +36,17 @@ class spine(object):
         # 1.2. COG CTRL
         self.cog = rigFn.constructCTL(self.guides[0], name = "COG", parent = self.root)
         fn.scaleShapePoints(self.cog.name, 1.3)
-        fn.rotateShapePoints(self.cog.name, rotationVector=[90, 0, 0], pivot=mc.xform(self.guides[-1], q=True, ws=True, t=True))
+        fn.rotateShapePoints(self.cog.name, rotationVector=[0, 0, 90], pivot=mc.xform(self.guides[-1], q=True, ws=True, t=True))
         # 1.0. PELVIS
         self.pelvisCtl = rigFn.constructCTL(self.guides[0], name = "pelvis", parent = self.cog)
-        fn.rotateShapePoints(self.pelvisCtl.name, rotationVector=[90, 0, 0], pivot=mc.xform(self.guides[-1], q=True, ws=True, t=True))
+        fn.rotateShapePoints(self.pelvisCtl.name, rotationVector=[0, 0, 90], pivot=mc.xform(self.guides[-1], q=True, ws=True, t=True))
 
         # 1.3. Spine FK
         self.fkCtl1 = rigFn.constructCTL(self.guides[len(self.guides)/2-2], name = self.name+"FKCtl", parent = self.cog)
         self.fkCtl2 = rigFn.constructCTL(self.guides[len(self.guides)/2+1], name = self.name+"FKCtl", parent = self.fkCtl1)
         # 1.4. CHEST
         self.chestCtl = rigFn.constructCTL(self.guides[-1], name="chest", parent = self.fkCtl2)
-        fn.rotateShapePoints(self.chestCtl.name, rotationVector=[90, 0, 0], pivot=mc.xform(self.guides[-1], q=True, ws=True, t=True))
+        fn.rotateShapePoints(self.chestCtl.name, rotationVector=[0, 0, 90], pivot=mc.xform(self.guides[-1], q=True, ws=True, t=True))
 
         # 2.0. SPINE RIBBON
         # Bind Joints Groug

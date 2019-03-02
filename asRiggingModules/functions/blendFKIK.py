@@ -225,6 +225,8 @@ class blendFKIK(object):
         IKJntGRP = mmod.transform(side=self.side, name=self.name+"IK"+"Joints", type="GRP", parent=IK_GRP)
         limitedEffectorGRP = mmod.transform(side=self.side, name=self.name+"IK"+"Limited"+self.segments[-1], type="GRP", parent=IK_GRP)
         effectorCtrl = rigFn.constructCTL(self.controllerGuide, side=self.side, name=self.name+"IK"+self.segments[-1], parent=IK_GRP, ctrlScale=mc.getAttr(jntList[2]+".radius"))
+        fn.rotateShapePoints(effectorCtrl.name, rotationVector=[0, 90, 0], pivot=mc.xform(self.controllerGuide, q=True, ws=True, t=True))
+
         # Constraining Effector to rig Root
         mc.parentConstraint(self.hook.name, fn.getParent(fn.getParent(effectorCtrl.name)), mo=True)
         mmod.connectAttr(fn.getParent(self.hook.name)+".scale", fn.getParent(fn.getParent(effectorCtrl.name))+".scale")

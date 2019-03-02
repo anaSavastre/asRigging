@@ -34,7 +34,7 @@ class neck(object):
         # 1.0. HEAD
         self.headCtrl = rigFn.constructCTL(self.guides[-1], name = "head", parent = self.hook)
         # Rotation surfacePoints
-        fn.rotateShapePoints(self.headCtrl.name, rotationVector=[90, 0, 0], pivot=mc.xform(self.guides[-1], q=True, ws=True, t=True))
+        fn.rotateShapePoints(self.headCtrl.name, rotationVector=[0, 0, 90], pivot=mc.xform(self.guides[-1], q=True, ws=True, t=True))
         fn.translateShapePoints(self.headCtrl.name, [0, mc.getAttr(self.guides[-1]+".radius"), 0], pivot=mc.xform(self.guides[-1], q=True, ws=True, t=True))
 
         # 1.2. NECK RIBBON

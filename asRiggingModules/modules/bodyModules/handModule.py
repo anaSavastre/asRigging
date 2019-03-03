@@ -77,7 +77,6 @@ def constructJNT(guideJNT, side="C", name="name", parent=None):
 
     return jnt
 
-
 class finger(object):
     globalCtrl=None
     def __init__(self, jntHierarchy, fingerName="finger", side="C", parent=None, hook=None, worldUpVector=""):
@@ -145,7 +144,6 @@ class finger(object):
             
             # JOINT STRETCHING
             distanceBetweenNode = mc.createNode("distanceBetween", name=side+"_distance"+fingerName+str(i)+"_DST")
-            #print fingerBaseJnt[i], "jnt"
             mc.connectAttr(fingerBaseJnt[i]+".worldMatrix", distanceBetweenNode+".inMatrix1")
             mc.connectAttr(fingerBaseJnt[i+1]+".worldMatrix", distanceBetweenNode+".inMatrix2")
 
@@ -173,10 +171,9 @@ class finger(object):
 
         # DELETING GUIDES
         mc.delete(jntHierarchy)
-
 class hand():
 
-    def __init__(self, handJnt=None, side="C", name="hand", parent=None, root=None, hook=None):
+    def __init__(self, handJnt=None, fingerGrp=None, side="C", name="hand", parent=None, root=None, hook=None):
         '''
         Hand Module
         parent = object to parent too
@@ -189,9 +186,12 @@ class hand():
         self.side = side
         self.name = name
         self.handJnt = hand
+        self.fingerGrp = fingerGrp
         self.parent = parent
         self.root = root
         self.hook = hook
+        self.wristCtrl = root.effectorCtrl
+        self.guideHandJnt = handJnt
 
         # GLOBALS
         mmod.resetCount()
@@ -203,11 +203,21 @@ class hand():
 
         # CONNECTING HAND GROUP TO WRIST MOVEMENT
         self.connectToWristMovement()
+        # CREATING HAND JNT
+        self.handController = rigFn.constructCTL(self.guideHandJnt, side=self.side, name = "handFK_wrist", parent = self.handGrp)
+        # TWIST ARM
+        mc.orientConstraint(fn.getChildren(self.handController)[1], self.root.radiusRibbon.guides[-1].name, mo=True)
+        # CONNECTING HAND TO FK ARM
+        # rigFn.parentConstraintMO(self.root.FKjntChain[1].name, fn.getParent(fn.getParent(self.handController)), fn.getParent(self.handController.name))#, translate=False, scale=False)
+        orientConstraint =mc.orientConstraint(self.root.FKjntChain[1].name, fn.getParent(self.handController.name), mo=True)[0]
+        ocWeightAlias = mc.orientConstraint(orientConstraint, q=True, wal=True)[0]
+        mmod.connectAttr( self.root.reverseBlend.getOutput(), orientConstraint+"."+ocWeightAlias)
 
-        handFingersGRP = mmod.transform(side=self.side, name="handFingers", type="GRP", parent=handGrp)
-        self.handFingersGRP = handFingersGRP
+
         # CREATING FINGERS
-        fingerJntList = fn.getChildren(handJnt)
+        handFingersGRP = mmod.transform(side=self.side, name="handFingers", type="GRP", parent=fn.getChildren(self.handController)[1])
+        self.handFingersGRP = handFingersGRP
+        fingerJntList = fn.getChildren(fingerGrp)
         fingers=[]
         for jnt in fingerJntList:
             name = fn.concat_str(jnt, s1_begin = 2, s1_end=6)
@@ -233,7 +243,7 @@ class hand():
 
        
         # DELETING GUIDES
-        mc.delete(handJnt)
+        mc.delete(fingerGrp, self.guideHandJnt)
     def connectToWristMovement(self):
         # CONNECTING TRANSLATION
         # Getting Local Space

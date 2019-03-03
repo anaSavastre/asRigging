@@ -21,21 +21,30 @@ def getDagPath(node=None):
     sel.getDagPath(0, d)
     return d
 
-def getLocalOffset(parent, child):
-    parentWorldMatrix = getDagPath(parent).inclusiveMatrix()
-    childWorldMatrix = getDagPath(child).inclusiveMatrix()
+def getLocalOffset(parent, child, translationOffsetFlag = True, rotationOffsetFlag = True):
+        parentWorldMatrix = getDagPath(parent).inclusiveMatrix()
+        childWorldMatrix = getDagPath(child).inclusiveMatrix()
 
-    offsetMatrix = childWorldMatrix * parentWorldMatrix.inverse()
-    returnMatrix = om.MTransformationMatrix()
-    translationVector = om.MVector()
-    rotationVector = om.MVector()
+        offsetMatrix = childWorldMatrix * parentWorldMatrix.inverse()
+        scriptUtils = om.MScriptUtil()
+        returnMatrix = om.MTransformationMatrix()
+        translationVector = om.MVector()
+        scaleDouble = scriptUtils.asDouble3Ptr()
+        # rotationMatrix.setScale(scaleDouble, om.MSpace.kWorld)
 
-    transformMatrix = om.MTransformationMatrix(offsetMatrix)
-    translationVector = transformMatrix.getTranslation()
-    rotationVector = transformMatrix.getRotation()
-    returnMatrix *= translationVector()
-    return returnMatrix.asMatrix()
 
+        transformMatrix = om.MTransformationMatrix(offsetMatrix)
+        if (translationOffsetFlag):
+            translationVector = transformMatrix.getTranslation(om.MSpace.kWorld)
+        if (rotationOffsetFlag):
+            rotationMatrix = om.MTransformationMatrix(offsetMatrix)
+            rotationMatrix.setTranslation(translationVector, om.MSpace.kWorld)
+            returnMatrix = rotationMatrix  
+            
+        # returnMatrix = offsetMatrix  
+        returnMatrix.setTranslation(translationVector, om.MSpace.kWorld)
+
+        return returnMatrix.asMatrix()
 
 ##################################### END REFERENCE #####################################
 

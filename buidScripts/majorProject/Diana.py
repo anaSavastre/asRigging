@@ -58,6 +58,8 @@ if (hostName == "DESKTOP-PQV0HOV"):
 
 controlShapesPath = "D:/Bournemouth University/asRigging/controlShapes"
 
+
+
 class diana(mjChr.rigSceneSetup):    
     character = "Diana"
     def __init__(self, rigName, projectEnv):
@@ -77,10 +79,10 @@ class diana(mjChr.rigSceneSetup):
             self.m_foot = footMod.foot(footJnt=s+"_foot00_JNT", side=s, root=self.m_leg, parent=s+"_bindLeg00_GRP", hook=self.rootJnt)
             # ARM
             self.m_clavicle = clavicleMod.clavicle(side=s, clavicleJnt=s+"_clavicle00_JNT", root=self.m_spine.chestCtl)
-            self.m_arm = armMod.arm(side=s, armJnt=s+"_arm00_JNT", parent=self, root=self.m_clavicle.clavicleControl[1])
+            self.m_arm = armMod.arm(side=s, armJnt=s+"_arm00_JNT", parent=self, root=self.m_clavicle)
               
             # HAND
-            self.m_hand =hand(handJnt=s+"_hand00_JNT", fingerGrp=s+"_handFingers00_GRP", side=s, root=self.m_arm, parent= s+"_bindArm00_GRP", hook = self.rootJnt)
+            self.m_hand =handMod.hand(handJnt=s+"_hand00_JNT", fingerGrp=s+"_handFingers00_GRP", side=s, root=self.m_arm, parent= s+"_bindArm00_GRP", hook = self.rootJnt)
 
        
        # CLEAN UP
@@ -103,50 +105,29 @@ class diana(mjChr.rigSceneSetup):
                         u'L_bindTibiaribbon00_JNT', u'L_bindTibiaribbon01_JNT', u'L_bindTibiaribbon02_JNT', u'L_bindTibiaribbon03_JNT',
                         u'L_bindTibiaribbon04_JNT', u'L_bindTibiaribbon05_JNT', u'R_bindFemurribbon00_JNT', u'R_bindFemurribbon01_JNT',
                         u'R_bindFemurribbon02_JNT', u'R_bindFemurribbon03_JNT', u'R_bindFemurribbon04_JNT', u'R_bindFemurribbon05_JNT',
-                        u'R_bindTibiaribbon00_JNT', u'R_bindTibiaribbon01_JNT',
-                        u'R_bindTibiaribbon02_JNT', u'R_bindTibiaribbon03_JNT',
-                        u'R_bindTibiaribbon04_JNT', u'R_bindTibiaribbon05_JNT',
-                        u'L_footFK_Ankle00_JNT', u'R_footFK_Ankle00_JNT',
-                        u'R_footFK_Tarsals01_JNT',
-                        u'L_footFK_Tarsals01_JNT',
-                        u'L_bindHumerusribbon01_JNT',
-                        u'L_bindHumerusribbon00_JNT',
-                        u'L_bindHumerusribbon02_JNT',
-                        u'L_bindHumerusribbon03_JNT',
-                        u'L_bindHumerusribbon04_JNT',
-                        u'L_bindHumerusribbon05_JNT',
-                        u'L_bindRadiusribbon00_JNT',
-                        u'L_bindRadiusribbon01_JNT',
-                        u'L_bindRadiusribbon02_JNT',
-                        u'L_bindRadiusribbon03_JNT',
-                        u'L_bindRadiusribbon04_JNT',
-                        u'L_bindRadiusribbon05_JNT',
-                        u'R_bindHumerusribbon00_JNT',
-                        u'R_bindHumerusribbon01_JNT',
-                        u'R_bindHumerusribbon02_JNT',
-                        u'R_bindHumerusribbon03_JNT',
-                        u'R_bindHumerusribbon04_JNT',
-                        u'R_bindHumerusribbon05_JNT',
-                        u'R_bindRadiusribbon00_JNT',
-                        u'R_bindRadiusribbon01_JNT',
-                        u'R_bindRadiusribbon02_JNT',
-                        u'R_bindRadiusribbon03_JNT',
-                        u'R_bindRadiusribbon04_JNT',
-                        u'R_bindRadiusribbon05_JNT']
+                        u'R_bindTibiaribbon00_JNT', u'R_bindTibiaribbon01_JNT', u'R_bindTibiaribbon02_JNT', u'R_bindTibiaribbon03_JNT',
+                        u'R_bindTibiaribbon04_JNT', u'R_bindTibiaribbon05_JNT', u'L_footFK_Ankle00_JNT', u'R_footFK_Ankle00_JNT',
+                        u'R_footFK_Tarsals01_JNT', u'L_footFK_Tarsals01_JNT', u'L_bindHumerusribbon01_JNT', u'L_bindHumerusribbon00_JNT',
+                        u'L_bindHumerusribbon02_JNT', u'L_bindHumerusribbon03_JNT', u'L_bindHumerusribbon04_JNT', u'L_bindHumerusribbon05_JNT',
+                        u'L_bindRadiusribbon00_JNT', u'L_bindRadiusribbon01_JNT', u'L_bindRadiusribbon02_JNT', u'L_bindRadiusribbon03_JNT',
+                        u'L_bindRadiusribbon04_JNT',u'L_bindRadiusribbon05_JNT', u'R_bindHumerusribbon00_JNT', u'R_bindHumerusribbon01_JNT',
+                        u'R_bindHumerusribbon02_JNT', u'R_bindHumerusribbon03_JNT', u'R_bindHumerusribbon04_JNT', u'R_bindHumerusribbon05_JNT',
+                        u'R_bindRadiusribbon00_JNT', u'R_bindRadiusribbon01_JNT', u'R_bindRadiusribbon02_JNT', u'R_bindRadiusribbon03_JNT',
+                        u'R_bindRadiusribbon04_JNT', u'R_bindRadiusribbon05_JNT']
 
 
 
-        # # POSITIONING JOINTS AT RIGHT PLACES
-        # # SPINE
+    #     # # POSITIONING JOINTS AT RIGHT PLACES
+    #     # # SPINE
         
-        # TEMPORARY
+    #     # TEMPORARY
         mc.hide("C_geometry01_GRP")
         mc.hide ("Groom", "Light", "Eye:group1")
-        mc.select("C_spineFKCtl0*_JNT")
-        mc.delete()
+    #     mc.select("C_spineFKCtl0*_JNT")
+    #     mc.delete()
 
         
-        mc.select(bindJoints, "Diana_Geo")
+    #     mc.select(bindJoints, "Diana_Geo")
 
 
 

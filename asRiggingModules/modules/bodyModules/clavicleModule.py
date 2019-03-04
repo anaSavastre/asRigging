@@ -1,5 +1,6 @@
 import maya.cmds as mc
 import functions as fn
+import mayaModule as mmod
 import rigFn
 
 

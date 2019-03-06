@@ -5,7 +5,7 @@ import mayaNode as mNode
 import rigFn as rigFn 
 import controlFn as ctlFn
 
-     
+          
 class blendFKIK(object):
     def __init__(self, side, jnt = None, name="segment", segmentsList=["base", "midPoint", "effector"], parent=None, root=None, hook=None):
         '''
@@ -63,6 +63,9 @@ class blendFKIK(object):
 
             # Creating settingsCtrl
             self.settingsCtrlSetUp(jntList=self.jntGuideList, parent=self.bindJntChain[2])
+            
+            # Creating stretchyLimbs
+            self.stretchyLimbsSetUp()
            
             for ikJnt, fkJnt, bindJnt, segment in zip(self.IKjntChain, self.FKjntChain, self.bindJntChain, self.segments):
 
@@ -139,6 +142,39 @@ class blendFKIK(object):
 
             # DELETING GUIDES
             mc.delete(jnt)
+
+    def stretchyLimbsSetUp(self):
+        print "Stretchy Limbs"
+        # Creating Nodes
+        lengthDifference = mNode.plusMinusAverage(side=self.side, name="lenDiference")
+        clampNode = mNode.clamp(side=self.side, name="clampLenDist")
+        segmentLength = mNode.multDoubleLinear(side=self.side, name="segmentLenght")
+        stretchyAttrMult = mNode.multDoubleLinear(side=self.side, name="stretchyAttr")
+        addOriginalDistBase = mNode.addDoubleLinear(self.side, name="addOriginalLengthBase")
+        addOriginalDistMid = mNode.addDoubleLinear(self.side, name="addOriginalLengthMid")
+
+        # Delta Distance
+        mmod.connectAttr(self.baseEndDistNode.getDistance(), lengthDifference.name+".input1D[0]")
+        mc.setAttr(lengthDifference.name+".input1D[1]",  self.baseSegmentLength+self.midSegmentLength)
+        lengthDifference.operation = 2
+        # Clamp Distance
+        mmod.connectAttr(lengthDifference.name+".output1D", clampNode.getInputR())
+        clampNode.maxR = 1000000
+        # Dividing Length in Segments
+        mmod.connectAttr(clampNode.getOutputR(), segmentLength.getInput1())
+        segmentLength.input2 = 0.5
+        # Multiply by the StretchLimbs Attribute
+        mmod.connectAttr(segmentLength.getOutput(), stretchyAttrMult.getInput1())
+        mmod.connectAttr(self.settingCtl.name+".stretchyLimb", stretchyAttrMult.getInput2())
+        # Adding To Original Length
+        mmod.connectAttr(stretchyAttrMult.getOutput(), addOriginalDistBase.getInput1())
+        mmod.connectAttr(stretchyAttrMult.getOutput(), addOriginalDistMid.getInput1())
+        mc.setAttr(addOriginalDistBase.getInput2(), self.baseSegmentLength)
+        mc.setAttr(addOriginalDistMid.getInput2(), self.midSegmentLength)
+        # Connect To Segment Length
+        mmod.connectAttr(addOriginalDistBase.getOutput(), self.settingsGRP.name+"."+self.segments[0]+"Length")
+        mmod.connectAttr(addOriginalDistMid.getOutput(), self.settingsGRP.name+"."+self.segments[1]+"Length") 
+
 
     def settingsCtrlSetUp(self, jntList=[], parent=None):
         settingsCtrlGrp = mmod.transform(side=self.side, name=self.name+"Settings", parent=self.bindJntChain[2] )
@@ -236,6 +272,7 @@ class blendFKIK(object):
         self.IKGRP = IK_GRP
         self.effectorCtrl = effectorCtrl
         self.limitedEffector = limitedEffectorGRP
+        self.settingsGRP = settingsGRP
         # Position Ctrl
         fn.rotateShapePoints(effectorCtrl.name, rotationVector=[90, 0, 0], pivot=mc.xform(jntList[2], q=True, t=True, ws=True))
 
@@ -251,6 +288,8 @@ class blendFKIK(object):
         # Get bone length
         baseSegmentLength = mc.getAttr(fn.getParent(jntChain[1].name)+".translateX")
         midSegmentLength = mc.getAttr(fn.getParent(jntChain[2].name)+".translateX")
+        self.baseSegmentLength = baseSegmentLength
+        self.midSegmentLength = midSegmentLength
         # String to worldMatrix Attr
         baseSegmentWMAttr = jntChain[0].getWorldMatrix()
         # baseSegmentWorldMatrixValue = mc.getAttr(baseSegmentWMAttr)
@@ -306,6 +345,7 @@ class blendFKIK(object):
         baseEndDist = mNode.distanceBetween(side=self.side, name=self.segments[0]+self.segments[2].capitalize()+"Dist")
         mmod.connectPlugs(baseSegmentStartMatrixAttr, baseEndDist.inMatrix1)
         mmod.connectAttr(effectorJNT+".worldMatrix", baseEndDist.getInMatrix2())
+        self.baseEndDistNode = baseEndDist
         # self.effectorCtrl
         # Clamp: distance to max = length(baseSegment.len+midSegment.len)
         distancedClamp = mNode.clamp(side=self.side, name="baseEndDist")
@@ -387,4 +427,3 @@ class blendFKIK(object):
         # Constraining Control to Hook
         mc.parentConstraint(self.hook.name, poleVectGlobal.name, mo=True)
 
-       

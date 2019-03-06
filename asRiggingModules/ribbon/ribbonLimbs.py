@@ -62,10 +62,14 @@ class ribbonLimbs(object):
         mmod.connectAttr(fn.getParent(fn.getParent(child))+".worldInverseMatrix", matrixMult.name+".matrixIn[1]")
         mmod.connectAttr(matrixMult.getMatrixSum(), decomposeMatrix.getInputMatrix())
         # CREATING INTERPOLATION
-        divide = mNode.multDoubleLinear(side=self.side, name="twistInterpolation"+str(index))
-        mmod.connectAttr(decomposeMatrix.name+".outputRotateX", divide.getInput1())
-        mc.setAttr(divide.getInput2(), blendValue)
-        mmod.connectAttr(divide.getOutput(), fn.getParent(child.name)+".rotateX")
+        eulerAdditive = mNode.animBlendNodeAdditiveDA(side = self.side, name= "twistInterpolation"+str(index))
+        mmod.connectAttr(decomposeMatrix.name+".outputRotateX", eulerAdditive.getInputA())
+        mc.setAttr(eulerAdditive.getWeightA(), blendValue)
+        mmod.connectAttr(eulerAdditive.getOutput(), fn.getParent(child.name)+".rotateX")
+        # divide = mNode.multDoubleLinear(side=self.side, name="twistInterpolation"+str(index))
+        # mmod.connectAttr(decomposeMatrix.name+".outputRotateX", divide.getInput1())
+        # mc.setAttr(divide.getInput2(), blendValue)
+        # mmod.connectAttr(divide.getOutput(), fn.getParent(child.name)+".rotateX")
 
     def twistInterpolation(self):
         # EXTRACT JOINT ROTATION - FROM END  TO START

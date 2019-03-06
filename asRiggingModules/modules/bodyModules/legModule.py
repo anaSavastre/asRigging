@@ -24,8 +24,8 @@ import functions as fn
 
 def resetLegMod():
     leg.rigParent = None
-    
-class leg(blendFKIK.blendFKIK):
+   
+class leg(blendFKIK):
     rigParent = None
     def __init__(self, side="C", legJnt=None, parent=None, root=None):
         if (parent!=None):

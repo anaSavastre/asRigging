@@ -113,7 +113,26 @@ class diana(mjChr.rigSceneSetup):
                         u'L_bindRadiusribbon04_JNT',u'L_bindRadiusribbon05_JNT', u'R_bindHumerusribbon00_JNT', u'R_bindHumerusribbon01_JNT',
                         u'R_bindHumerusribbon02_JNT', u'R_bindHumerusribbon03_JNT', u'R_bindHumerusribbon04_JNT', u'R_bindHumerusribbon05_JNT',
                         u'R_bindRadiusribbon00_JNT', u'R_bindRadiusribbon01_JNT', u'R_bindRadiusribbon02_JNT', u'R_bindRadiusribbon03_JNT',
-                        u'R_bindRadiusribbon04_JNT', u'R_bindRadiusribbon05_JNT']
+                        u'R_bindRadiusribbon04_JNT', u'R_bindRadiusribbon05_JNT',
+                        u'L_bindClavicle012_JNT', u'R_bindClavicle012_JNT', 
+                        u'L_handFK_wrist00_JNT', u'R_handFK_wrist00_JNT', 
+                        u'L_thumbMetacarpal00_JNT', u'L_thumbProximalPhalange02_JNT', u'L_thumbMiddlePhalange04_JNT',
+                        u'R_thumbMetacarpal00_JNT', u'R_thumbProximalPhalange02_JNT', u'R_thumbMiddlePhalange04_JNT',
+                        u'L_indexMetacarpal00_JNT', u'L_indexProximalPhalange02_JNT', u'L_indexMiddlePhalange04_JNT', 
+                        u'L_indexDistalPhalange06_JNT', u'L_middleMetacarpal00_JNT', u'L_middleProximalPhalange02_JNT', 
+                        u'L_middleMiddlePhalange04_JNT', u'L_middleDistalPhalange06_JNT', u'L_ringMetacarpal00_JNT', 
+                        u'L_ringProximalPhalange02_JNT', u'L_ringMiddlePhalange04_JNT', u'L_ringDistalPhalange06_JNT',
+                        u'L_pinkyMetacarpal01_JNT', u'L_pinkyProximalPhalange03_JNT', u'L_pinkyMiddlePhalange05_JNT',
+                        u'L_pinkyDistalPhalange07_JNT', u'R_indexMetacarpal00_JNT', u'R_indexProximalPhalange02_JNT',
+                        u'R_indexMiddlePhalange04_JNT', u'R_indexDistalPhalange06_JNT', u'R_middleMetacarpal00_JNT',
+                        u'R_middleProximalPhalange02_JNT', u'R_middleMiddlePhalange04_JNT', u'R_ringMetacarpal00_JNT', 
+                        u'R_pinkyMetacarpal01_JNT', u'R_pinkyProximalPhalange03_JNT', u'R_ringProximalPhalange02_JNT', 
+                        u'R_pinkyMiddlePhalange05_JNT', u'R_ringMiddlePhalange04_JNT', u'R_pinkyDistalPhalange07_JNT',
+                        u'R_ringDistalPhalange06_JNT', u'R_middleDistalPhalange06_JNT']
+                        # u'C_bindNeck03_JNT', u'C_bindNeck04_JNT', u'C_bindNeck05_JNT', 
+                        # u'C_bindNeck06_JNT', u'C_bindNeck07_JNT', u'C_bindNeck08_JNT', u'C_head00_JNT']
+
+
 
 
 
@@ -123,11 +142,11 @@ class diana(mjChr.rigSceneSetup):
     #     # TEMPORARY
         mc.hide("C_geometry01_GRP")
         mc.hide ("Groom", "Light", "Eye:group1")
-    #     mc.select("C_spineFKCtl0*_JNT")
-    #     mc.delete()
+        mc.select("C_spineFKCtl0*_JNT")
+        mc.delete()
 
         
-    #     mc.select(bindJoints, "Diana_Geo")
+        mc.select(bindJoints, "Diana_Geo")
 
 
 

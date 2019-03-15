@@ -7,7 +7,6 @@ Major Project: Richest Girl in Town
 
 Character: Diana
 
-
 '''
 
 import maya.cmds as mc
@@ -26,8 +25,7 @@ import pipeline
 import asNodes as asNode
 import mayaNode as mNode
 import blendFKIK as blendFKIK
-import ribbonLimbs as ribbonLimbs
-
+import ribbon
 import rigFn as rigFn
 import mayaNode as node
 
@@ -66,7 +64,8 @@ import mayaNode as mNode
 import rigFn as rigFn 
 import controlFn as ctlFn
 
-      
+
+
 class diana(mjChr.rigSceneSetup):    
     character = "Diana"
     def __init__(self, rigName, projectEnv):
@@ -82,7 +81,8 @@ class diana(mjChr.rigSceneSetup):
         side=["L", "R"]
         for s in side:
             # LEG 
-            self.m_leg = leg(legJnt=s+"_leg00_JNT", side=s, parent=self, root=self.m_spine.pelvisCtl)
+            self.m_leg = legMod.leg(legJnt=s+"_leg00_JNT", side=s, parent=self, root=self.m_spine.pelvisCtl)
+            # self.m_leg =  leg(legJnt=s+"_leg00_JNT", side=s, parent=self, root=self.m_spine.pelvisCtl)
             self.m_foot = footMod.foot(footJnt=s+"_foot00_JNT", side=s, root=self.m_leg, parent=s+"_bindLeg00_GRP", hook=self.rootJnt)
             # ARM
             self.m_clavicle = clavicleMod.clavicle(side=s, clavicleJnt=s+"_clavicle00_JNT", root=self.m_spine.chestCtl)
@@ -108,19 +108,19 @@ class diana(mjChr.rigSceneSetup):
         bindJoints = [ u'C_chest04_JNT', u'C_bindSpine013_JNT', u'C_bindSpine012_JNT', u'C_bindSpine011_JNT',
                        u'C_bindSpine010_JNT', u'C_bindSpine09_JNT', u'C_bindSpine08_JNT', u'C_bindSpine07_JNT',
                        u'C_bindSpine06_JNT', u'C_pelvis01_JNT', u'L_bindFemurribbon01_JNT', u'L_bindFemurribbon00_JNT',
-                       u'L_bindFemurribbon02_JNT', u'L_bindFemurribbon03_JNT', u'L_bindFemurribbon04_JNT', u'L_bindFemurribbon05_JNT',
+                       u'L_bindFemurribbon02_JNT', u'L_bindFemurribbon03_JNT', u'L_bindFemurribbon04_JNT',
                         u'L_bindTibiaribbon00_JNT', u'L_bindTibiaribbon01_JNT', u'L_bindTibiaribbon02_JNT', u'L_bindTibiaribbon03_JNT',
-                        u'L_bindTibiaribbon04_JNT', u'L_bindTibiaribbon05_JNT', u'R_bindFemurribbon00_JNT', u'R_bindFemurribbon01_JNT',
-                        u'R_bindFemurribbon02_JNT', u'R_bindFemurribbon03_JNT', u'R_bindFemurribbon04_JNT', u'R_bindFemurribbon05_JNT',
+                        u'L_bindTibiaribbon04_JNT', u'R_bindFemurribbon00_JNT', u'R_bindFemurribbon01_JNT',
+                        u'R_bindFemurribbon02_JNT', u'R_bindFemurribbon03_JNT', u'R_bindFemurribbon04_JNT', 
                         u'R_bindTibiaribbon00_JNT', u'R_bindTibiaribbon01_JNT', u'R_bindTibiaribbon02_JNT', u'R_bindTibiaribbon03_JNT',
-                        u'R_bindTibiaribbon04_JNT', u'R_bindTibiaribbon05_JNT', u'L_footFK_Ankle00_JNT', u'R_footFK_Ankle00_JNT',
+                        u'R_bindTibiaribbon04_JNT', u'L_footFK_Ankle00_JNT', u'R_footFK_Ankle00_JNT',
                         u'R_footFK_Tarsals01_JNT', u'L_footFK_Tarsals01_JNT', u'L_bindHumerusribbon01_JNT', u'L_bindHumerusribbon00_JNT',
-                        u'L_bindHumerusribbon02_JNT', u'L_bindHumerusribbon03_JNT', u'L_bindHumerusribbon04_JNT', u'L_bindHumerusribbon05_JNT',
+                        u'L_bindHumerusribbon02_JNT', u'L_bindHumerusribbon03_JNT', u'L_bindHumerusribbon04_JNT',
                         u'L_bindRadiusribbon00_JNT', u'L_bindRadiusribbon01_JNT', u'L_bindRadiusribbon02_JNT', u'L_bindRadiusribbon03_JNT',
-                        u'L_bindRadiusribbon04_JNT',u'L_bindRadiusribbon05_JNT', u'R_bindHumerusribbon00_JNT', u'R_bindHumerusribbon01_JNT',
-                        u'R_bindHumerusribbon02_JNT', u'R_bindHumerusribbon03_JNT', u'R_bindHumerusribbon04_JNT', u'R_bindHumerusribbon05_JNT',
+                        u'L_bindRadiusribbon04_JNT', u'R_bindHumerusribbon00_JNT', u'R_bindHumerusribbon01_JNT',
+                        u'R_bindHumerusribbon02_JNT', u'R_bindHumerusribbon03_JNT', u'R_bindHumerusribbon04_JNT',
                         u'R_bindRadiusribbon00_JNT', u'R_bindRadiusribbon01_JNT', u'R_bindRadiusribbon02_JNT', u'R_bindRadiusribbon03_JNT',
-                        u'R_bindRadiusribbon04_JNT', u'R_bindRadiusribbon05_JNT',
+                        u'R_bindRadiusribbon04_JNT',
                         u'L_bindClavicle012_JNT', u'R_bindClavicle012_JNT', 
                         u'L_handFK_wrist00_JNT', u'R_handFK_wrist00_JNT', 
                         u'L_thumbMetacarpal00_JNT', u'L_thumbProximalPhalange02_JNT', u'L_thumbMiddlePhalange04_JNT',
@@ -135,19 +135,25 @@ class diana(mjChr.rigSceneSetup):
                         u'R_middleProximalPhalange02_JNT', u'R_middleMiddlePhalange04_JNT', u'R_ringMetacarpal00_JNT', 
                         u'R_pinkyMetacarpal01_JNT', u'R_pinkyProximalPhalange03_JNT', u'R_ringProximalPhalange02_JNT', 
                         u'R_pinkyMiddlePhalange05_JNT', u'R_ringMiddlePhalange04_JNT', u'R_pinkyDistalPhalange07_JNT',
-                        u'R_ringDistalPhalange06_JNT', u'R_middleDistalPhalange06_JNT']
-                        # u'C_bindNeck03_JNT', u'C_bindNeck04_JNT', u'C_bindNeck05_JNT', 
-                        # u'C_bindNeck06_JNT', u'C_bindNeck07_JNT', u'C_bindNeck08_JNT', u'C_head00_JNT']
-
-
-
-
+                        u'R_ringDistalPhalange06_JNT', u'R_middleDistalPhalange06_JNT', 
+                        u'L_thumbMetacarpal01_JNT', u'L_thumbProximalPhalange03_JNT', u'L_indexMetacarpal01_JNT', 
+                        u'L_indexProximalPhalange03_JNT', u'L_indexMiddlePhalange05_JNT', u'L_middleMetacarpal01_JNT',
+                        u'L_middleProximalPhalange03_JNT', u'L_middleMiddlePhalange05_JNT', u'L_ringMetacarpal01_JNT', 
+                        u'L_ringProximalPhalange03_JNT', u'L_ringMiddlePhalange05_JNT', u'L_pinkyMetacarpal02_JNT', 
+                        u'L_pinkyProximalPhalange04_JNT', u'L_pinkyMiddlePhalange06_JNT', 
+                        u'R_thumbMetacarpal01_JNT', u'R_thumbProximalPhalange03_JNT', u'R_indexMetacarpal01_JNT', 
+                        u'R_indexProximalPhalange03_JNT', u'R_indexMiddlePhalange05_JNT', u'R_middleMetacarpal01_JNT',
+                        u'R_middleProximalPhalange03_JNT', u'R_middleMiddlePhalange05_JNT', u'R_ringMetacarpal01_JNT', 
+                        u'R_ringProximalPhalange03_JNT', u'R_ringMiddlePhalange05_JNT', u'R_pinkyMetacarpal02_JNT', 
+                        u'R_pinkyProximalPhalange04_JNT', u'R_pinkyMiddlePhalange06_JNT', 
+                        u'C_bindNeck03_JNT', u'C_bindNeck04_JNT', u'C_bindNeck05_JNT', 
+                        u'C_bindNeck06_JNT', u'C_bindNeck07_JNT', u'C_bindNeck08_JNT', u'C_head00_JNT']
 
     #     # # POSITIONING JOINTS AT RIGHT PLACES
     #     # # SPINE
         
     #     # TEMPORARY
-        mc.hide("C_geometry01_GRP")
+        # mc.hide("C_geometry01_GRP")
         mc.hide ("Groom", "Light", "Eye:group1")
         mc.select("C_spineFKCtl0*_JNT")
         mc.delete()

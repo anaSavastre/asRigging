@@ -10,7 +10,7 @@ import rigFn as rigFn
 import mayaNode as node
 
 # New File
-mc.file(new = True, f=True)
+# mc.file(new = True, f=True)
 
 
 def createGuides(side, numberOfGuides, spacing=1):
@@ -26,7 +26,8 @@ def loftSurfaceFromGuides(side="C",name="matloft",guides=None):
             
         # Create matLoft node
         matloft = asNode.asMatloft(side=side, name=name)
-
+        self.matloftNode = matloft
+        
         for k, obj in enumerate(guides):
             mc.connectAttr(obj.name+".worldMatrix", matloft.name+".inputMatrix["+str(k)+"]")
 
@@ -49,11 +50,13 @@ class ribbon(object):
         self.guides = guides
         self.revolveVector = revolveVector
         self.ribbonJoints=[]
+        self.ribbonGuides = []
         self.numberOfJoints = numberOfJoints
         if (root == None):
             self.root = mmod.transform(side=self.side, name="ribbonRoot", type="GRP")
 
         if (guides!=None):
+            self.customGuidees()
             # Creating the Global Group
             self.ribbonBind =  mmod.transform(side=self.side, name=self.name+"Global", type="GRP", parent=self.root)
             self.surfaceGuidesGrp = mmod.transform(side=self.side, name=self.name+"SurfaceGuides", parent=self.parent)
@@ -63,6 +66,23 @@ class ribbon(object):
             self.createLoftSurface()   
             # Attaching Joints
             self.attachJoinnts(parent=self.surfaceGuidesGrp)
+    def customGuidees(self):
+        '''
+        CREATING A GROUP ABOVE EACH GUIDE
+        '''
+        # 0. GLOBAL GROUP
+        for guide in self.guides:
+            ribbonGroup = mmod.transform(side=self.side, name=self.name+"RibbonControl", type="GRP", parent=guide)
+            self.ribbonGuides.append(ribbonGroup)
+            try:
+                mc.parent (ribbonGroup, fn.getParent(guide))
+            except:
+                mc.parent(ribbonGroup, w=True)
+
+            mc.parent(guide, ribbonGroup)
+       
+
+
     def getRivetAlignmentVectors(self):
         # GETTING LOCAL SPACE OF ROOT
         multMatrix = mNode.multMatrix(side=self.side, name=self.name+"ObjectSpace")
@@ -139,9 +159,9 @@ class ribbon(object):
         mmod.connectAttr(decompMatrix.getOutputTranslate(), self.ribbonJoints[-1].name+".translate" )
         mmod.connectAttr(decompMatrix.getOutputRotate() , self.ribbonJoints[-1].name+".rotate" )
         try:
-            mmod.connectAttr(self.root.name+".scale", self.ribbonJoints[-1].name+".scale" )
+            mmod.connectAttr(self.root.name+".scale", fn.getParent(self.ribbonJoints[-1].name)+".scale")
         except:
-            mmod.connectAttr(self.root+".scale", self.ribbonJoints[-1].name+".scale" )
+            mmod.connectAttr(self.root+".scale", fn.getParent(self.ribbonJoints[-1].name)+".scale" )
 
 
       
@@ -162,7 +182,7 @@ class ribbon(object):
         step = 1.0/(self.numberOfJoints)
         self.parameterU = []
         for i in range (0, self.numberOfJoints+1):
-            self.parameterU.append(curveFn.findParamFromLength(curveFn.length()*step*i))
+            self.parameterU.append(curveFn.findParamFromLength(curveFn.length()*step*i)-0.01)
         mc.delete(fn.getParent(curve), curveFromSurface)
 
 

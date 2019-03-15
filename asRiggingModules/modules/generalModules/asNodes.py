@@ -19,6 +19,17 @@ class asMatloft(node.utilityNode):
     def outputSurface(self, value):
         mc.setAttr(self.name+".outputSurface", value)
 
+    def getSurfaceLength(self):
+        return self.name+".surfaceLength"
+    @property
+    def surfaceLength(self):
+        ''' returns node's plug '''
+        return self.getPlug("surfaceLength")
+    @surfaceLength.setter
+    def surfaceLength(self, value):
+        mc.setAttr(self.name+".surfaceLength", value)
+
+
 class asRivet(node.utilityNode):
     elemIndex = 0
     nodeType = "asRivet"

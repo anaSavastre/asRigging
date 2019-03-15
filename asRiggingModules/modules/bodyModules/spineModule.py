@@ -131,7 +131,7 @@ class spine(object):
         step = 1.0/(len(self.guides)-1)
         self.parameterU = []
         for i in range (0, len(self.guides)):
-            self.parameterU.append(curveFn.findParamFromLength(curveFn.length()*step*i))
+            self.parameterU.append(curveFn.findParamFromLength(curveFn.length()*step*i)-0.01)
         mc.delete(fn.getParent(curve), curveFromSurface)
     def createLoftSurface(self, guides):
         self.surfaceGuides(guides)

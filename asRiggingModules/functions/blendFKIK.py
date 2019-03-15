@@ -144,7 +144,6 @@ class blendFKIK(object):
             mc.delete(jnt)
 
     def stretchyLimbsSetUp(self):
-        print "Stretchy Limbs"
         # Creating Nodes
         lengthDifference = mNode.plusMinusAverage(side=self.side, name="lenDiference")
         clampNode = mNode.clamp(side=self.side, name="clampLenDist")
@@ -156,7 +155,8 @@ class blendFKIK(object):
         # Delta Distance
         mmod.connectAttr(self.baseEndDistNode.getDistance(), lengthDifference.name+".input1D[0]")
         mc.setAttr(lengthDifference.name+".input1D[1]",  self.baseSegmentLength+self.midSegmentLength)
-        lengthDifference.operation = 2
+        if ( self.baseSegmentLength+self.midSegmentLength > 0 ):
+            lengthDifference.operation = 2
         # Clamp Distance
         mmod.connectAttr(lengthDifference.name+".output1D", clampNode.getInputR())
         clampNode.maxR = 1000000
@@ -167,11 +167,19 @@ class blendFKIK(object):
         mmod.connectAttr(segmentLength.getOutput(), stretchyAttrMult.getInput1())
         mmod.connectAttr(self.settingCtl.name+".stretchyLimb", stretchyAttrMult.getInput2())
         # Adding To Original Length
-        mmod.connectAttr(stretchyAttrMult.getOutput(), addOriginalDistBase.getInput1())
-        mmod.connectAttr(stretchyAttrMult.getOutput(), addOriginalDistMid.getInput1())
+        if ( self.baseSegmentLength+self.midSegmentLength < 0 ):
+            reverseNode = mNode.multDoubleLinear(side=self.side, name="reverseParameter")
+            mmod.connectAttr(stretchyAttrMult.getOutput(), reverseNode.getInput1() )
+            reverseNode.input2 = -1
+            mmod.connectAttr(reverseNode.getOutput(), addOriginalDistBase.getInput1())
+            mmod.connectAttr(reverseNode.getOutput(), addOriginalDistMid.getInput1())
+        else:
+            mmod.connectAttr(stretchyAttrMult.getOutput(), addOriginalDistBase.getInput1())
+            mmod.connectAttr(stretchyAttrMult.getOutput(), addOriginalDistMid.getInput1())
         mc.setAttr(addOriginalDistBase.getInput2(), self.baseSegmentLength)
         mc.setAttr(addOriginalDistMid.getInput2(), self.midSegmentLength)
         # Connect To Segment Length
+       
         mmod.connectAttr(addOriginalDistBase.getOutput(), self.settingsGRP.name+"."+self.segments[0]+"Length")
         mmod.connectAttr(addOriginalDistMid.getOutput(), self.settingsGRP.name+"."+self.segments[1]+"Length") 
 
@@ -205,7 +213,6 @@ class blendFKIK(object):
         # Creating attribute on ctrl
         self.blendAttr = self.settingCtl.addAttr(longName="fkIkBlend", softMinValue=0, defaultValue=1, softMaxValue=1, attrType="short", keyable=True)
         self.stretchyLimbs = self.settingCtl.addAttr(longName="stretchyLimb", softMinValue=0, defaultValue=0, softMaxValue=1, attrType="short", keyable=True)
-        
 
 
     
@@ -260,7 +267,7 @@ class blendFKIK(object):
         IK_GRP = mmod.transform(side=self.side, name=self.name+"IK", type="GRP", parent=parent)
         IKJntGRP = mmod.transform(side=self.side, name=self.name+"IK"+"Joints", type="GRP", parent=IK_GRP)
         limitedEffectorGRP = mmod.transform(side=self.side, name=self.name+"IK"+"Limited"+self.segments[-1], type="GRP", parent=IK_GRP)
-        effectorCtrl = rigFn.constructCTL(self.controllerGuide, side=self.side, name=self.name+"IK"+self.segments[-1], parent=IK_GRP, ctrlScale=mc.getAttr(jntList[2]+".radius"))
+        effectorCtrl = rigFn.constructCTL(self.controllerGuide, side=self.side, name=self.name+"IK"+self.segments[-1], parent=IK_GRP, ctrlScale=mc.getAttr(jntList[2]+".radius"), ctrlShape=1)
         fn.rotateShapePoints(effectorCtrl.name, rotationVector=[0, 90, 0], pivot=mc.xform(self.controllerGuide, q=True, ws=True, t=True))
 
         # Constraining Effector to rig Root

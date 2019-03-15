@@ -63,8 +63,8 @@ class neck(object):
     
         # GETTING THE LOCAL SPACE OF THE ROOT JNT
         multMatrix = mNode.multMatrix(side=self.side, name=self.name+"ObjectSpace")
-        mmod.connectAttr(self.root.name+".parentInverseMatrix", multMatrix.name+".matrixIn[0]")
-        mmod.connectAttr(self.root.name+".worldMatrix", multMatrix.name+".matrixIn[1]")
+        mmod.connectAttr(fn.getChildren(self.root.name)[1]+".parentInverseMatrix", multMatrix.name+".matrixIn[0]")
+        mmod.connectAttr(fn.getChildren(self.root.name)[1]+".worldMatrix", multMatrix.name+".matrixIn[1]")
 
         # Vector Product 
         forward = mNode.vectorProduct(side=self.side, name=self.name+"ForwardVector")
@@ -205,7 +205,7 @@ class neck(object):
         step = 1.0/(len(self.guides)-1)
         self.parameterU = []
         for i in range (0, len(self.guides)):
-            self.parameterU.append(curveFn.findParamFromLength(curveFn.length()*step*i))
+            self.parameterU.append(curveFn.findParamFromLength(curveFn.length()*step*i)-0.01)
         mc.delete(fn.getParent(curve), curveFromSurface)
 
     def createRivet(self, parameterU, parent=None):

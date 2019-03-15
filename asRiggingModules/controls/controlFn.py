@@ -91,7 +91,7 @@ class boxControl(mmod.circle):
 
         # CREATING SQUARE SHAPE
         mc.delete(fn.getChildren(self.name)[0])
-        createNewCureveShape(self.name, self.boxControShapeCV, degree=1, name=self.name)
+        createNewCureveShape(self.name, self.boxControShapeCV, degree=1, name=self.name+"BX")
 
 class locatorControl(mmod.circle):
     locatorControlShapeCV = [[0.0, 0.0, 1.0], [0.0, 0.0, -1.0], [0.0, 0.0, 0.0], [-1.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, -1.0, 0.0]]

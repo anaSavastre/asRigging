@@ -7,6 +7,7 @@ import mayaNode as node
 import asNodes as asNode
 
 import ribbon as ribbon
+
 class ribbonLimbs(object):
    
     def generateGuides(self):
@@ -118,9 +119,14 @@ class ribbonLimbs(object):
         mmod.connectAttr(average.getOutput3D(), child+".translate")
      
     def translationInterpolation(self):
-       self.influenceBlend(influence1=self.guides[0].name, influence2=self.guides[2].name, child=fn.getParent(self.guides[1].name))
-       self.influenceBlend(influence1=self.guides[-1].name, influence2=self.guides[2].name, child=fn.getParent(self.guides[-2].name))
+        self.influenceBlend(influence1=self.guides[0].name, influence2=self.guides[-1].name, child=fn.getParent(self.guides[2].name))
 
+        self.influenceBlend(influence1=self.guides[0].name, influence2=self.guides[2].name, child=fn.getParent(self.guides[1].name))
+        self.influenceBlend(influence1=self.guides[-1].name, influence2=self.guides[2].name, child=fn.getParent(self.guides[-2].name))
+    def stretchyLimbs(self):
+        mc.parentConstraint(self.endJnt, fn.getParent(self.guides[-1]), mo=True)
+        # rigFn.parentConstraintMO(self.endJnt, fn.getParent(fn.getParent(self.guides)), fn.getParent(self.guides) )
+    
     def __init__(self, side="C", name="ribbbonLimb", numberOfGuides=5, revolveVector= [1, 0, 0], endJnt=None, startJnt=None, parent=None, root=None):
         # self
         self.side = side
@@ -139,11 +145,12 @@ class ribbonLimbs(object):
         if (endJnt!=None, startJnt!=None):
             self.generateGuides()
             # CREATING THE RIBBONS
-            ribbon.ribbon(side=self.side, name=self.name, guides=self.guides, revolveVector=self.revolveVector, parent=self.guideGrp, root=self.root)
+            self.ribbon = ribbon.ribbon(side=self.side, name=self.name, guides=self.guides, parent=self.guideGrp, root=self.root, revolveVector=self.revolveVector)
             # CREATING TWIST INTERPOLATION
             self.twistInterpolation()
             # CREATING TRANSLATION INTERPOLATION
             self.translationInterpolation()
-
-
-
+            # CREATING STRETCHY LIMBS
+            self.stretchyLimbs()
+      
+  

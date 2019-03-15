@@ -4,6 +4,7 @@ import maya.OpenMaya as om
 import functions as fn
 
 
+
 class utilityNode(object):
     elemIndex = 0
     def __init__(self, nodeType, side="C", name="name", type="NOD"):
@@ -34,6 +35,31 @@ class utilityNode(object):
             print "mObj not returned"
             return None
 
+
+
+class curveInfo (utilityNode):
+    elemIndex = 0 
+    nodeType = "curveInfo"
+    def __init__(self, side="C", name="curveInfo", type="CVI"):
+        super(curveInfo, self).__init__(self.nodeType, side, name, type)
+        curveInfo.elemIndex+=1
+    # INPUT ATRIBUTES
+    def getInputCurve(self):
+        return self.name+".inputCurve"
+    @property
+    def inputCurve(self):
+        return self.getPlug("inputCurve")
+    @inputCurve.setter
+    def inputCurve(self, value):
+        mc.setAttr(self.name+".inputCurve", value)
+
+    # OUTPUT ATTRIBUTES
+    def getArcLength(self):
+        return self.name+".arcLength"
+    @property
+    def arcLength(self):
+        ''' returns node's plug '''
+        return self.getPlug("arcLength")
 
 
 

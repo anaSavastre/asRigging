@@ -147,7 +147,7 @@ def pasteCtrlShape(ctrl, copied, degree, form):
     
     mc.delete(fn.getChildren(ctrl)[0])
 
-# ctrl, degree, form = copyCtrlShape("curve1")
-# pasteCtrlShape("R_scapula01_CTL", ctrl, degree, form)
+ctrl, degree, form = copyCtrlShape("C_pelvis01_CTL")
+pasteCtrlShape("C_spineIKmiddle05_CTL", ctrl, degree, form)
 
 # ctrl = locatorControl()

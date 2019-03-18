@@ -43,7 +43,7 @@ class neck(object):
         # Extracting the forward and up vectors
         self.getRivetAlignmentVectors()
         # Create Surface Loft Guides
-        self.createLoftSurface(self.guides[:-1])
+        self.createLoftSurface(self.guides)
         # Attaching Joints
         self.attachJoinnts(parent=self.neckGlobalGrp)
 
@@ -53,11 +53,41 @@ class neck(object):
         
         # SPACE SWITCH FOR HEAD CONTROL
         self.headCtrl.createSpaceSwitch()
-        self.headCtrl.addSpaceSwitch(spaceName= "middle", parentObject = self.middleCtrl)
-
-
+        self.headCtrl.addSpaceSwitch(spaceName= "neck", parentObject = self.middleCtrl)
+        
+        # Volume Preservation
+        self.volumePreservationSetUp()
         # DELETING GUIDES
         mc.delete(self.guides)
+    
+    
+    def volumePreservationSetUp(self): 
+        # Creating Volume Preservation Attribute              
+        voulumePreservationAttr = mc.addAttr(self.middleCtrl.name, ln="volumePreservation", dv=1, min = 0, max = 1, at="short", k=True)
+        # MultiplyDivide NODE
+        multiplyDiv = mNode.multiplyDivide(side=self.side, name=self.name+"DivLen")
+        mc.setAttr(multiplyDiv.name+".input1X", mc.getAttr(self.matloftNode.getSurfaceLength()) )
+        multiplyDiv.operation = 2
+        mmod.connectAttr(self.matloftNode.getSurfaceLength(), multiplyDiv.name+".input2X")
+        # Volume Preservation Condition
+        condNode = mNode.condition(side=self.side, name=self.name+"VolumePreservationCond")
+        condNode.secondTerm = 1
+        # mmod.connectAttr(multiplyDiv.name+".outputX", condNode.getFirstTerm())
+        mmod.connectAttr(multiplyDiv.getOutput(), condNode.getColorIfTrue())
+        mmod.connectAttr(self.middleCtrl.name+".volumePreservation", condNode.getFirstTerm())
+        
+        # Power Nodes
+        for i in range (len(self.guides)):
+            attrName = "magnitude"+str(i)
+            magnitudeAttr =mc.addAttr(self.middleCtrl.name, longName=attrName, min=-1, dv=0, max=1, at="double", keyable=True)
+            powerNode = mNode.multiplyDivide(side=self.side, name=self.name+"PowerNode")
+            mmod.connectAttr(condNode.name+".outColorR", powerNode.name+".input1X")
+            mmod.connectAttr(self.middleCtrl.name+"."+attrName, powerNode.name+".input2X")
+            powerNode.operation = 3
+            # Connecting To JNT Scale
+            mmod.connectAttr(powerNode.name+".outputX",  self.neckJnt[i].name+".scaleY")
+            mmod.connectAttr(powerNode.name+".outputX",  self.neckJnt[i].name+".scaleZ")
+
     
     def getRivetAlignmentVectors(self):
     

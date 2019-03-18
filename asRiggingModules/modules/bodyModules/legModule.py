@@ -44,7 +44,7 @@ class leg(blendFKIK.blendFKIK):
         mmod.connectAttr(self.settingCtl.name+".volumePreservation", condNode.getFirstTerm())
 
         # Power Nodes
-        for i in range (6):
+        for i in range (len(ribbonLimb.ribbon.ribbonJoints)):
             attrName = ribbonName+"RibbonMagnitude"+str(i)
             magnitudeAttr =mc.addAttr(self.settingCtl.name, longName=attrName, min=-2, dv=0, max=2, at="double", keyable=True)
             powerNode = mNode.multiplyDivide(side=self.side, name=self.name+ribbonName.capitalize()+"PowerNode")

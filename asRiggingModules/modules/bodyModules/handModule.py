@@ -76,7 +76,6 @@ def constructJNT(guideJNT, side="C", name="name", parent=None):
     jnt = mmod.joint(side=side, name=name, parent=ofs)
 
     return jnt
-
 class finger(object):
     globalCtrl=None
     def __init__(self, jntHierarchy, fingerName="finger", side="C", parent=None, hook=None, worldUpVector=""):
@@ -108,7 +107,12 @@ class finger(object):
 
         aimVector = [1, 0, 0]
         upVector = [0, 1, 0]
-                
+        
+        # FINGER CONTROLLER COLOR
+        if (self.side == "L"):
+            self.ctlColor = 18
+        if (self.side == "R"):
+            self.ctlColor = 20
 
         # CREATING HIERARCHY
         self.fingerGRP = mmod.transform(side=side, name=fingerName, type="GRP", parent=parent)
@@ -117,6 +121,7 @@ class finger(object):
         # GLOBAL CTRL
         if (fingerName=="pinky"):
             finger.globalCtrl = rigFn.constructCTL(jntHierarchy, side=side, name=metacarpalName, parent=self.fingerGRP)
+            finger.globalCtrl.setColor(self.ctlColor)
             #metaJntA = fn.getChildren(self.globalCtrl.name)[1]
             #fingerBaseJnt.append(metaJntA)
 
@@ -134,6 +139,7 @@ class finger(object):
             phalangeCTL = rigFn.constructCTL(jnt, side=side, name=phalangeName[i], parent=fn.getParent(metaJntA) if i==0 else phalangeCTL)
             fingerBaseJnt.append(mc.listRelatives(phalangeCTL, c=True, typ="joint")[0])
             jntB = mmod.joint(side=side, name=phalangeName[i], parent=fingerBaseJnt[i+1])
+            phalangeCTL.setColor(self.ctlColor)
 
             # AIM CONSTRAINTS
             # Creating WorldUpObject
@@ -196,6 +202,11 @@ class hand():
         # GLOBALS
         mmod.resetCount()
 
+        # FINGER CONTROLLER COLOR
+        if (self.side == "L"):
+            self.ctlColor = 18
+        if (self.side == "R"):
+            self.ctlColor = 20
 
         # CREATING HIERARCHY
         handGrp = mmod.transform(side=self.side, name="hand", type="GRP", parent=self.parent)
@@ -205,6 +216,7 @@ class hand():
         self.connectToWristMovement()
         # CREATING HAND JNT
         self.handController = rigFn.constructCTL(self.guideHandJnt, side=self.side, name = "handFK_wrist", parent = self.handGrp)
+        self.handController.setColor(self.ctlColor)
         # TWIST ARM
         mc.orientConstraint(fn.getChildren(self.handController)[1], self.root.radiusRibbon.guides[-1].name, mo=True)
         # CONNECTING HAND TO FK ARM
@@ -213,6 +225,10 @@ class hand():
         ocWeightAlias = mc.orientConstraint(orientConstraint, q=True, wal=True)[0]
         mmod.connectAttr( self.root.reverseBlend.getOutput(), orientConstraint+"."+ocWeightAlias)
 
+        # CONNECTING ROTATION
+        mmod.connectAttr(self.root.effectorCtrl.name+".rotate", fn.getParent(fn.getParent(self.handController))+".rotate")
+
+       
 
         # CREATING FINGERS
         handFingersGRP = mmod.transform(side=self.side, name="handFingers", type="GRP", parent=fn.getChildren(self.handController)[1])
@@ -236,11 +252,6 @@ class hand():
             mc.setAttr(multNode.getInput2(), (i*20)/100.0+0.05)
             mmod.connectAttr(multNode.getOutput(), fn.getParent(f.fingerJntChain[0])+'.rotateZ')
         
-        # MATCHING GLOBAL ORIENTATION
-        decomMatrix = mNode.decomposeMatrix(side=self.side, name="rootGlobalTransformations")
-        mmod.connectAttr(self.hook.name+".worldMatrix", decomMatrix.getInputMatrix())
-        mmod.connectAttr(decomMatrix.getOutputRotate(),  self.handFingersGRP.name+".rotate")
-
        
         # DELETING GUIDES
         mc.delete(fingerGrp, self.guideHandJnt)
@@ -248,18 +259,15 @@ class hand():
         # CONNECTING TRANSLATION
         # Getting Local Space
         mc.setAttr(self.handGrp.name+".inheritsTransform" , 0)
+        # Connecting rotation
+        decomMatrix = mNode.decomposeMatrix(name="rootWorldMatrix")
+        mmod.connectAttr(self.hook.name+".worldMatrix", decomMatrix.getInputMatrix())
+        mmod.connectAttr(decomMatrix.getOutputRotate(), self.handGrp.name+".rotate")
         # matrixMult = mNode.multMatrix(side=self.side, name=self.name+"LocalSpace")
         decopMatrix = mNode.decomposeMatrix(side=self.side, name=self.name+"LocalSpace")
-        # mmod.connectAttr(self.root.bindJntChain[-1].name+".worldMatrix", matrixMult.name+".matrixIn[0]")
-        # mmod.connectAttr(self.parent+".worldInverseMatrix", matrixMult.name+".matrixIn[1]")
-        # mmod.connectPlugs(matrixMult.matrixSum, decopMatrix.inputMatrix)
         mmod.connectAttr(self.root.bindJntChain[-1].name+".worldMatrix", decopMatrix.getInputMatrix())
         mmod.connectPlugs(decopMatrix.outputTranslate, self.handGrp.translate)
-        # CONNECTING ROTATION
-        # additive = mNode.animBlendNodeAdditiveDA(side=self.side, name=self.name+"ReverseRotationX")
-        # mmod.connectAttr(self.root.effectorCtrl.name+".rotateX", additive.getInputA())
-        # additive.weightA = -1
-        # mmod.connectAttr(additive.getOutput(), self.handGrp.name+".rotateZ")
-        mmod.connectAttr(self.root.effectorCtrl.name+".rotateX", self.handGrp.name+".rotateX")
-        mmod.connectAttr(self.root.effectorCtrl.name+".rotateY", self.handGrp.name+".rotateY")
-        mmod.connectAttr(self.root.effectorCtrl.name+".rotateZ", self.handGrp.name+".rotateZ")
+        
+        
+        
+       

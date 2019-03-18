@@ -110,7 +110,18 @@ class diamondControl(mmod.circle):
         # CREATING SQUARE SHAPE
         mc.delete(fn.getChildren(self.name)[0])
         createNewCureveShape(self.name, self.diamondControlShapeCV, degree=1, name=self.name+"D")
+
+class squareControl(mmod.circle):
+    squareControlShapeCV =[[-0.8, 0.0, 0.0], [-0.8, 0.0, -0.8], [0.0, 0.0, -0.8], [0.8, 0.0, -0.8], [0.8, 0.0, 0.0], [0.8, 0.0, 0.8], [0.0, 0.0, 0.8], [-0.8, 0.0, 0.8], [-0.8, 0.0, 0.0]]
+
+    def __init__(self, side="C", name="square", type="CTL", parent=None):
+        super(squareControl, self).__init__(side, name, type, parent)
+
+        # CREATING SQUARE SHAPE
+        mc.delete(fn.getChildren(self.name)[0])
+        createNewCureveShape(self.name, self.squareControlShapeCV, degree=1, name=self.name+"D")
    
+ 
 
 def copyCtrlShape(ctrl):
     form = mc.getAttr(ctrl+".form")
@@ -147,7 +158,8 @@ def pasteCtrlShape(ctrl, copied, degree, form):
     
     mc.delete(fn.getChildren(ctrl)[0])
 
-ctrl, degree, form = copyCtrlShape("C_pelvis01_CTL")
-pasteCtrlShape("C_spineIKmiddle05_CTL", ctrl, degree, form)
+# ctrl, degree, form = copyCtrlShape("curve1")
+# print ctrl
+# pasteCtrlShape("L_radiusRibbonControl03_CTL", ctrl, degree, form)
 
-# ctrl = locatorControl()
+# ctrl = squareControl()

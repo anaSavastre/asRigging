@@ -64,6 +64,566 @@ import mayaNode as mNode
 import rigFn as rigFn 
 import controlFn as ctlFn
 
+import blendFKIK as blendFKIK
+import ribbonLimbs as ribbonLimbs
+
+
+
+class finger(object):
+    globalCtrl=None
+    def __init__(self, jntHierarchy, fingerName="finger", side="C", parent=None, hook=None, worldUpVector=""):
+        '''
+        NAMES
+        fingerName ={thumb, index, middle, ring, pinky}
+
+
+        1. HIERARCHY STRUCTURE
+            fingerName_GRP
+                metacarpal_GRP>OFS>JNT
+                    phalangeA00_GRP>OFS>CTL>JNT
+                        phalangeB00_GRP>OFS>CTL>JNT
+                            phalangeC00_GRP>OFS>CTL>JNT
+                         
+        '''
+
+        # GLOBALS
+        self.side = side
+        self.parent = parent
+        self.hook = hook
+        self.worldUpVector = worldUpVector
+        mmod.resetCount()
+
+        metacarpalName = fingerName+"Metacarpal"
+        phalangeName = [fingerName+"ProximalPhalange", fingerName+"MiddlePhalange", fingerName+"DistalPhalange"] 
+        guidJntList = mc.listRelatives(jntHierarchy, ad=True); guidJntList.reverse()
+        fingerBaseJnt=[]
+
+        aimVector = [1, 0, 0]
+        upVector = [0, 1, 0]
+        
+        # FINGER CONTROLLER COLOR
+        if (self.side == "L"):
+            self.ctlColor = 18
+        if (self.side == "R"):
+            self.ctlColor = 20
+
+        # CREATING HIERARCHY
+        self.fingerGRP = mmod.transform(side=side, name=fingerName, type="GRP", parent=parent)
+        # worldUpVector
+        
+        # GLOBAL CTRL
+        if (fingerName=="pinky"):
+            finger.globalCtrl = rigFn.constructCTL(jntHierarchy, side=side, name=metacarpalName, parent=self.fingerGRP)
+            finger.globalCtrl.setColor(self.ctlColor)
+            #metaJntA = fn.getChildren(self.globalCtrl.name)[1]
+            #fingerBaseJnt.append(metaJntA)
+
+        metaJntA = rigFn.constructJNT(jntHierarchy, side=side, name=metacarpalName, parent=self.fingerGRP)
+        fingerBaseJnt.append(metaJntA.name)
+
+        # METACARPAL JNT        
+        metaJntB = mmod.joint(side=side, name=metacarpalName, parent=metaJntA)
+        metaJntB.translateX=mc.xform(guidJntList[0], q=True, r=True, t=True)[0]
+        metaGrp = mmod.transform(side=side, name=metacarpalName, parent=fn.getParent(metaJntA), type="GRP")
+        mc.parent(metaJntA, metaGrp)
+        
+        # PHALANGES JNT
+        for i, jnt in enumerate(guidJntList[:-1]):
+            phalangeCTL = rigFn.constructCTL(jnt, side=side, name=phalangeName[i], parent=fn.getParent(metaJntA) if i==0 else phalangeCTL)
+            fingerBaseJnt.append(mc.listRelatives(phalangeCTL, c=True, typ="joint")[0])
+            jntB = mmod.joint(side=side, name=phalangeName[i], parent=fingerBaseJnt[i+1])
+            phalangeCTL.setColor(self.ctlColor)
+
+            # AIM CONSTRAINTS
+            # Creating WorldUpObject
+            worldUpObj = mmod.transform(side=self.side, name=fingerName+str(i)+"WorldUpObject", parent=fn.getParent(fingerBaseJnt[i]))
+            fn.snapTool(fingerBaseJnt[i], worldUpObj)
+            mc.aimConstraint(fingerBaseJnt[i+1], fingerBaseJnt[i], aim=[1, 0, 0], u=[0, 1, 0], worldUpType="objectrotation", worldUpVector=[0, 1, 0], worldUpObject=worldUpObj)
+
+            
+            # JOINT STRETCHING
+            distanceBetweenNode = mc.createNode("distanceBetween", name=side+"_distance"+fingerName+str(i)+"_DST")
+            mc.connectAttr(fingerBaseJnt[i]+".worldMatrix", distanceBetweenNode+".inMatrix1")
+            mc.connectAttr(fingerBaseJnt[i+1]+".worldMatrix", distanceBetweenNode+".inMatrix2")
+
+            # Minus operation
+            minusNode = mc.createNode("plusMinusAverage", name=side+"_subtract"+fingerName+str(i)+"_PMA")
+            mc.setAttr(minusNode+".operation", 2)
+            mc.connectAttr(distanceBetweenNode+".distance", minusNode+".input1D[0]")
+            mc.connectAttr(fingerBaseJnt[i+1]+".radius", minusNode+".input1D[1]")
+            # Scalingby global scale
+            divide = mNode.multiplyDivide(side=self.side, name=fingerName+str(i)+"GlobalScale")
+            worldTransformation = mNode.decomposeMatrix(side=self.side, name = "rootGlobalTransformation")
+            mmod.connectAttr(self.hook.name+".worldMatrix", worldTransformation.getInputMatrix())
+            mmod.connectAttr(minusNode+".output1D", divide.name+".input1X")
+            divide.operation = 2
+            mmod.connectAttr(worldTransformation.getOutputScale(), divide.getInput2())
+            mc.connectAttr(divide.name+".outputX", fn.getChildren(fingerBaseJnt[i])[0]+".translateX")
+
+            # POSITIONING END JNT
+            if (jnt==guidJntList[-2]):
+                translateX = mc.getAttr(guidJntList[-1]+".translateX")
+                mc.setAttr(fn.getChildren(fingerBaseJnt[-1])[0]+".translateX", translateX)
+
+
+        self.fingerJntChain = fingerBaseJnt
+
+        # DELETING GUIDES
+        mc.delete(jntHierarchy)
+class hand():
+
+    def __init__(self, handJnt=None, fingerGrp=None, side="C", name="hand", parent=None, root=None, hook=None):
+        '''
+        Hand Module
+        parent = object to parent too
+        root = arm 
+        hook = rootJnt for global scale
+
+        Creating a finger obj for each of the jnt Chain in the hierarchy 
+        '''
+        # SELF
+        self.side = side
+        self.name = name
+        self.handJnt = hand
+        self.fingerGrp = fingerGrp
+        self.parent = parent
+        self.root = root
+        self.hook = hook
+        self.wristCtrl = root.effectorCtrl
+        self.guideHandJnt = handJnt
+
+        # GLOBALS
+        mmod.resetCount()
+
+        # FINGER CONTROLLER COLOR
+        if (self.side == "L"):
+            self.ctlColor = 18
+        if (self.side == "R"):
+            self.ctlColor = 20
+
+        # CREATING HIERARCHY
+        handGrp = mmod.transform(side=self.side, name="hand", type="GRP", parent=self.parent)
+        self.handGrp = handGrp
+
+        # CONNECTING HAND GROUP TO WRIST MOVEMENT
+        self.connectToWristMovement()
+        # CREATING HAND JNT
+        self.handController = rigFn.constructCTL(self.guideHandJnt, side=self.side, name = "handFK_wrist", parent = self.handGrp)
+        self.handController.setColor(self.ctlColor)
+        # TWIST ARM
+        mc.orientConstraint(fn.getChildren(self.handController)[1], self.root.radiusRibbon.guides[-1].name, mo=True)
+        # CONNECTING HAND TO FK ARM
+        # rigFn.parentConstraintMO(self.root.FKjntChain[1].name, fn.getParent(fn.getParent(self.handController)), fn.getParent(self.handController.name))#, translate=False, scale=False)
+        orientConstraint =mc.orientConstraint(self.root.FKjntChain[1].name, fn.getParent(self.handController.name), mo=True)[0]
+        ocWeightAlias = mc.orientConstraint(orientConstraint, q=True, wal=True)[0]
+        mmod.connectAttr( self.root.reverseBlend.getOutput(), orientConstraint+"."+ocWeightAlias)
+
+        # CONNECTING ROTATION
+        mmod.connectAttr(self.root.effectorCtrl.name+".rotate", fn.getParent(fn.getParent(self.handController))+".rotate")
+
+       
+
+        # CREATING FINGERS
+        handFingersGRP = mmod.transform(side=self.side, name="handFingers", type="GRP", parent=fn.getChildren(self.handController)[1])
+        self.handFingersGRP = handFingersGRP
+        fingerJntList = fn.getChildren(fingerGrp)
+        fingers=[]
+        for jnt in fingerJntList:
+            name = fn.concat_str(jnt, s1_begin = 2, s1_end=6)
+            fingerObj = finger(jnt, fingerName=name, side=self.side, parent=handFingersGRP, hook=self.hook)
+            fingers.append(fingerObj)
+
+        # CREATE GLOBAL ROTATE
+        for i, f in enumerate(fingers):
+            '''if (i==0):
+                mmod.connectAttr(finger.globalCtrl.name+'.rotateZ', fn.getParent(f.fingerJntChain[0])+'.rotateZ')
+            else:'''
+        
+            # CREATING SCALING FACTOR
+            multNode = mNode.multDoubleLinear(side=self.side, name="globalRotateScalingFactor")
+            mmod.connectAttr(finger.globalCtrl.name+'.rotateZ', multNode.getInput1())
+            mc.setAttr(multNode.getInput2(), (i*20)/100.0+0.05)
+            mmod.connectAttr(multNode.getOutput(), fn.getParent(f.fingerJntChain[0])+'.rotateZ')
+        
+        # # MATCHING GLOBAL ORIENTATION
+        # decomMatrix = mNode.decomposeMatrix(side=self.side, name="rootGlobalTransformations")
+        # mmod.connectAttr(self.hook.name+".worldMatrix", decomMatrix.getInputMatrix())
+        # mmod.connectAttr(decomMatrix.getOutputRotate(),  self.handFingersGRP.name+".rotate")
+
+       
+        # DELETING GUIDES
+        mc.delete(fingerGrp, self.guideHandJnt)
+    def connectToWristMovement(self):
+        # CONNECTING TRANSLATION
+        # Getting Local Space
+        mc.setAttr(self.handGrp.name+".inheritsTransform" , 0)
+        # Connecting rotation
+        decomMatrix = mNode.decomposeMatrix(name="rootWorldMatrix")
+        mmod.connectAttr(self.hook.name+".worldMatrix", decomMatrix.getInputMatrix())
+        mmod.connectAttr(decomMatrix.getOutputRotate(), self.handGrp.name+".rotate")
+        # matrixMult = mNode.multMatrix(side=self.side, name=self.name+"LocalSpace")
+        decopMatrix = mNode.decomposeMatrix(side=self.side, name=self.name+"LocalSpace")
+        # mmod.connectAttr(self.root.bindJntChain[-1].name+".worldMatrix", matrixMult.name+".matrixIn[0]")
+        # mmod.connectAttr(self.parent+".worldInverseMatrix", matrixMult.name+".matrixIn[1]")
+        # mmod.connectPlugs(matrixMult.matrixSum, decopMatrix.inputMatrix)
+        mmod.connectAttr(self.root.bindJntChain[-1].name+".worldMatrix", decopMatrix.getInputMatrix())
+        mmod.connectPlugs(decopMatrix.outputTranslate, self.handGrp.translate)
+        
+        
+        
+       
+
+class foot(object):
+    def __init__(self, side="C", footJnt=None, root=None, parent=None, hook=None):
+        ''' 
+        root = leg() object
+        parent = parent bind jnt (FK foot)
+        '''
+        # self
+        self.side = side
+        self.footJnt = footJnt
+        self.legRoot = root
+        self.ankleCtrl = root.effectorCtrl
+        self.parent = parent
+        self.root = root
+        self.hook = hook
+        self.footSegments = ["Ankle", "Tarsals", "Toes"]
+        self.footName="foot"
+        
+        if (footJnt):
+            # FK Foot            
+            footJNTList = fn.descendentsList(root=footJnt)
+            self.footJNTList = []
+            for elem in footJNTList:
+                self.footJNTList.append(elem)
+        
+
+            self.FKfoot_setUp(footJNTList=footJNTList, parent=self.parent)
+            # FOOT ROLL
+            self.footRoll_setUp(footJNTList=footJNTList, parent=root.segmentGRP)
+
+            # CONSTRAINING FOOT TO  FK ANKLE (temporary done with orient constraint)
+            orientConstraint =mc.orientConstraint(self.legRoot.FKjntChain[-1], fn.getParent(fn.getParent(self.footFKJnt[0])), mo=True)[0]
+            ocWeightAlias = mc.orientConstraint(orientConstraint, q=True, wal=True)[0]
+            mmod.connectAttr( self.legRoot.reverseBlend.getOutput(), orientConstraint+"."+ocWeightAlias)
+
+            # # CONNECTING FK ANKLE TO IK ANKLE
+            # parentConstraint = mc.parentConstraint(self.ankleCtrl, fn.getParent(self.footFKJnt[0]), mo=True)[0]
+            # pcWeightAlias = mc.parentConstraint(parentConstraint, q=True, wal=True)[0]
+            # mmod.connectAttr(self.legRoot.settingCtl.name+".fkIkBlend", parentConstraint+"."+pcWeightAlias)
+            orientConstraint =mc.orientConstraint(self.ankleCtrl, fn.getParent(fn.getParent(self.footFKJnt[0])), mo=True)[0]
+            ocWeightAlias = mc.orientConstraint(orientConstraint, q=True, wal=True)[1]
+            mmod.connectAttr( self.legRoot.settingCtl.name+".fkIkBlend", orientConstraint+"."+ocWeightAlias)
+
+            # Making Scaleable
+            mmod.connectAttr(fn.getParent(self.hook)+".scale", fn.getParent(self.footFKJnt[0])+".scale")
+            
+            # Connecting Ankle Twist to Ribbon Leg
+            self.twistLeg()
+
+            # ANKLE - Adding Extra Attributes 
+            self.ankleAttributes()
+
+            # DELETING GUIDES
+            mc.delete(footJnt)
+
+    def ankleAttributes(self):
+        '''
+        Adding extra attributes on ankle control
+
+        LEG MOVEMENT
+            legTwist
+        FOOT ROOL CONFIGURATION
+            tarsalLock
+            straighten
+        FOOT MOVEMENT
+            toeRotation
+            tarsalRotation
+            HeelTwist
+            ToeTwist
+            TarsalTwist???
+
+        '''
+        # GLOBAL
+        ctrl = self.legRoot.effectorCtrl
+        twistAttr = self.legRoot.ikHandle+".twist"
+
+        # LEG MOVEMENT
+        # legTwist
+        ctrl.addAttr( longName='legTwist', attrType='double' )     
+        mmod.connectAttr(ctrl.name+".legTwist", twistAttr)
+
+        # FOOT ROOL CONFIGURATION
+        # tarsalLock
+        tarsalLock = ctrl.addAttr( longName='tarsalLock', softMinValue=-1.7, defaultValue=0.34, softMaxValue=3.14, attrType="doubleAngle", keyable=True)
+        # Set Tarsal Lock Attribute 
+        mc.setAttr(ctrl.name+".tarsalLock", mc.getAttr(self.animParameters.name+".tarsalLock"))
+        # Connect Attr
+        mmod.connectAttr(ctrl.name+".tarsalLock", self.animParameters.name+".tarsalLock")    
+
+        # straighten
+        straighten = ctrl.addAttr( longName='straighten',  softMinValue=-15, defaultValue=1.5, softMaxValue=15, attrType="double", keyable=True) 
+        # Set Attr Value
+        mc.setAttr(ctrl.name+".straighten", mc.getAttr(self.animParameters.name+".straighten"))
+        mmod.connectAttr(ctrl.name+".straighten", self.animParameters.name+".straighten")
+
+        # FOOT MOVEMENT
+        # heelRotation
+        # attrName = 'heelRotation'
+        # attribute = self.configParameters.name+".toeRest"
+        # toeRotation = ctrl.addAttr(longName=attrName, softMinValue=-1.7, defaultValue=0, softMaxValue=3.14, attrType="doubleAngle", keyable=True)
+        # addNode = mNode.addDoubleLinear(side=self.side, name=attrName+"AddToeRotToRestVal")
+        # mmod.connectAttr(ctrl.name+"."+attrName, addNode.getInput1())
+        # mc.setAttr(addNode.getInput2(), mc.getAttr(attribute))
+        # mmod.connectAttr(addNode.getOutput(), attribute)
+        # toeRotation
+        attrName = 'toeRotation'
+        attribute = self.configParameters.name+".toeRest"
+        toeRotation = ctrl.addAttr(longName=attrName, softMinValue=-3.14, defaultValue=0, softMaxValue=0, attrType="doubleAngle", keyable=True)
+        addNode = mNode.addDoubleLinear(side=self.side, name=attrName+"AddToeRotToRestVal")
+        mmod.connectAttr(ctrl.name+"."+attrName, addNode.getInput1())
+        mc.setAttr(addNode.getInput2(), mc.getAttr(attribute))
+        mmod.connectAttr(addNode.getOutput(), attribute)
+        # tarsalRotation
+        attrName = 'tarsalRotation'
+        attribute = self.configParameters.name+".tarsalRest"
+        toeRotation = ctrl.addAttr(longName=attrName, softMinValue=0, defaultValue=0, softMaxValue=3.14, attrType="doubleAngle", keyable=True)
+        addNode = mNode.addDoubleLinear(side=self.side, name=attrName+"AddToeRotToRestVal")
+        mmod.connectAttr(ctrl.name+"."+attrName, addNode.getInput1())
+        mc.setAttr(addNode.getInput2(), mc.getAttr(attribute))
+        mmod.connectAttr(addNode.getOutput(), attribute)
+        # heelTwist
+        attrName = 'heelTwist'
+        attribute = self.footRollJnt[0].name+".rotateY"
+        toeRotation = ctrl.addAttr(longName=attrName, softMinValue=-5, defaultValue=0, softMaxValue=5, attrType="doubleAngle", keyable=True)
+        addNode = mNode.addDoubleLinear(side=self.side, name=attrName+"AddToeRotToRestVal")
+        mmod.connectAttr(ctrl.name+"."+attrName, addNode.getInput1())
+        mc.setAttr(addNode.getInput2(), mc.getAttr(attribute))
+        mmod.connectAttr(addNode.getOutput(), attribute)
+        # toeTwist
+        attrName = 'toeTwist'
+        attribute = self.footRollJnt[1].name+".rotateY"
+        toeRotation = ctrl.addAttr(longName=attrName, softMinValue=-5, defaultValue=0, softMaxValue=5, attrType="doubleAngle", keyable=True)
+        addNode = mNode.addDoubleLinear(side=self.side, name=attrName+"AddToeRotToRestVal")
+        mmod.connectAttr(ctrl.name+"."+attrName, addNode.getInput1())
+        mc.setAttr(addNode.getInput2(), mc.getAttr(attribute))
+        mmod.connectAttr(addNode.getOutput(), attribute)
+
+    def twistConnection(self, targetParent, object):
+        objParent = fn.getParent(object)
+        # Matrix Mult
+        side = fn.concat_str(str1 = object, s1_begin=0, s1_end=len(object)-1 )
+        matrix = mNode.multMatrix(side=side, name="transformationMatrix")
+        # GETTING LOCAL OFFSET
+        localOffset = fn.getLocalOffset(objParent, object)
+        mc.setAttr(matrix.name+".matrixIn[0]", [localOffset(i, j) for i in range(4) for j in range(4)], type="matrix")
+
+
+        mmod.connectAttr(targetParent+".worldMatrix", matrix.name+".matrixIn[1]")
+        mmod.connectAttr(objParent+".worldInverseMatrix", matrix.name+".matrixIn[2]")
+        decomposeMatrix = mNode.decomposeMatrix(side=side, name="transformation")
+        mmod.connectAttr(matrix.getMatrixSum(), decomposeMatrix.getInputMatrix())
+        mmod.connectAttr(decomposeMatrix.name+".outputRotateX", object+".rotateX")
+    def twistLeg(self):
+        # self.twistConnection(self.footFKJnt[0].name, self.root.tibiaRibbon.guides[-1].name )
+        mc.orientConstraint(self.footFKJnt[0].name, self.root.tibiaRibbon.guides[-1].name, mo=True)
+      
+
+
+    def footRoll_setUp(self, footJNTList=[], parent=None):
+        ''' 
+            0. Creating heel jnt from the guides
+                Create jnt on the plane defined by the three guides
+                HeelJnt : y of toe end, z of ankle, 
+                => x=?
+
+            1. CREATING THE HIERARCHY
+                footRollGRP
+                    >control
+                        >animParameters (footRoll, tarsalLock, strainghten)
+                        >configParameters (toeRest, tarsalRest, heelLength, toeLength, tarsalLength)
+                    >joints
+
+            2. SETTING UP FOOT ROLL
+                2.0. Creating Jnts
+                2.1. Creating control attr
+                2.2. Linking control Attr
+
+            3. FOOT ROLL NETWORK
+
+            4. CONNECT FOOTROLL TO LEG
+
+            5. CONNECT FOOTROLL TO FK FOOT 
+                5.0. Get Heel Toe Vector (bind pose value)
+                5.1. Get Ankle Tarsal Vector 
+                5.2. Angle Between vectors
+                5.3. Hook Foot GRP
+                5.4. Hook Toes
+        '''
+        # GLOBALS
+        mmod.resetJNTCount()
+        mmod.resetTRNCount()
+        # 0. CREATING HEEL JNT
+        # Getting the plane defined by the guides
+        # Getting the 3 points
+        p1 = mc.xform(footJNTList[0], ws=True, q=True, t=True)
+        p2 = mc.xform(footJNTList[1], ws=True, q=True, t=True)
+        p3 = mc.xform(footJNTList[2], ws=True, q=True, t=True)
+        plane = fn.planeEquation(p1, p2, p3)
+        # Finding x of heel jnt
+        y = p3[1]; z = p1[2]
+        x = -(plane[3] + plane[2]*z + plane[1]*y)/plane[0]
+        heelJnt = mmod.joint(side=self.side, name=self.footName+"Heel", parent=None)
+        mc.xform(heelJnt.name, ws=True, t=[x, y, z])
+        # Aiming heel to toeEnd
+        mc.delete(mc.aimConstraint(footJNTList[2], heelJnt, aim=[-1, 0, 0], u=[0, 1, 0], worldUpType="scene"))
+
+        # 1. CREATING HIERARCHY
+        globalFootRoll = mmod.transform(side=self.side, name=self.footName+"Roll", type="GRP", parent=parent)
+        controlGrp = mmod.transform(side=self.side, name=self.footName+"Roll_controls", type="GRP", parent=globalFootRoll)
+        jointsGrp =  mmod.transform(side=self.side, name=self.footName+"Roll_joints", type="GRP", parent=globalFootRoll)
+        animParameters = mmod.transform(side=self.side, name=self.footName+"Roll_animParameters", type="GRP", parent=controlGrp)
+        configParameters = mmod.transform(side=self.side, name=self.footName+"Roll_configParameters", type="GRP", parent=controlGrp)
+        self.animParameters = animParameters
+        self.configParameters = configParameters
+        # 2.0. Creating Joints
+        footJNTList.append(heelJnt)
+        footJNTList.reverse()
+        segments = self.footSegments
+        segments.append("Heel")
+        segments.reverse()
+        newGuides = rigFn.jntHierarchy(footJNTList)
+        footRolljnt = rigFn.createJntChain(newGuides, side=self.side, name=self.footName+"Roll", segmentList = segments, parent=jointsGrp)
+        self.footRollJnt = footRolljnt
+        mc.delete(newGuides)
+        # 2.1. Creating control attr
+        footRoll = animParameters.addAttr(longName="footRoll", softMinValue=-1.7, defaultValue=0, softMaxValue=3.14, attrType="doubleAngle", keyable=True)
+        tarsalLock = animParameters.addAttr(longName="tarsalLock", softMinValue=-1.7, defaultValue=0.34, softMaxValue=3.14, attrType="doubleAngle", keyable=True)
+        straighten = animParameters.addAttr(longName="straighten", softMinValue=-15, defaultValue=1.5, softMaxValue=15, attrType="double", keyable=True)
+        self.footRoll = footRoll
+        self.tarsalLock = tarsalLock
+        self.straighten = straighten
+        toeRest = configParameters.addAttr( longName="toeRest", softMinValue=-1.7, defaultValue=0, softMaxValue=3.14, attrType="doubleAngle", keyable=True)
+        tarsalRest = configParameters.addAttr( longName="tarsalRest", softMinValue=-1.7, defaultValue=0, softMaxValue=3.14, attrType="doubleAngle", keyable=True)
+
+        mc.setAttr(configParameters.name+".toeRest", mc.getAttr(fn.getParent(footRolljnt[1].name)+".rotateZ"))
+        mc.setAttr(configParameters.name+".tarsalRest", mc.getAttr(fn.getParent(footRolljnt[2].name)+".rotateZ"))
+        # 2.2. Linking control Attr
+        mmod.connectAttr(configParameters.name+".toeRest", fn.getParent(footRolljnt[1].name)+".rotateZ")
+        mmod.connectAttr(configParameters.name+".tarsalRest",fn.getParent(footRolljnt[2].name)+".rotateZ")
+
+        # 3. FOOT ROLL NETWORK
+        # 3.0. HEEL BACK ROTATION
+        clampHeel = mNode.clamp(side=self.side, name="footRoll"+"footRollHeel")
+        mmod.connectPlugs(footRoll, clampHeel.inputR)
+        mc.setAttr(clampHeel.name+".minR", -100)
+        inverseMult =mNode.multDoubleLinear(side=self.side, name="footRoll"+"footRollHeel")
+        mmod.connectPlugs(clampHeel.outputR, inverseMult.input1)
+        mc.setAttr(inverseMult.name+".input2", -1)
+        mmod.connectPlugs(inverseMult.output, footRolljnt[0].rotateZ)
+        # 3.1. TARSAL ROTATION
+        clampTarsalRot = mNode.clamp(side=self.side, name="footRoll"+"footRollTarsalRotation")
+        clampTarsalLock = mNode.clamp(side=self.side, name="footRoll"+"footRollTarsalLock")
+        mmod.connectPlugs(tarsalLock, clampTarsalLock.inputR)
+        mc.setAttr(clampTarsalLock.getMaxR(), 100)
+        mmod.connectPlugs(footRoll, clampTarsalRot.inputR)
+        mmod.connectPlugs(clampTarsalLock.outputR, clampTarsalRot.maxR)
+        # 3.2. STRAIGHTENING
+        diffRollTarsalLock = mNode.plusMinusAverage(side=self.side, name="footRoll"+"toeRotation")
+        clampDiff = mNode.clamp(side=self.side, name="footRoll"+"toeRotation")
+        mc.setAttr(diffRollTarsalLock.getOperation(), 2)
+        mmod.connectAttr(animParameters.name+".footRoll", diffRollTarsalLock.name+".input1D[0]")
+        mmod.connectAttr(clampTarsalLock.getOutputR(), diffRollTarsalLock.name+".input1D[1]")
+        mmod.connectAttr(diffRollTarsalLock.name+".output1D", clampDiff.getInputR())
+        mc.setAttr(clampDiff.getMaxR(), 100)
+        mmod.connectPlugs(clampDiff.outputR, footRolljnt[1].rotateZ)
+
+        # Subtracting this rotation from the tarsal Rot
+        invClampDiff = mNode.multDoubleLinear(side=self.side, name="footRoll"+"invToeRotation")
+        straightenCoef = mNode.multDoubleLinear(side=self.side, name="footRoll"+"straightenCoef")
+        addStraightening = mNode.addDoubleLinear(side=self.side, name="footRoll"+"tarsalRotation")
+        mc.setAttr(invClampDiff.getInput2(), -1)
+        mmod.connectPlugs(clampDiff.outputR, invClampDiff.input1)
+        mmod.connectPlugs(invClampDiff.output, straightenCoef.input1)
+        mmod.connectAttr(animParameters.name+".straighten", straightenCoef.getInput2())
+
+        mmod.connectPlugs(straightenCoef.output, addStraightening.input1)
+        mmod.connectAttr(clampTarsalRot.getOutputR(), addStraightening.getInput2())
+
+        mmod.connectPlugs(addStraightening.output, footRolljnt[2].rotateZ)
+
+        
+        # 4. CONNECT FOOTROLL TO LEG
+        # Get Ankle jnt WM Translation
+        decompMtxFootRollAnkle = mNode.decomposeMatrix(side=self.side, name="footRoll"+"footRollAnkle")
+        decompMtxAnkeCtl = mNode.decomposeMatrix(side=self.side, name="footRoll"+"ankleControl")
+        subtractingTransformations = mNode.plusMinusAverage(side=self.side, name="footRoll"+"totalTransforms")
+        mmod.connectAttr(footRolljnt[3].name+".worldMatrix", decompMtxFootRollAnkle.name+".inputMatrix") 
+        mmod.connectAttr(self.ankleCtrl.name+".worldMatrix", decompMtxAnkeCtl.name+".inputMatrix")
+        mc.disconnectAttr(self.ankleCtrl.name+".worldMatrix", decompMtxAnkeCtl.name+".inputMatrix")
+        mmod.connectAttr(decompMtxFootRollAnkle.getOutputTranslate(), subtractingTransformations.name+".input3D[0]")
+        mmod.connectAttr(decompMtxAnkeCtl.getOutputTranslate(), subtractingTransformations.name+".input3D[1]")
+        mc.setAttr(subtractingTransformations.getOperation(), 2)
+        mmod.connectAttr(subtractingTransformations.getOutput3D(), mc.listRelatives(self.ankleCtrl, c=True)[1] +".translate")
+
+
+        # # 5. CONNECT FOOTROLL TO FK FOOT (WITH CONSTRAINTS)
+        # 5.0. DUPLICATING FK FOOT
+        localFKGrp = mmod.transform(side=self.side, name="footRoll"+"LocalFK", parent=jointsGrp)
+        localFkJnt = rigFn.createJntChain(self.footJNTList, side=self.side, name="footRoll"+"LocalFK", segmentList=self.footSegments, parent=localFKGrp)
+        # 5.1. ORIENT CONSTRAINT OFS GRPs
+        toeOrientConstraint = mc.orientConstraint(footRolljnt[1].name, fn.getParent(localFkJnt[1].name), mo=True)[0]
+        tarsalOrientConstraint = mc.orientConstraint(footRolljnt[2].name, fn.getParent(localFkJnt[0].name), mo=True)[0]
+        # 5.2. SET INFLUENCES TO BE ACTIVE JUST IN IK MODE
+        weight = mc.orientConstraint(toeOrientConstraint, q=True, wal=True)[0]
+        mmod.connectAttr(self.legRoot.settingCtl.name+".fkIkBlend", toeOrientConstraint+"."+weight)
+        weight = mc.orientConstraint(tarsalOrientConstraint, q=True, wal=True)[0]
+        mmod.connectAttr(self.legRoot.settingCtl.name+".fkIkBlend", tarsalOrientConstraint+"."+weight)
+        # 5.3. CONNECTING ROTATION TO FK OFS GRPs
+        mmod.connectAttr(fn.getParent(localFkJnt[1].name)+".rotate", fn.getParent(self.footFKJnt[1].name)+".rotate")
+        mmod.connectAttr(fn.getParent(localFkJnt[0].name)+".rotate", fn.getParent(self.footFKJnt[0].name)+".rotate")
+        # 5.4. HIDING GRP
+        mc.hide(localFKGrp)
+        # 6. Connecting FootRoll to leg Ctrl
+        mmod.connectPlugs(self.legRoot.footRollAttr, self.footRoll)
+
+        # DELETING GUIDS
+        mc.delete(heelJnt)
+
+
+    def FKfoot_setUp(self, footJNTList=[], parent=None):
+        # GLOBALS
+        mmod.resetJNTCount()
+        mmod.resetTRNCount()
+        # 1. CREATING HIERARCHY
+        footFK_GRP = mmod.transform(side=self.side, name=self.footName+"FK", type="GRP", parent=parent)
+        mc.setAttr(footFK_GRP.name+".inheritsTransform", 0)
+        footFKJntGRP = mmod.transform(side=self.side, name=self.footName+"FK"+"Joints", type="GRP", parent=footFK_GRP)
+        # 2.1. CONSTRAINING FOOT TO  IK ANKLE
+        decmpMatrixLimAnkle = mNode.decomposeMatrix(side=self.side, name="limitedAnkleWM")
+        decmpMatrixFKAnkle = mNode.decomposeMatrix(side=self.side, name="FKAnkleWM")
+        conditionNode = mNode.condition(side=self.side, name="legBlendMode")
+        mmod.connectAttr(self.legRoot.limitedEffector.name+".worldMatrix", decmpMatrixLimAnkle.getInputMatrix())
+        mmod.connectAttr(self.legRoot.FKjntChain[2].name+".worldMatrix", decmpMatrixFKAnkle.getInputMatrix())
+        mmod.connectAttr(decmpMatrixLimAnkle.getOutputTranslate(), conditionNode.getColorIfFalse())
+        mmod.connectAttr(decmpMatrixFKAnkle.getOutputTranslate(), conditionNode.getColorIfTrue())
+        mmod.connectPlugs(self.legRoot.blendAttr, conditionNode.firstTerm)
+        mmod.connectPlugs(conditionNode.outColor, footFKJntGRP.translate)
+    
+        # 2.2. FOOT JNT CHAIN
+        jntChain = rigFn.createFKChain(footJNTList, side=self.side, name=self.footName+"FK", segmentList=self.footSegments, parent=footFKJntGRP)
+        self.footFKJnt = jntChain
+        self.footFKGRP = footFKJntGRP.name
+
+        # MATCHING GLOBAL ORIENTATION
+        decomMatrix = mNode.decomposeMatrix(side=self.side, name="rootGlobalTransformations")
+        mmod.connectAttr(self.hook.name+".worldMatrix", decomMatrix.getInputMatrix())
+        mmod.connectAttr(decomMatrix.getOutputRotate(), footFKJntGRP.name+".rotate")
+  
+
+ 
+
+
 
 
 class diana(mjChr.rigSceneSetup):    
@@ -75,7 +635,7 @@ class diana(mjChr.rigSceneSetup):
         legMod.resetLegMod()
         armMod.resetArmMod()
         # Creating the spine
-        self.m_spine = spineMod.spine(spineJnt="C_spine00_JNT", root=self.rootJnt, parent=self, revolveVector=[0, 0, 1])
+        self.m_spine = spineMod.spine(spineJnt="C_spine00_JNT", root=self.rootJnt, parent=self, revolveVector=[1, 0, 0])
         self.m_neck = neckMod.neck (neckJnt="C_neck00_JNT", root=self.m_spine.chestCtl, parent=self, hook=self.m_spine.cog, revolveVector=[1, 0, 0])
 
         side=["L", "R"]
@@ -83,13 +643,13 @@ class diana(mjChr.rigSceneSetup):
             # LEG 
             self.m_leg = legMod.leg(legJnt=s+"_leg00_JNT", side=s, parent=self, root=self.m_spine.pelvisCtl)
             # self.m_leg =  leg(legJnt=s+"_leg00_JNT", side=s, parent=self, root=self.m_spine.pelvisCtl)
-            self.m_foot = footMod.foot(footJnt=s+"_foot00_JNT", side=s, root=self.m_leg, parent=s+"_bindLeg00_GRP", hook=self.rootJnt)
+            self.m_foot = foot(footJnt=s+"_foot00_JNT", side=s, root=self.m_leg, parent=s+"_bindLeg00_GRP", hook=self.rootJnt)
             # ARM
             self.m_clavicle = clavicleMod.clavicle(side=s, clavicleJnt=s+"_clavicle00_JNT", root=self.m_spine.chestCtl)
             self.m_arm = armMod.arm(side=s, armJnt=s+"_arm00_JNT", parent=self, root=self.m_clavicle)
-              
+            
             # HAND
-            self.m_hand =handMod.hand(handJnt=s+"_hand00_JNT", fingerGrp=s+"_handFingers00_GRP", side=s, root=self.m_arm, parent= s+"_bindArm00_GRP", hook = self.rootJnt)
+            self.m_hand =hand(handJnt=s+"_hand00_JNT", fingerGrp=s+"_handFingers00_GRP", side=s, root=self.m_arm, parent= s+"_bindArm00_GRP", hook = self.rootJnt)
 
        
        # CLEAN UP
@@ -154,7 +714,7 @@ class diana(mjChr.rigSceneSetup):
         
     #     # TEMPORARY
         # mc.hide("C_geometry01_GRP")
-        mc.hide ("Groom", "Light", "Eye:group1")
+        mc.hide ("Groom", "Light", "Eye1")
         mc.select("C_spineFKCtl0*_JNT")
         mc.delete()
 

@@ -10,6 +10,7 @@ import rigFn as rigFn
 import mayaNode as node
 
 
+
 class spine(object):
     def __init__(self, side="C", name="spine", revolveVector = [1, 0, 0], spineJnt=None, root=None, parent=None):
         '''
@@ -38,15 +39,20 @@ class spine(object):
         fn.scaleShapePoints(self.cog.name, 1.3)
         fn.rotateShapePoints(self.cog.name, rotationVector=[0, 0, 90], pivot=mc.xform(self.guides[-1], q=True, ws=True, t=True))
         # 1.0. PELVIS
-        self.pelvisCtl = rigFn.constructCTL(self.guides[0], name = "pelvis", parent = self.cog)
-        fn.rotateShapePoints(self.pelvisCtl.name, rotationVector=[0, 0, 90], pivot=mc.xform(self.guides[-1], q=True, ws=True, t=True))
+        self.pelvisCtl = rigFn.constructCTL(self.guides[0], name = "pelvis", parent = self.cog, ctrlShape = 5)
+        # fn.rotateShapePoints(self.pelvisCtl.name, rotationVector=[0, 0, 90], pivot=mc.xform(self.guides[-1], q=True, ws=True, t=True))
 
         # 1.3. Spine FK
         self.fkCtl1 = rigFn.constructCTL(self.guides[len(self.guides)/2-2], name = self.name+"FKCtl", parent = self.cog)
         self.fkCtl2 = rigFn.constructCTL(self.guides[len(self.guides)/2+1], name = self.name+"FKCtl", parent = self.fkCtl1)
+        fn.rotateShapePoints(self.fkCtl1.name, rotationVector=[0, 0, 90], pivot=mc.xform(self.guides[-1], q=True, ws=True, t=True))
+        fn.rotateShapePoints(self.fkCtl2.name, rotationVector=[0, 0, 90], pivot=mc.xform(self.guides[-1], q=True, ws=True, t=True))
+        self.fkCtl1.setColor (14)
+        self.fkCtl2.setColor (14)
+
         # 1.4. CHEST
-        self.chestCtl = rigFn.constructCTL(self.guides[-1], name="chest", parent = self.fkCtl2)
-        fn.rotateShapePoints(self.chestCtl.name, rotationVector=[0, 0, 90], pivot=mc.xform(self.guides[-1], q=True, ws=True, t=True))
+        self.chestCtl = rigFn.constructCTL(self.guides[-1], name="chest", parent = self.fkCtl2, ctrlShape=5)
+        # fn.rotateShapePoints(self.chestCtl.name, rotationVector=[0, 0, 90], pivot=mc.xform(self.guides[-1], q=True, ws=True, t=True))
 
         # 2.0. SPINE RIBBON
         # Bind Joints Groug
@@ -56,12 +62,41 @@ class spine(object):
         # Extracting the forward and up vectors
         self.getRivetAlignmentVectors()
         # Create Surface Loft Guides
-        self.createLoftSurface(self.guides[1:-1])
+        self.createLoftSurface(self.guides)
         # Attaching Joints
         self.attachJoinnts(parent=self.spineGlobalGrp)
-
+        # Volume Preservation
+        self.volumePreservationSetUp()
         # DELETING GUIDES
         mc.delete(self.guides)
+    def volumePreservationSetUp(self): 
+        # Creating Volume Preservation Attribute              
+        voulumePreservationAttr = mc.addAttr(self.cog.name, ln="volumePreservation", dv=1, min = 0, max = 1, at="short", k=True)
+        # MultiplyDivide NODE
+        multiplyDiv = mNode.multiplyDivide(side=self.side, name=self.name+"DivLen")
+        mc.setAttr(multiplyDiv.name+".input1X", mc.getAttr(self.matloftNode.getSurfaceLength()) )
+        multiplyDiv.operation = 2
+        mmod.connectAttr(self.matloftNode.getSurfaceLength(), multiplyDiv.name+".input2X")
+        # Volume Preservation Condition
+        condNode = mNode.condition(side=self.side, name=self.name+"VolumePreservationCond")
+        condNode.secondTerm = 1
+        # mmod.connectAttr(multiplyDiv.name+".outputX", condNode.getFirstTerm())
+        mmod.connectAttr(multiplyDiv.getOutput(), condNode.getColorIfTrue())
+        mmod.connectAttr(self.cog.name+".volumePreservation", condNode.getFirstTerm())
+        
+        # Power Nodes
+        for i in range (len(self.guides)):
+            attrName = "magnitude"+str(i)
+            magnitudeAttr =mc.addAttr(self.cog.name, longName=attrName, min=-1, dv=0, max=1, at="double", keyable=True)
+            powerNode = mNode.multiplyDivide(side=self.side, name=self.name+"PowerNode")
+            mmod.connectAttr(condNode.name+".outColorR", powerNode.name+".input1X")
+            mmod.connectAttr(self.cog.name+"."+attrName, powerNode.name+".input2X")
+            powerNode.operation = 3
+            # Connecting To JNT Scale
+            mmod.connectAttr(powerNode.name+".outputX",  self.spineJnt[i].name+".scaleY")
+            mmod.connectAttr(powerNode.name+".outputX",  self.spineJnt[i].name+".scaleZ")
+
+  
 
     def getRivetAlignmentVectors(self):
 
@@ -156,10 +191,10 @@ class spine(object):
 
             # Creating the Controls
             # MIDDLE
-            middleCtl = rigFn.constructCTL(self.surfaceOfsPoints[2], name = self.name+"IKmiddle", parent = self.fkCtl1)
+            middleCtl = rigFn.constructCTL(self.surfaceOfsPoints[2], name = self.name+"IKmiddle", parent = self.fkCtl1, ctrlShape=5)
             mc.delete(mc.listRelatives(middleCtl.name, c=True)[1])
             fn.scaleShapePoints(middleCtl.name, mc.getAttr(guides[len(guides)/2]+".radius")/2)
-            fn.rotateShapePoints(middleCtl.name, rotationVector=mc.xform(guides[len(guides)/2], q=True, ws=True, ro=True), pivot=mc.xform(guides[len(guides)/2], q=True, ws=True, t=True))
+            # fn.rotateShapePoints(middleCtl.name, rotationVector=[90, 0, 0], pivot=mc.xform(guides[len(guides)/2], q=True, ws=True, t=True))
             mc.parent(self.surfaceOfsPoints[2], middleCtl)
 
             # # START
@@ -200,3 +235,5 @@ class spine(object):
             mc.delete(midGuide)
         self.createGuideFromObj(guides[gLen-2], parent=grp)
         self.createGuideFromObj(guides[gLen-1], parent=grp)  
+
+

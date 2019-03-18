@@ -137,6 +137,7 @@ def constructCTL(guideJNT, side="C", name="name", parent=None, ctrlScale=1, ctrl
                 2 -> diamond 
                 3 -> locator
                 4 -> settings
+                5 -> square
     Function that creates the following hierarchy 
     mmod.transformNode_GRP
         mmod.transformNode_OFS : aligned with guideJNT
@@ -160,6 +161,8 @@ def constructCTL(guideJNT, side="C", name="name", parent=None, ctrlScale=1, ctrl
         ctl = ctlFn.locatorControl(side=side, name=name, parent=ofs)
     elif (ctrlShape == 4):
         ctl = ctlFn.settingCtl(side=side, name=name, parent=ofs)   
+    elif (ctrlShape == 5):
+        ctl = ctlFn.squareControl(side = side, name=name, parent=ofs)
     else:
         ctl = mmod.circle(side=side, name=name, parent=ofs)
     # Scaling Ctrl

@@ -116,4 +116,4 @@ def saveFile(projectEnv="C:/Users/anama/Desktop/MajorProject/Production", saveNa
         searchAndReplaceText(pathName)
 
 
-#nameObj(side="C", name="pillar")
+#ameObj(side="C", name="pillar")

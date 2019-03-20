@@ -66,14 +66,12 @@ class leg(blendFKIK.blendFKIK):
         # RIBBON LIMBS
         # CREATING MAGNITUDE ATTR
         # Volume Preservation Attr
-        volumePreservation =mc.addAttr(self.settingCtl.name, longName="volumePreservation", min=0, dv=0, max=1, at="short", keyable=True)
+        volumePreservation =mc.addAttr(self.settingCtl.name, longName="volumePreservation", min=0, dv=1, max=1, at="short", keyable=True)
 
 
         self.femurRibbon = ribbonLimbs.ribbonLimbs(side=self.side, endJnt=self.bindJntChain[1], startJnt=self.bindJntChain[0], name= "femurRibbon", parent=leg.rigParent, root=fn.getChildren(root)[1], revolveVector=[0, 0, 1])
         self.tibiaRibbon = ribbonLimbs.ribbonLimbs(side=self.side, endJnt=self.bindJntChain[2], startJnt=self.bindJntChain[1], name= "tibiaRibbon", parent=leg.rigParent, root=fn.getChildren(root)[1], revolveVector=[0, 0, 1])
-        # CREATING VOLUME RESERVATION
-        self.volumePreservationSetUp(self.femurRibbon, ribbonName="femur")
-        self.volumePreservationSetUp(self.tibiaRibbon, ribbonName="tibia")
+        
         # RIBBON VISIBILITY SWITCH
         mc.hide(self.femurRibbon.guides[0], self.femurRibbon.guides[-1], self.tibiaRibbon.guides[0], self.tibiaRibbon.guides[-1])
         ribbonVisibility = self.settingCtl.addAttr(longName = "secondaryControls", softMinValue=0, defaultValue=0, softMaxValue=1, attrType="short", keyable=True)
@@ -81,3 +79,7 @@ class leg(blendFKIK.blendFKIK):
             mmod.connectPlugs(ribbonVisibility, femurControl.visibility)
             mmod.connectPlugs(ribbonVisibility, tibiaControl.visibility)
  
+        # CREATING VOLUME RESERVATION
+        self.volumePreservationSetUp(self.femurRibbon, ribbonName="femur")
+        self.volumePreservationSetUp(self.tibiaRibbon, ribbonName="tibia")
+     

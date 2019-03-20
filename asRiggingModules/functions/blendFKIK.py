@@ -212,7 +212,7 @@ class blendFKIK(object):
     
         # Creating attribute on ctrl
         self.blendAttr = self.settingCtl.addAttr(longName="fkIkBlend", softMinValue=0, defaultValue=1, softMaxValue=1, attrType="short", keyable=True)
-        self.stretchyLimbs = self.settingCtl.addAttr(longName="stretchyLimb", softMinValue=0, defaultValue=0, softMaxValue=1, attrType="short", keyable=True)
+        self.stretchyLimbs = self.settingCtl.addAttr(longName="stretchyLimb", softMinValue=0, defaultValue=1, softMaxValue=1, attrType="short", keyable=True)
 
 
     

@@ -99,7 +99,7 @@ class spine(object):
         mc.delete(self.guides)
     def volumePreservationSetUp(self): 
         # Creating Volume Preservation Attribute              
-        voulumePreservationAttr = mc.addAttr(self.cog.name, ln="volumePreservation", dv=0, min = 0, max = 1, at="short")
+        voulumePreservationAttr = mc.addAttr(self.cog.name, ln="volumePreservation", dv=1, min = 0, max = 1, at="short", k=True)
         # MultiplyDivide NODE
         multiplyDiv = mNode.multiplyDivide(side=self.side, name=self.name+"DivLen")
         mc.setAttr(multiplyDiv.name+".input1X", mc.getAttr(self.matloftNode.getSurfaceLength()) )

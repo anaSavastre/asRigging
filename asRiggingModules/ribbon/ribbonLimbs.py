@@ -8,8 +8,10 @@ import asNodes as asNode
 
 import ribbon as ribbon
 
+
+
 class ribbonLimbs(object):
-   
+       
     def generateGuides(self):
         '''
         1. GET SEGMENT DIRECTION VECTOR
@@ -55,17 +57,25 @@ class ribbonLimbs(object):
         # CONSTRAINING CONTROL GRP TO START JNT
         rigFn.parentConstraint(self.startJnt.name, fn.getParent(self.controlGrp.name), self.controlGrp.name)
 
-    def rotationBlend(self, influence = mmod.transform(), child= mmod.transform(), blendValue = 0, index=0):
-        # CREATING MATRIX MULTIPLICATION
-        matrixMult = mNode.multMatrix(side=self.side, name="twistInterpolation"+str(index))
-        decomposeMatrix = mNode.decomposeMatrix(side=self.side, name="twistValues"+str(index))
-        mmod.connectAttr(influence.name+".worldMatrix", matrixMult.name+".matrixIn[0]")
-        mmod.connectAttr(fn.getParent(fn.getParent(child))+".worldInverseMatrix", matrixMult.name+".matrixIn[1]")
-        mmod.connectAttr(matrixMult.getMatrixSum(), decomposeMatrix.getInputMatrix())
+    def rotationBlend(self, baseInfluence = mmod.transform(), topInfluence = mmod.transform(), child= mmod.transform(), blendValue = 0, index=0):
+        # BASE INFLUENCE CREATING MATRIX MULTIPLICATION
+        matrixMultBase = mNode.multMatrix(side=self.side, name="twistInterpolation"+str(index))
+        decomposeMatrixBase = mNode.decomposeMatrix(side=self.side, name="twistValues"+str(index))
+        mmod.connectAttr(baseInfluence.name+".worldMatrix", matrixMultBase.name+".matrixIn[0]")
+        mmod.connectAttr(fn.getParent(fn.getParent(child))+".worldInverseMatrix", matrixMultBase.name+".matrixIn[1]")
+        mmod.connectAttr(matrixMultBase.getMatrixSum(), decomposeMatrixBase.getInputMatrix())
+        # TOP INFLUENCE CREATING MATRIX MULTIPLICATION
+        matrixMultTop = mNode.multMatrix(side=self.side, name="twistInterpolation"+str(index))
+        decomposeMatrixTop = mNode.decomposeMatrix(side=self.side, name="twistValues"+str(index))
+        mmod.connectAttr(topInfluence.name+".worldMatrix", matrixMultTop.name+".matrixIn[0]")
+        mmod.connectAttr(fn.getParent(fn.getParent(child))+".worldInverseMatrix", matrixMultTop.name+".matrixIn[1]")
+        mmod.connectAttr(matrixMultTop.getMatrixSum(), decomposeMatrixTop.getInputMatrix())
         # CREATING INTERPOLATION
         eulerAdditive = mNode.animBlendNodeAdditiveDA(side = self.side, name= "twistInterpolation"+str(index))
-        mmod.connectAttr(decomposeMatrix.name+".outputRotateX", eulerAdditive.getInputA())
+        mmod.connectAttr(decomposeMatrixBase.name+".outputRotateX", eulerAdditive.getInputA())
+        mmod.connectAttr(decomposeMatrixTop.name+".outputRotateX", eulerAdditive.getInputB())
         mc.setAttr(eulerAdditive.getWeightA(), blendValue)
+        mc.setAttr(eulerAdditive.getWeightB(), 1 - blendValue)
         mmod.connectAttr(eulerAdditive.getOutput(), fn.getParent(child.name)+".rotateX")
         # divide = mNode.multDoubleLinear(side=self.side, name="twistInterpolation"+str(index))
         # mmod.connectAttr(decomposeMatrix.name+".outputRotateX", divide.getInput1())
@@ -76,7 +86,7 @@ class ribbonLimbs(object):
         # EXTRACT JOINT ROTATION - FROM END  TO START
         # num = len(self.guides)
         for i, guide in enumerate (self.guides[1:-1]):
-            self.rotationBlend(influence = self.guides[-1], child= guide, blendValue =  1 - 0.25*(3-i), index = i)
+            self.rotationBlend(baseInfluence = self.guides[-1], topInfluence = self.guides[0], child= guide, blendValue =  1 - 0.25*(3-i), index = i)
             
     def influenceBlend(self, influence1=mmod.transform(), influence2=mmod.transform(), child=mmod.transform()):
         '''
@@ -124,7 +134,7 @@ class ribbonLimbs(object):
         self.influenceBlend(influence1=self.guides[0].name, influence2=self.guides[2].name, child=fn.getParent(self.guides[1].name))
         self.influenceBlend(influence1=self.guides[-1].name, influence2=self.guides[2].name, child=fn.getParent(self.guides[-2].name))
     def stretchyLimbs(self):
-        mc.parentConstraint(self.endJnt, fn.getParent(self.guides[-1]), mo=True)
+        mc.pointConstraint(self.endJnt, fn.getParent(self.guides[-1]), mo=True)
         # rigFn.parentConstraintMO(self.endJnt, fn.getParent(fn.getParent(self.guides)), fn.getParent(self.guides) )
     
     def __init__(self, side="C", name="ribbbonLimb", numberOfGuides=5, revolveVector= [1, 0, 0], endJnt=None, startJnt=None, parent=None, root=None):
@@ -153,4 +163,4 @@ class ribbonLimbs(object):
             # CREATING STRETCHY LIMBS
             self.stretchyLimbs()
       
-  
+ 

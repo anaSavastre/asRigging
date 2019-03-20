@@ -421,6 +421,6 @@ def curveSimplifier (object = None, dimension=".rotateZ"):
 # customParentConstraint("customNodeConstraint|C_parentCube00_GRP1|C_parentCube01_CTL1", "customNodeConstraint|C_constraintCubeCustomNode00_GRP1")
 # simpleAnim()
 # testObj = recreateAnimation(sourceAnimation = "Bip01FBXASC032RFBXASC032Forearm")
-cubeTesteScene()
+# cubeTesteScene()
 animationGUIWindoe = animationGUI()
 # curveSimplifier(object = testObj)

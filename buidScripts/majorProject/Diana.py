@@ -427,9 +427,7 @@ class foot(object):
         mmod.connectAttr(decomMatrix.getOutputRotate(), footFKJntGRP.name+".rotate")
   
 
- 
-
-
+  
 
 
 class diana(mjChr.rigSceneSetup):    
@@ -455,7 +453,7 @@ class diana(mjChr.rigSceneSetup):
             self.m_arm = armMod.arm(side=s, armJnt=s+"_arm00_JNT", parent=self, root=self.m_clavicle)
             
             # HAND
-            self.m_hand =hand(handJnt=s+"_hand00_JNT", fingerGrp=s+"_handFingers00_GRP", side=s, root=self.m_arm, parent= s+"_bindArm00_GRP", hook = self.rootJnt)
+            self.m_hand =handMod.hand(handJnt=s+"_hand00_JNT", fingerGrp=s+"_handFingers00_GRP", side=s, root=self.m_arm, parent= s+"_bindArm00_GRP", hook = self.rootJnt)
 
        
        # CLEAN UP
@@ -471,9 +469,8 @@ class diana(mjChr.rigSceneSetup):
             mc.setAttr(node+".widthOffset", 1)
 
         # BIND JOINTS
-        bindJoints = [ u'C_chest04_JNT', u'C_bindSpine013_JNT', u'C_bindSpine012_JNT', u'C_bindSpine011_JNT',
-                       u'C_bindSpine010_JNT', u'C_bindSpine09_JNT', u'C_bindSpine08_JNT', u'C_bindSpine07_JNT',
-                       u'C_bindSpine06_JNT', u'C_pelvis01_JNT', u'L_bindFemurribbon01_JNT', u'L_bindFemurribbon00_JNT',
+        bindJoints = [ u'C_chest04_JNT',  u'C_bindSpine011_JNT', u'C_bindSpine010_JNT', u'C_bindSpine09_JNT', u'C_bindSpine08_JNT', u'C_bindSpine07_JNT',
+                       u'C_pelvis01_JNT', u'L_bindFemurribbon01_JNT', u'L_bindFemurribbon00_JNT',
                        u'L_bindFemurribbon02_JNT', u'L_bindFemurribbon03_JNT', u'L_bindFemurribbon04_JNT',
                         u'L_bindTibiaribbon00_JNT', u'L_bindTibiaribbon01_JNT', u'L_bindTibiaribbon02_JNT', u'L_bindTibiaribbon03_JNT',
                         u'L_bindTibiaribbon04_JNT', u'R_bindFemurribbon00_JNT', u'R_bindFemurribbon01_JNT',
@@ -520,7 +517,7 @@ class diana(mjChr.rigSceneSetup):
         
     #     # TEMPORARY
         # mc.hide("C_geometry01_GRP")
-        mc.hide ("Groom", "Light", "Eye1")
+        mc.hide ("Groom")#, "Light", "Eye1")
         mc.select("C_spineFKCtl0*_JNT")
         mc.delete()
 
@@ -530,3 +527,18 @@ class diana(mjChr.rigSceneSetup):
 
 
 rig=diana("Diana", projectEnv)
+
+
+
+# # CLEAM UP
+# def cleanUp():
+        
+#     mc.select("*_JNT")
+
+#     list = mc.ls(sl=True)
+
+#     for jnt in list:
+#         mc.setAttr(jnt+".drawStyle", 1)
+
+
+# cleanUp()

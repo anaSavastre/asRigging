@@ -20,12 +20,15 @@ import blendFKIK as blendFKIK
 import ribbonLimbs as ribbonLimbs
 import functions as fn
 import mayaNode as mNode
+import rigFn as rigFn
 
 
 
 def resetLegMod():
     leg.rigParent = None
  
+
+
 class leg(blendFKIK.blendFKIK):
     rigParent = None
   
@@ -78,7 +81,10 @@ class leg(blendFKIK.blendFKIK):
         for femurControl, tibiaControl  in zip(self.femurRibbon.guides[1:-1], self.tibiaRibbon.guides[1:-1]):
             mmod.connectPlugs(ribbonVisibility, femurControl.visibility)
             mmod.connectPlugs(ribbonVisibility, tibiaControl.visibility)
- 
+
+        # CONSTRAINING FEMUR UPPER CTRL TO PELVIS
+        rigFn.parentConstraintMO (self.root.name, fn.getParent(fn.getParent(self.femurRibbon.guides[0])), fn.getParent(self.femurRibbon.guides[0]), translate=False, rotate=True, scale=False )
+        
         # CREATING VOLUME RESERVATION
         self.volumePreservationSetUp(self.femurRibbon, ribbonName="femur")
         self.volumePreservationSetUp(self.tibiaRibbon, ribbonName="tibia")

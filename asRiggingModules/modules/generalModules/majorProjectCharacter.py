@@ -77,8 +77,6 @@ class rigSceneSetup(object):
         '''
         files= os.listdir(path)
         sortedFiles = sorted(list(set([item for item in files if item.endswith('.ma') or item.endswith('.mb')])));
-        print "sourted files", sortedFiles
-        print "files", files
         latestFile = sortedFiles[-1]
         # for index in range (2, len(files)):
         #     if (".ma" in files[-index] ):
@@ -91,10 +89,8 @@ class rigSceneSetup(object):
 
 
         try:
-            print "file to be loaded", path+"/"+latestFile
             mc.file( path+"/"+latestFile, i= True, type= "mayaAscii", usingNamespaces= False, f=True)
         except:
-            print "file not loaded"
             return
 
 
@@ -156,10 +152,6 @@ class rigSceneSetup(object):
         
         # IMPORT MODEL
         self.loadLatestFile(modelFile)
-
-        print "model Loaded", modelFile
-        # mc.file(modelFile, i= True, type= "mayaAscii", usingNamespaces= False, f=True)
-
         # MODEL PARAMETERS
         geoCenter = self.getObjCenter()
         geoHeight = self.getObjHeight()

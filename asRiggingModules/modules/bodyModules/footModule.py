@@ -41,13 +41,14 @@ class foot(object):
             mmod.connectAttr( self.legRoot.reverseBlend.getOutput(), orientConstraint+"."+ocWeightAlias)
 
             # # CONNECTING FK ANKLE TO IK ANKLE
+            mmod.connectAttr(self.ankleCtrl.name+".rotate", self.ikAnkleCtrlConnectionGrp.name+".rotate")
             # parentConstraint = mc.parentConstraint(self.ankleCtrl, fn.getParent(self.footFKJnt[0]), mo=True)[0]
             # pcWeightAlias = mc.parentConstraint(parentConstraint, q=True, wal=True)[0]
             # mmod.connectAttr(self.legRoot.settingCtl.name+".fkIkBlend", parentConstraint+"."+pcWeightAlias)
-            orientConstraint =mc.orientConstraint(self.ankleCtrl, fn.getParent(fn.getParent(self.footFKJnt[0])), mo=True)[0]
-            ocWeightAlias = mc.orientConstraint(orientConstraint, q=True, wal=True)[0]
-            mmod.connectAttr( self.legRoot.settingCtl.name+".fkIkBlend", orientConstraint+"."+ocWeightAlias)
-
+            # orientConstraint =mc.orientConstraint(self.ankleCtrl, fn.getParent(fn.getParent(self.footFKJnt[0])), mo=True)[0]
+            # ocWeightAlias = mc.orientConstraint(orientConstraint, q=True, wal=True)[1]
+            # mmod.connectAttr( self.legRoot.settingCtl.name+".fkIkBlend", orientConstraint+"."+ocWeightAlias)
+            # mmod.connectAttr()
             # Making Scaleable
             mmod.connectAttr(fn.getParent(self.hook)+".scale", fn.getParent(self.footFKJnt[0])+".scale")
             
@@ -329,9 +330,17 @@ class foot(object):
         mmod.resetJNTCount()
         mmod.resetTRNCount()
         # 1. CREATING HIERARCHY
+        # footConnectionFK_GRP = mmod.transform(side=self.side, name=self.footName+"FK", type="GRP", parent=parent)
         footFK_GRP = mmod.transform(side=self.side, name=self.footName+"FK", type="GRP", parent=parent)
+
         mc.setAttr(footFK_GRP.name+".inheritsTransform", 0)
+       
+
         footFKJntGRP = mmod.transform(side=self.side, name=self.footName+"FK"+"Joints", type="GRP", parent=footFK_GRP)
+        footConnectionFK_GRP = mmod.transform(side=self.side, name=self.footName+"FK"+"Connection", type="GRP", parent=footFKJntGRP)
+        self.ikAnkleCtrlConnectionGrp= footConnectionFK_GRP
+
+
         # 2.1. CONSTRAINING FOOT TO  IK ANKLE
         decmpMatrixLimAnkle = mNode.decomposeMatrix(side=self.side, name="limitedAnkleWM")
         decmpMatrixFKAnkle = mNode.decomposeMatrix(side=self.side, name="FKAnkleWM")
@@ -344,7 +353,7 @@ class foot(object):
         mmod.connectPlugs(conditionNode.outColor, footFKJntGRP.translate)
     
         # 2.2. FOOT JNT CHAIN
-        jntChain = rigFn.createFKChain(footJNTList, side=self.side, name=self.footName+"FK", segmentList=self.footSegments, parent=footFKJntGRP)
+        jntChain = rigFn.createFKChain(footJNTList, side=self.side, name=self.footName+"FK", segmentList=self.footSegments, parent=footConnectionFK_GRP)
         self.footFKJnt = jntChain
         self.footFKGRP = footFKJntGRP.name
 
@@ -352,6 +361,3 @@ class foot(object):
         decomMatrix = mNode.decomposeMatrix(side=self.side, name="rootGlobalTransformations")
         mmod.connectAttr(self.hook.name+".worldMatrix", decomMatrix.getInputMatrix())
         mmod.connectAttr(decomMatrix.getOutputRotate(), footFKJntGRP.name+".rotate")
-  
-
- 

@@ -21,7 +21,7 @@ def getCVFronShape(shapeNode, r=False, ws=True):
         
     return ls, degree
 
-def createNewCureveShape(curveNode, cvGuideList, degree, name):
+def createNewCureveShape(curveNode, cvGuideList, degree, name="curveShape"):
     curve = mc.curve(name=name , point = cvGuideList, ws=True, degree=degree)
     mc.parent(fn.getChildren(curve)[0], curveNode, shape=True, r=True)
     mc.delete(curve)
@@ -143,7 +143,12 @@ def pasteCtrlShape(ctrl, copied, degree, form):
         curve = mc.curve(name="test" , point = copied, ws=True, degree=degree)
         mc.parent(fn.getChildren(curve)[0], ctrl, shape=True, r=True)
         mc.delete(curve)
+    elif (form==2):
+        curve = mc.circle()
+        for i, cv in enumerate(copied):
+            mc.xform(fn.getChildren(curve)[0]+".cv["+str(i)+"]", t=cv, ws=True)
 
+        mc.parent(fn.getChildren(curve)[0], ctrl, shape=True, r=True)
     else:
         # curve = mc.circle()
         # for i, cv in enumerate(copied):
@@ -155,11 +160,64 @@ def pasteCtrlShape(ctrl, copied, degree, form):
         mc.parent(fn.getChildren(curve)[0], ctrl, shape=True, r=True)
 
         mc.delete(curve)
-    
-    mc.delete(fn.getChildren(ctrl)[0])
 
-# ctrl, degree, form = copyCtrlShape("curve1")
-# print ctrl
-# pasteCtrlShape("L_radiusRibbonControl03_CTL", ctrl, degree, form)
+    for elem in fn.getChildren(ctrl):
+        if (mc.nodeType(elem, api=True) != "kNurbsCurve"):
+            continue
+        else:
+            mc.delete(elem)
+            break
 
-# ctrl = squareControl()
+
+def copySelectedControl():
+        
+    sl = mc.ls(sl=True)
+    ctrlShapeList =[]
+    degreeShapeList =[]
+    formShapeList =[]
+   
+    if (sl == []):
+        mc.warning( "No control shape selected" ) 
+    else:
+        for elem in fn.getChildren(sl):
+            objType = mc.nodeType(elem, api=True)
+
+            if (objType == "kNurbsCurve"):
+                ctrl, degree, form = ctlFn.copyCtrlShape(elem)
+                ctrlShapeList.append(ctrl)
+                degreeShapeList.append(degree)
+                formShapeList.append(form)
+
+def pasteSelectedControl ():        
+
+    sl = mc.ls(sl=True)
+    if (sl == []):
+        mc.error( "No control shape selected" )
+        return
+    else:
+        try:
+            ctrlShapeList
+        except:
+            mc.error( "NO CONTROL WAS COPIED" )
+            return
+
+        # DELETING ALL EXTRA SHAPES
+        count = 0 
+        for elem in fn.getChildren(sl):
+            objType = mc.nodeType(elem, api=True)
+            if (objType != "kNurbsCurve"):
+                continue
+            else:
+                count += 1
+                if (count > 1 ):
+                    mc.delete(elem)
+                    
+        
+        for i, (ctrl, degree, form) in enumerate( zip (ctrlShapeList, degreeShapeList, formShapeList)):
+            if (i == 0):
+                pasteCtrlShape(sl, ctrl, degree, form)
+            else:
+                ctlFn.createNewCureveShape(sl, ctrl, degree, "curveShape")
+
+
+# pasteSelectedControl()

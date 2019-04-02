@@ -115,5 +115,5 @@ def saveFile(projectEnv="C:/Users/anama/Desktop/MajorProject/Production", saveNa
         # fn.cleanFile (pathName)
         searchAndReplaceText(pathName)
 
-
-nameObj(side="L", name="leg")
+#saveFile()
+# nameObj(side="L", name="leg")

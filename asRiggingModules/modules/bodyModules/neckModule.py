@@ -77,7 +77,7 @@ class neck(object):
         mmod.connectAttr(self.middleCtrl.name+".volumePreservation", condNode.getFirstTerm())
         
         # Power Nodes
-        for i in range (len(self.guides)):
+        for i in range (len(self.guides)-2):
             attrName = "magnitude"+str(i)
             magnitudeAttr =mc.addAttr(self.middleCtrl.name, longName=attrName, min=-1, dv=0, max=1, at="double", keyable=True)
             powerNode = mNode.multiplyDivide(side=self.side, name=self.name+"PowerNode")
@@ -222,7 +222,7 @@ class neck(object):
     def attachJoinnts(self, parent=None):
         group = mmod.transform(side=self.side, name=self.name+"BindJnt", type="GRP", parent=parent)
         self.getParameterList()
-        for i in range (0, len(self.guides)):
+        for i in range (1, len(self.guides)-1):
             self.createRivet(self.parameterU[i], parent=group)
     def getParameterList(self):
         # CreatingCurve fromSurface

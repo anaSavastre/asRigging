@@ -201,7 +201,9 @@ def getParent(grp):
     '''
     Returns parent of given transform node in the outliner 
     '''
-    return mc.listRelatives(grp, p=True, f=True)[0]
+    # return mc.listRelatives(grp, p=True, f=True)[0]
+    return mc.listRelatives(grp, p=True)[0]
+
 
 def translateShapePoints(shape, translationVector, pivot):
     shapeList= getChildren(shape)
@@ -252,6 +254,14 @@ def colYellow ():
         mc.setAttr(ctrl+".overrideEnabled", 1);
         #set color to yellow
         mc.setAttr(ctrl+".overrideColor", 17)
+
+def vectorBetween(point1, point2):
+    x = point2[0] - point1 [0]
+    y = point2[1] - point1 [1]
+    z = point2[2] - point1 [2]
+    vector = [x, y, z]
+    return vector
+
 
 def deistBetween(point1, point2):
     dist = math.sqrt((point2[0] - point1[0])*(point2[0] - point1[0]) + (point2[1] - point1[1])*(point2[1] - point1[1]) + (point2[2] - point1[2])*(point2[2] - point1[2]))

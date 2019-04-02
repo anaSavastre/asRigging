@@ -57,8 +57,8 @@ class arm(blendFKIK.blendFKIK):
         # mc.orientConstraint (self.root, fn.getParent(self.humerusRibbon.guides[0]), mo=True)
         rigFn.parentConstraintMO (self.root.name, fn.getParent(fn.getParent(self.humerusRibbon.guides[0])), fn.getParent(self.humerusRibbon.guides[0]), translate=False, rotate=True, scale=False )
         # # AIM HUMERUS CTRLS TO ELBOW
-        # aimGroup = mmod.transform(side=self.side, name="humerusRibbonAim", type="GRP", parent = fn.getParent(self.humerusRibbon.guides[0]))
-        # mc.parent(self.humerusRibbon.guides[0], aimGroup)
+        aimGroup = mmod.transform(side=self.side, name="humerusRibbonAim", type="GRP", parent = fn.getParent(self.humerusRibbon.guides[0]))
+        mc.parent(self.humerusRibbon.guides[0], aimGroup)
         mc.aimConstraint(self.radiusRibbon.ribbon.ribbonJoints[0],  aimGroup, aim=[1, 0, 0], u=[0, 1, 0], worldUpType="objectrotation", worldUpVector=[0, 1, 0], worldUpObject=self.root, mo=True)
         # ELBOW CONTROL
         rigFn.parentConstraintMO(self.radiusRibbon.guides[0].name, fn.getParent(self.humerusRibbon.guides[-1]), self.humerusRibbon.guides[-1].name, maintainOffset = True, translate=True, rotate=True, scale=False)

@@ -134,9 +134,9 @@ class ribbonLimbs(object):
         self.influenceBlend(influence1=self.guides[0].name, influence2=self.guides[2].name, child=fn.getParent(self.guides[1].name))
         self.influenceBlend(influence1=self.guides[-1].name, influence2=self.guides[2].name, child=fn.getParent(self.guides[-2].name))
     def stretchyLimbs(self):
-        mc.pointConstraint(self.endJnt, fn.getParent(self.guides[-1]), mo=True)
+        # mc.pointConstraint(self.endJnt, fn.getParent(self.guides[-1]), mo=True)
         # rigFn.parentConstraintMO(self.endJnt, fn.getParent(fn.getParent(self.guides)), fn.getParent(self.guides) )
-    
+        
     def __init__(self, side="C", name="ribbbonLimb", numberOfGuides=5, revolveVector= [1, 0, 0], endJnt=None, startJnt=None, parent=None, root=None):
         # self
         self.side = side

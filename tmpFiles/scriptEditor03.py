@@ -76,3 +76,13 @@ import maya.cmds as mc
 
 
 # mc.parentConstraint("C_lightApperture012_JNT", "C_lightBox00_GEO",mo=True)
+
+
+import jawModule as jawMod
+
+
+
+mmod.resetCount()
+jawMod.jaw(jawJnt="C_jaw00_JNT", root="C_headBase00_JNT")
+
+# rigFn.constructCTL("C_head00_JNT1", side="C", name="headTop", parent="C_head00_JNT", ctrlScale=1, ctrlShape=0)

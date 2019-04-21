@@ -183,7 +183,7 @@ def copySelectedControl():
             objType = mc.nodeType(elem, api=True)
 
             if (objType == "kNurbsCurve"):
-                ctrl, degree, form = ctlFn.copyCtrlShape(elem)
+                ctrl, degree, form = copyCtrlShape(elem)
                 ctrlShapeList.append(ctrl)
                 degreeShapeList.append(degree)
                 formShapeList.append(form)

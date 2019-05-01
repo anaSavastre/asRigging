@@ -67,8 +67,7 @@ import controlFn as ctlFn
 import blendFKIK as blendFKIK
 import ribbonLimbs as ribbonLimbs
 
-
-
+ 
 class diana(mjChr.rigSceneSetup):    
     character = "Diana"
     def __init__(self, rigName, projectEnv):
@@ -78,13 +77,13 @@ class diana(mjChr.rigSceneSetup):
         legMod.resetLegMod()
         armMod.resetArmMod()
         # Creating the spine
-        self.m_spine = spineMod.spine(spineJnt="C_spine00_JNT", root=self.rootJnt, parent=self, revolveVector=[1, 0, 0])
-        self.m_neck = neckMod.neck (neckJnt="C_neck00_JNT", root=self.m_spine.chestCtl, parent=self, hook=self.m_spine.cog, revolveVector=[1, 0, 0])
+        self.m_spine =  spineMod.spine(spineJnt="C_spine00_JNT", root=self.rootJnt, parent=self, revolveVector=[1, 0, 0])
+        self.m_neck = neckMod.neck (neckJnt="C_neck00_JNT", root=self.m_spine.chestCtl, parent=self, hook=self.rootJnt, revolveVector=[1, 0, 0])
 
         side=["L", "R"]
         for s in side:
             # LEG 
-            self.m_leg = legMod.leg(legJnt=s+"_leg00_JNT", side=s, parent=self, root=self.m_spine.pelvisCtl)
+            self.m_leg =  legMod.leg(legJnt=s+"_leg00_JNT", side=s, parent=self, root=self.m_spine.pelvisCtl)
             # self.m_leg =  leg(legJnt=s+"_leg00_JNT", side=s, parent=self, root=self.m_spine.pelvisCtl)
             self.m_foot = footMod.foot(footJnt=s+"_foot00_JNT", side=s, root=self.m_leg, parent=s+"_bindLeg00_GRP", hook=self.rootJnt)
             # ARM
@@ -150,11 +149,11 @@ class diana(mjChr.rigSceneSetup):
                         u'C_bindNeck02_JNT', u'C_bindNeck03_JNT', u'C_bindNeck04_JNT', 
                         u'C_bindNeck06_JNT', u'C_bindNeck05_JNT', u'C_head00_JNT']
 
-    #     # # POSITIONING JOINTS AT RIGHT PLACES
-    #     # # SPINE
+        # POSITIONING JOINTS AT RIGHT PLACES
+        # SPINE
         
-    #     # TEMPORARY
-        # mc.hide("C_geometry01_GRP", "Dress")
+        # TEMPORARY
+        mc.hide("C_geometry01_GRP", "C_Dress00_GEO")
         mc.hide ("Groom")#, "Light", "Eye1")
         mc.select("C_spineFKCtl0*_JNT")
         mc.delete()

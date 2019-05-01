@@ -153,19 +153,23 @@ class finger(object):
             mc.connectAttr(fingerBaseJnt[i]+".worldMatrix", distanceBetweenNode+".inMatrix1")
             mc.connectAttr(fingerBaseJnt[i+1]+".worldMatrix", distanceBetweenNode+".inMatrix2")
 
-            # Minus operation
-            minusNode = mc.createNode("plusMinusAverage", name=side+"_subtract"+fingerName+str(i)+"_PMA")
-            mc.setAttr(minusNode+".operation", 2)
-            mc.connectAttr(distanceBetweenNode+".distance", minusNode+".input1D[0]")
-            mc.connectAttr(fingerBaseJnt[i+1]+".radius", minusNode+".input1D[1]")
             # Scalingby global scale
             divide = mNode.multiplyDivide(side=self.side, name=fingerName+str(i)+"GlobalScale")
             worldTransformation = mNode.decomposeMatrix(side=self.side, name = "rootGlobalTransformation")
             mmod.connectAttr(self.hook.name+".worldMatrix", worldTransformation.getInputMatrix())
-            mmod.connectAttr(minusNode+".output1D", divide.name+".input1X")
+            mmod.connectAttr(distanceBetweenNode+".distance", divide.name+".input1X")
             divide.operation = 2
             mmod.connectAttr(worldTransformation.getOutputScale(), divide.getInput2())
-            mc.connectAttr(divide.name+".outputX", fn.getChildren(fingerBaseJnt[i])[0]+".translateX")
+           
+            # Minus operation
+            minusNode = mc.createNode("plusMinusAverage", name=side+"_subtract"+fingerName+str(i)+"_PMA")
+            mc.setAttr(minusNode+".operation", 2)
+            mc.connectAttr(divide.name+".outputX", minusNode+".input1D[0]")
+            mc.connectAttr(fingerBaseJnt[i+1]+".radius", minusNode+".input1D[1]")
+
+            # Connecting Translate X
+            mc.connectAttr(minusNode+".output1D", fn.getChildren(fingerBaseJnt[i])[0]+".translateX")
+
 
             # POSITIONING END JNT
             if (jnt==guidJntList[-2]):
@@ -226,7 +230,8 @@ class hand():
         mmod.connectAttr( self.root.reverseBlend.getOutput(), orientConstraint+"."+ocWeightAlias)
 
         # CONNECTING ROTATION
-        mmod.connectAttr(self.root.effectorCtrl.name+".rotate", fn.getParent(fn.getParent(self.handController))+".rotate")
+        rigFn.parentConstraintMO(self.root.effectorCtrl.name, fn.getParent(fn.getParent(fn.getParent(self.handController))), fn.getParent(fn.getParent(self.handController)) )
+        # mmod.connectAttr(self.root.effectorCtrl.name+".rotate", fn.getParent(fn.getParent(self.handController))+".rotate")
 
        
 

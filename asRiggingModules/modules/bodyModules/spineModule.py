@@ -10,7 +10,6 @@ import rigFn as rigFn
 import mayaNode as node
 
 
-
 class spine(object):
     def __init__(self, side="C", name="spine", revolveVector = [1, 0, 0], spineJnt=None, root=None, parent=None):
         '''
@@ -199,10 +198,14 @@ class spine(object):
 
             # # START
             mc.parent(self.surfaceOfsPoints[1], self.surfaceOfsPoints[0])
-            mc.parentConstraint(self.pelvisCtl, self.surfaceOfsPoints[0], mo=True)
+            rigFn.parentConstraintMO(self.pelvisCtl.name,fn.getParent( self.surfaceOfsPoints[0].name),  self.surfaceOfsPoints[0].name, maintainOffset = True, 
+                                        translate=True, rotate=True, scale=True)
+            
             # # END
             mc.parent(self.surfaceOfsPoints[3], self.surfaceOfsPoints[4])
-            mc.parentConstraint(self.chestCtl, self.surfaceOfsPoints[4], mo=True)
+            rigFn.parentConstraintMO(self.chestCtl.name, fn.getParent( self.surfaceOfsPoints[4].name),  self.surfaceOfsPoints[4].name, maintainOffset = True, 
+                                        translate=True, rotate=True, scale=True)
+            # mc.parentConstraint(self.chestCtl, self.surfaceOfsPoints[4], mo=True)
      
     def createGuideFromObj(self, obj, parent=None):        
         ofs = mmod.transform(side=self.side, name=self.name+"offsetPoint", type="OFS", parent=parent)

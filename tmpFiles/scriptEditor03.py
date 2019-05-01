@@ -4,6 +4,8 @@ import mayaModule as mmod
 import mayaNode as mNode                            
 import maya.cmds as mc
                          
+rigFn.parentConstraintMO("L_armIKWrist03_CTL", "L_hand00_GRP", "L_handFK_wrist01_GRP", maintainOffset = True, translate=True, rotate=True, scale=True)
+ 
 # # BIND                                              JOINTS
 # bindJoints = [ u'C_chest04_JNT', u'C_bindSpine06_JNT', u'C_bindSpine010_JNT', u'C_bindSpine09_JNT', u'C_bindSpine08_JNT', u'C_bindSpine07_JNT',
 #                        u'C_pelvis01_JNT', u'L_bindFemurribbon01_JNT', u'L_bindFemurribbon00_JNT',
@@ -78,11 +80,11 @@ import maya.cmds as mc
 # mc.parentConstraint("C_lightApperture012_JNT", "C_lightBox00_GEO",mo=True)
 
 
-import jawModule as jawMod
+# import jawModule as jawMod
 
 
 
-mmod.resetCount()
-jawMod.jaw(jawJnt="C_jaw00_JNT", root="C_headBase00_JNT")
+# mmod.resetCount()
+# jawMod.jaw(jawJnt="C_jaw00_JNT", root="C_headBase00_JNT")
 
 # rigFn.constructCTL("C_head00_JNT1", side="C", name="headTop", parent="C_head00_JNT", ctrlScale=1, ctrlShape=0)

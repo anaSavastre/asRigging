@@ -63,7 +63,7 @@ class arm(blendFKIK.blendFKIK):
         # ELBOW CONTROL
         rigFn.parentConstraintMO(self.radiusRibbon.guides[0].name, fn.getParent(self.humerusRibbon.guides[-1]), self.humerusRibbon.guides[-1].name, maintainOffset = True, translate=True, rotate=True, scale=False)
         # RIBBON GLOBAL
-        self.ribbonGlobalCtrl()
+        # self.ribbonGlobalCtrl()
         
         # for guide in self.humerusRibbon.guides:
         #     aimGroup = mmod.transform(side=self.side, name="ribbonAim", type="GRP", parent = fn.getParent(guide))
@@ -86,7 +86,7 @@ class arm(blendFKIK.blendFKIK):
             mmod.connectPlugs(ribbonVisibility, humerusControl.visibility)
             mmod.connectPlugs(ribbonVisibility, radiusControl.visibility)
         mmod.connectPlugs(ribbonVisibility, self.radiusRibbon.guides[0].visibility)
-        mmod.connectPlugs(ribbonVisibility, self.globalRibbonCtrl.visibility)
+        # mmod.connectPlugs(ribbonVisibility, self.globalRibbonCtrl.visibility)
 
     
     

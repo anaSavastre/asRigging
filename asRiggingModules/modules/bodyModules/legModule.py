@@ -89,7 +89,7 @@ class leg(blendFKIK.blendFKIK):
         # KNEE CONTROL
         rigFn.parentConstraintMO(self.tibiaRibbon.guides[0].name, fn.getParent(self.femurRibbon.guides[-1]), self.femurRibbon.guides[-1].name, maintainOffset = True, translate=True, rotate=True, scale=False)
         # RIBBON GLOBAL
-        self.ribbonGlobalCtrl()
+        # self.ribbonGlobalCtrl()
         
         # CREATING VOLUME PRESERVATION
         self.volumePreservationSetUp(self.femurRibbon, ribbonName="femur")
@@ -101,7 +101,7 @@ class leg(blendFKIK.blendFKIK):
             mmod.connectPlugs(ribbonVisibility, femurControl.visibility)
             mmod.connectPlugs(ribbonVisibility, tibiaControl.visibility)
         mmod.connectPlugs(ribbonVisibility, self.tibiaRibbon.guides[0].visibility)
-        mmod.connectPlugs(ribbonVisibility, self.globalRibbonCtrl.visibility)
+        # mmod.connectPlugs(ribbonVisibility, self.globalRibbonCtrl.visibility)
 
 
     def ribbonGlobalCtrl (self):

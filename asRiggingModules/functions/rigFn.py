@@ -4,6 +4,12 @@ import mayaModule as mmod
 import mayaNode as mNode
 import controlFn as ctlFn
 
+
+def createConnectionGroup (object, name="objectParent", side="C"):
+    parentGroup = mmod.transform(side=side, name=name, type="GRP", parent = object)
+    mc.parent(parentGroup, fn.getParent(object))
+    mc.parent (object, parentGroup)
+
 def parentConstraintMO(targetParent, objParent, object, maintainOffset = True, translate=True, rotate=True, scale=True):
     # Matrix Mult
     side = fn.concat_str(str1 = object, s1_begin=0, s1_end=len(object)-1 )

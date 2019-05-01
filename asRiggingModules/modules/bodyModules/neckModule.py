@@ -30,6 +30,8 @@ class neck(object):
         self.neckJnt = []
         self.revolveVector = revolveVector
         mmod.resetCount() 
+        # 0. CREATE MAIN GROUP
+        self.neckCtrlGrp = mmod.transform(side=self.side, name=self.name+"Ctl", type="TRF", parent = self.hook)
         # 1. CREATE JNT HIERARCHY
         # 1.0. HEAD
         self.headCtrl = rigFn.constructCTL(self.guides[-1], name = "head", parent = self.hook)
@@ -48,8 +50,13 @@ class neck(object):
         self.attachJoinnts(parent=self.neckGlobalGrp)
 
         # SPACE SWITCH FOR MIDDLE CONTROL
+        self.baseCtrl.createSpaceSwitch()
+        self.baseCtrl.addSpaceSwitch(spaceName= "chest", parentObject = self.root)
+        
+
+        # SPACE SWITCH FOR MIDDLE CONTROL
         self.middleCtrl.createSpaceSwitch()
-        self.middleCtrl.addSpaceSwitch(spaceName= "chest", parentObject = self.root)
+        self.middleCtrl.addSpaceSwitch(spaceName= "neckBase", parentObject =  self.baseCtrl)
         
         # SPACE SWITCH FOR HEAD CONTROL
         self.headCtrl.createSpaceSwitch()
@@ -170,21 +177,61 @@ class neck(object):
             # REBUILD SURFACE FOR HIGHER DENSITY
             mc.rebuildSurface(self.surface, su=len(guides)+2, sv=1, kr=2)
 
-            # Creating the Controls
+            # CREATING CONTROLS
             # MIDDLE
-            middleCtl = rigFn.constructCTL(self.surfaceOfsPoints[2], name = self.name+"IKmiddle", parent = self.hook)
+            middleCtl = rigFn.constructCTL(self.surfaceOfsPoints[2], name = self.name+"IKmiddle", parent = self.neckCtrlGrp)
             mc.delete(mc.listRelatives(middleCtl.name, c=True)[1])
             fn.scaleShapePoints(middleCtl.name, mc.getAttr(guides[len(guides)/2]+".radius")/2)
             fn.rotateShapePoints(middleCtl.name, rotationVector=[90, 0, 0], pivot=mc.xform(guides[len(guides)/2], q=True, ws=True, t=True))
             mc.parent(self.surfaceOfsPoints[2], middleCtl)
             # START
+            baseCtrl = rigFn.constructCTL(self.surfaceOfsPoints[0], name = self.name+"IKneckBase", parent = self.neckCtrlGrp)
+            mc.delete(mc.listRelatives(baseCtrl.name, c=True)[1])
             mc.parent(self.surfaceOfsPoints[1], self.surfaceOfsPoints[0])
-            mc.parentConstraint(self.root, self.surfaceOfsPoints[0], mo=True)
+            mc.parent (self.surfaceOfsPoints[0], baseCtrl)
+            fn.scaleShapePoints(baseCtrl.name, mc.getAttr(guides[len(guides)/2]+".radius")/2)
+            fn.rotateShapePoints(baseCtrl.name, rotationVector=[90, 0, 0], pivot=mc.xform(guides[len(guides)/2], q=True, ws=True, t=True))
             # END
             mc.parent(self.surfaceOfsPoints[3], self.surfaceOfsPoints[4])
-            mc.parentConstraint(self.headCtrl, self.surfaceOfsPoints[4], mo=True)
-
+            rigFn.parentConstraintMO(self.headCtrl.name, fn.getParent( self.surfaceOfsPoints[4].name),  self.surfaceOfsPoints[4].name, maintainOffset = True, 
+                                        translate=True, rotate=True, scale=True)
+            # mc.parentConstraint(self.headCtrl, self.surfaceOfsPoints[4], mo=True)
             self.middleCtrl = middleCtl
+            self.baseCtrl = baseCtrl
+
+            # CREATING SPACES
+            # Base
+            neckBaseSpace = mmod.transform(side=self.side, name="neckBaseSpace", type="GRP", parent=baseCtrl)
+            mc.parent(neckBaseSpace, self.root)
+            # Middle
+            neckMiddleSpace = mmod.transform(side=self.side, name="neckMiddleSpace", type="GRP", parent=middleCtl)
+            mc.parent(neckMiddleSpace, self.baseCtrl)
+            # Head
+            headSpace = mmod.transform(side=self.side, name="headSpace", type="GRP", parent=self.headCtrl)
+            mc.parent(headSpace, self.middleCtrl)
+
+            # CREATING CONNECTION GROUPS
+            rigFn.createConnectionGroup(fn.getParent(baseCtrl))
+            rigFn.createConnectionGroup(fn.getParent(middleCtl))
+            rigFn.createConnectionGroup(fn.getParent(self.headCtrl))
+
+            # CONNECTING CONTROLLS
+            # Parent Base to Root space
+            rigFn.parentConstraintMO(neckBaseSpace.name, fn.getParent(fn.getParent(fn.getParent(baseCtrl.name))), fn.getParent(fn.getParent(baseCtrl.name)), maintainOffset = True, 
+                                        translate=True, rotate=False, scale=False)
+            
+            # Parent Middle to Base space
+            rigFn.parentConstraintMO(neckMiddleSpace.name, fn.getParent(fn.getParent(fn.getParent(middleCtl.name))), fn.getParent(fn.getParent(middleCtl.name)), maintainOffset = True, 
+                                        translate=True, rotate=False, scale=False)
+            
+            # Parent Head to Middle space
+            rigFn.parentConstraintMO(headSpace.name, fn.getParent(fn.getParent(fn.getParent(self.headCtrl.name))), fn.getParent(fn.getParent(self.headCtrl.name)), maintainOffset = True, 
+                                        translate=True, rotate=False, scale=False)
+    
+            
+
+
+            
             # # INBETWEEN POINTS
             # self.influenceBlend(middleCtl, self.surfaceOfsPoints[0], self.surfaceOfsPoints[1])
             # self.influenceBlend(middleCtl, self.surfaceOfsPoints[4], self.surfaceOfsPoints[3])

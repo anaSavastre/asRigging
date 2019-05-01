@@ -5,7 +5,7 @@ import mayaNode as mNode
 import rigFn as rigFn 
 import controlFn as ctlFn
 
-          
+      
 class blendFKIK(object):
     def __init__(self, side, jnt = None, name="segment", segmentsList=["base", "midPoint", "effector"], parent=None, root=None, hook=None):
         '''
@@ -132,8 +132,15 @@ class blendFKIK(object):
             mmod.connectAttr(relativeMatrix.getWorldMatrix(), self.startMatrix)
             # 2. Parent constraint FK and IK jnts to ROOT
             if (root!=None):
-                mmod.connectAttr(self.baseSegWorldMatrixDecompose.getOutputTranslate(), fn.getParent(self.FKjntChain[0])+".translate")
                 mmod.connectAttr(self.baseSegWorldMatrixDecompose.getOutputTranslate(), fn.getParent(self.IKjntChain[0])+".translate")
+
+                # CONNECTING FK
+                mmod.connectAttr(self.baseSegWorldMatrixDecompose.getOutputTranslate(), fn.getParent(self.FKjntChain[0])+".translate")
+                mmod.connectAttr(self.baseSegWorldMatrixDecompose.getOutputRotate(), fn.getParent(self.FKjntChain[0])+".rotate")
+                mmod.connectAttr(self.baseSegWorldMatrixDecompose.getOutputScale(), fn.getParent(self.FKjntChain[0])+".scale")
+
+
+              
 
                 #mc.scaleConstraint(root, fn.getParent(fn.getParent(self.FKjntChain[0])), mo=True)
                 #mc.scaleConstraint(root, fn.getParent(fn.getParent(self.IKjntChain[0])), mo=True)
@@ -151,10 +158,15 @@ class blendFKIK(object):
         stretchyAttrMult = mNode.multDoubleLinear(side=self.side, name="stretchyAttr")
         addOriginalDistBase = mNode.addDoubleLinear(self.side, name="addOriginalLengthBase")
         addOriginalDistMid = mNode.addDoubleLinear(self.side, name="addOriginalLengthMid")
+        globalLength = mNode.multDoubleLinear(side=self.side, name="globalLength")
 
+        # Global Distance
+        mc.setAttr(globalLength.getInput1(), self.baseSegmentLength+self.midSegmentLength)
+        mmod.connectAttr(fn.getParent(self.hook.name)+".scaleY", globalLength.getInput2())
         # Delta Distance
         mmod.connectAttr(self.baseEndDistNode.getDistance(), lengthDifference.name+".input1D[0]")
-        mc.setAttr(lengthDifference.name+".input1D[1]",  self.baseSegmentLength+self.midSegmentLength)
+        mmod.connectAttr(globalLength.getOutput(), lengthDifference.name+".input1D[1]")
+        # mc.setAttr(lengthDifference.name+".input1D[1]",  self.baseSegmentLength+self.midSegmentLength)
         if ( self.baseSegmentLength+self.midSegmentLength > 0 ):
             lengthDifference.operation = 2
         # Clamp Distance
@@ -432,5 +444,10 @@ class blendFKIK(object):
         aimObj = mmod.transform(side=self.side, name=self.name+"AimObj", type="GRP", parent=self.IKjntChain[1])
       
         # Constraining Control to Hook
-        mc.parentConstraint(self.hook.name, poleVectGlobal.name, mo=True)
+        rigFn.parentConstraintMO(self.hook.name, fn.getParent(poleVectGlobal.name), poleVectGlobal.name, maintainOffset = True,
+                                 translate=True, rotate=True, scale=True)
+    
+        # mc.parentConstraint(self.hook.name, poleVectGlobal.name, mo=True)
+
+
 

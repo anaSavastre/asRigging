@@ -47,16 +47,22 @@ class lips(object):
         # Upper
         self.upperControls = []
         for guide in self.lipUpperGuide:
-            self.upperControls.append(rigFn.constructCTL(guide, name = "localUpperLip", parent = self.root, ctrlShape=6))
+            ctrl = rigFn.constructCTL(guide, name = "localUpperLip", parent = self.root, ctrlShape=6)
+            mc.delete(fn.getChildren(ctrl)[-1])
+            jnt= mmod.joint(side=self.side, name="localUpperLip", parent=ctrl)
+            self.upperControls.append(jnt)
             # Sacling Child Joint Radius to 
-            mc.setAttr(fn.getChildren(self.upperControls[-1])[-1]+".radius", 0.1)
+            mc.setAttr(self.upperControls[-1].name+".radius", 0.1)
 
         # Lower
         self.lowerControls = []
-        for guide in self.lipLowerGuide:
-            self.lowerControls.append(rigFn.constructCTL(guide, name = "localLowerLip", parent = self.jawJnt, ctrlShape=6))
+        for guide in self.lipLowerGuide: 
+            ctrl = rigFn.constructCTL(guide, name = "localLowerLip", parent = self.jawJnt, ctrlShape=6)
+            mc.delete(fn.getChildren(ctrl)[-1])
+            jnt= mmod.joint(side=self.side, name="localLowerLip", parent=ctrl)
+            self.lowerControls.append(jnt)
             # Sacling Child Joint Radius to 
-            mc.setAttr(fn.getChildren(self.upperControls[-1])[-1]+".radius", 0.1)
+            mc.setAttr(self.upperControls[1].name+".radius", 0.1)
 
 
         # Upper Lip
@@ -71,9 +77,30 @@ class lips(object):
 
         # 4. CREATING CONTROLLER STRUCTURE
 
+    def auxiliarySetUp (self, guide, worldUp, parent):
+        # Creating Joint
+        parentJnt= mmod.joint(side=self.side, name="global"+"LipGuide", parent=parent)
+        # Align With Guide
+        fn.align(guide, parentJnt)
+        # Offset By Radius
+        mc.xform (parent, ws=True, t=[0, 0, mc.getAttr(parentJnt.name+".radius")])
+        # Create Children 
+        childJnt= mmod.joint(side=self.side, name="global"+"LipGuide", parent=parentJnt)
+        # AimConstraint
+        mc.aimConstraint (guide, parentJnt, aim=[0, 0, 1], u=[0, 1, 0], worldUpType="objectrotation", worldUpVector=[0, 1, 0], worldUpObject=worldUp)
 
-    def lipCollisionSetUp (self, guide, causeObj, effectObj, translationDirection=1, name="name"):
+        # DistanceBetween
+        distanceNode = mNode.distanceBetween(side=self.side, name="guideToLipDist")
+        mmod.connectAttr(parentJnt.getWorldMatrix(), distanceNode.getInMatrix1())
+        mmod.connectAttr(guide.getWorldMatrix(), distanceNode.getInMatrix2())
+        mmod.connectAttr(distanceNode.getDistance(), childJnt.name+".translateZ")        
+
+        return childJnt.name
+
+
+    def lipCollisionSetUp (self, causeObj, effectObj, root, translationDirection=1, name="name"):
         # Create Necessary Nodes
+        matrixMult = mNode.multMatrix(side=self.side, name=name+"SpaceMatrix")
         decompWorldMatrix = mNode.decomposeMatrix(side=self.side, name=name+"WM")
         deltaTranslation = mNode.plusMinusAverage(side=self.side, name=name+"DeltaTranslation")
         offset = mNode.plusMinusAverage(side=self.side, name=name+"Offset")
@@ -81,8 +108,12 @@ class lips(object):
         if (translationDirection<0):
             reversedDirection = mNode.multDoubleLinear(side=self.side, name=name+"Reverse")
         
+        # Local Space
+        mmod.connectAttr(causeObj+".worldMatrix", matrixMult.name+".matrixIn[0]")
+        mmod.connectAttr(self.root.name+".worldInverseMatrix", matrixMult.name+".matrixIn[1]")
+
         # Extracting World Matrix
-        mmod.connectAttr(guide+".worldMatrix", decompWorldMatrix.getInputMatrix())
+        mmod.connectAttr(matrixMult.getMatrixSum(), decompWorldMatrix.getInputMatrix())
 
         # Delta Translation
         if (translationDirection>0):
@@ -105,7 +136,7 @@ class lips(object):
         upWorldY  = mc.xform(effectObj, q=True, ws=True, t=True)[1]
         lowWorldY = mc.xform(causeObj, q=True, ws=True, t=True)[1]
         # CHANGE TO RADIUS OFFSET
-        mc.setAttr(offset.name+".input3D[1].input3Dy", -1*(abs(upWorldY - lowWorldY)+0.1))
+        mc.setAttr(offset.name+".input3D[1].input3Dy", -1*(abs(upWorldY - lowWorldY)-0.1))
 
         # Clamping Distance
         mmod.connectAttr(offset.getOutput3D(), clamp.getInput())
@@ -113,47 +144,20 @@ class lips(object):
         clamp.minG = 0
         # Connecting to Ribbon Joint
         if (translationDirection>0):
-            mmod.connectAttr(clamp.getOutputG(), fn.getParent(effectObj)+".translateY")
+            mmod.connectAttr(clamp.getOutputG(), effectObj+".translateY")
         else:
             # ReverseDirection
             mmod.connectAttr(clamp.getOutputG(), reversedDirection.getInput1())
             reversedDirection.input2 = -1
-            mmod.connectAttr(reversedDirection.getOutput(), fn.getParent(effectObj)+".translateY" )
+            mmod.connectAttr(reversedDirection.getOutput(), effectObj+".translateY" )
 
     def lipAutoMovement(self):
+        autoMovementGuideGroup = mmod.transform(side=self.side, name=self.name+"AutoMovGuides", type="GRP", parent= self.parent)
         for i, (upper, lower) in enumerate(zip(self.upperControls, self.lowerControls)):
             # LOWER TO UPPER
-            self.lipCollisionSetUp (fn.getChildren(lower)[-1], lower, upper, translationDirection=1)
-            # self.lipCollisionSetUp (self.upperLipRibbon.ribbonJoints[i].name, upper, lower, translationDirection=-1, name=self.name+"Upper")
-
-            # # Create Necessary Nodes
-            # decompWorldMatrix = mNode.decomposeMatrix(side=self.side, name=self.name+"LowerWM")
-            # deltaTranslation = mNode.plusMinusAverage(side=self.side, name=self.name+"LowerDeltaTranslation")
-            # offset = mNode.plusMinusAverage(side=self.side, name=self.name+"LowerOffset")
-            # clamp = mNode.clamp(side=self.side, name=self.name+"LowerAutoMovClamp")
-           
-            # # Extracting World Matrix
-            # mmod.connectAttr(self.lowerLipRibbon.ribbonJoints[i].name+".worldMatrix", decompWorldMatrix.getInputMatrix())
-
-            # # Delta Translation
-            # mmod.connectAttr(decompWorldMatrix.getOutputTranslate(), deltaTranslation.name+".input3D[0]")
-            # outTranslation =  mc.getAttr(decompWorldMatrix.getOutputTranslate())[0]
-            # mc.setAttr (deltaTranslation.name+".input3D[1]", outTranslation[0], outTranslation[1], outTranslation[2], type="double3")
-            # deltaTranslation.operation = 2
-
-            # # Offset ------------- FINISH
-            # mmod.connectAttr (deltaTranslation.getOutput3D(), offset.name+".input3D[0]")
-            # # Distance Between Joints Upper and Lower
-            # upWorldY  = mc.xform(upper, q=True, ws=True, t=True)[1]
-            # lowWorldY = mc.xform(lower, q=True, ws=True, t=True)[1]
-            # mc.setAttr(offset.name+".input3D[1].input3Dy", -1*abs(upWorldY - lowWorldY))
-
-            # # Clamping Distance
-            # mmod.connectAttr(offset.getOutput3D(), clamp.getInput())
-            # clamp.maxG = 1000000
-            # clamp.minG = 0
-            # # Connecting to Ribbon Joint
-            # mmod.connectAttr(clamp.getOutputG(), fn.getParent(upper)+".translateY")
+            print lower, fn.getParent(lower), fn.getParent(upper)
+            self.lipCollisionSetUp (fn.getParent(fn.getParent(lower)), fn.getParent(upper), self.root, translationDirection=1)
+            self.lipCollisionSetUp (fn.getParent(fn.getParent(upper)), fn.getParent(lower), self.jawJnt, translationDirection=-1)
 
             
 

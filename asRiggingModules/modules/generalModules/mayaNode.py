@@ -725,6 +725,8 @@ class distanceBetween(utilityNode):
 
     # INPUT ATTRIBUTES
     # inMatrix1
+    def getInMatrix1(self):
+        return self.name+".inMatrix1"
     @property
     def inMatrix1(self):
         ''' returns node's plug '''

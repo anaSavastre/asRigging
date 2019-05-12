@@ -146,14 +146,14 @@ class diana(mjChr.rigSceneSetup):
                         u'R_middleProximalPhalange03_JNT', u'R_middleMiddlePhalange05_JNT', u'R_ringMetacarpal01_JNT', 
                         u'R_ringProximalPhalange03_JNT', u'R_ringMiddlePhalange05_JNT', u'R_pinkyMetacarpal02_JNT', 
                         u'R_pinkyProximalPhalange04_JNT', u'R_pinkyMiddlePhalange06_JNT', 
-                        u'C_bindNeck02_JNT', u'C_bindNeck03_JNT', u'C_bindNeck04_JNT', 
+                        u'C_bindNeck03_JNT', u'C_bindNeck04_JNT', u'C_bindNeck07_JNT',
                         u'C_bindNeck06_JNT', u'C_bindNeck05_JNT', u'C_head00_JNT']
 
         # POSITIONING JOINTS AT RIGHT PLACES
         # SPINE
         
         # TEMPORARY
-        mc.hide("C_geometry01_GRP", "C_Dress00_GEO")
+        # mc.hide("C_geometry01_GRP", "C_Dress00_GEO")
         mc.hide ("Groom")#, "Light", "Eye1")
         mc.select("C_spineFKCtl0*_JNT")
         mc.delete()

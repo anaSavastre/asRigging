@@ -23,8 +23,10 @@ def getCVFronShape(shapeNode, r=False, ws=True):
 
 def createNewCureveShape(curveNode, cvGuideList, degree, name="curveShape"):
     curve = mc.curve(name=name , point = cvGuideList, ws=True, degree=degree)
-    mc.parent(fn.getChildren(curve)[0], curveNode, shape=True, r=True)
+    shape = fn.getChildren(curve)[0]
+    mc.parent(shape, curveNode, shape=True, r=True)
     mc.delete(curve)
+    return shape
 
 class rootCtrl(mmod.circle):
     mainShapeCV = [[0.488818043543672, 2.630981315374408e-17, -0.5053273763261652], [1.6802371135674137e-14, 3.720769458552724e-17, -0.5162082206651473], [-0.48881804354363645, 2.630981315374408e-17, -0.5053273763261652], [-0.5425073128364897, -2.3125088783133172e-31, 0.02629909217145371], [-0.4939634966454518, -2.6309813153744377e-17, 0.5132605288365761], [1.6802371135674137e-14, -3.720769458552734e-17, 0.49810068642495864], [0.49396349664548556, -2.6309813153744476e-17, 0.5132605288365761], [0.537269852200934, -2.382537414624486e-31, 0.02629909217145371], [0.537269852200934, -2.382537414624486e-31, 0.02629909217145371], [0.537269852200934, -2.382537414624486e-31, 0.02629909217145371], [0.537269852200934, -2.382537414624486e-31, 0.02629909217145371]]
@@ -122,7 +124,23 @@ class squareControl(mmod.circle):
         createNewCureveShape(self.name, self.squareControlShapeCV, degree=1, name=self.name+"D")
    
  
+class sphereControl(mmod.circle):
+    def __init__(self, side="C", name="sphere", type="CTL", parent=None):
+        super(sphereControl, self).__init__(side, name, type, parent)
+        
+        circle2 = mmod.circle(side=side, name=name, parent=parent)
+        circle3 = mmod.circle(side=side, name=name, parent=parent)
 
+        fn.rotateShapePoints(fn.getChildren(circle2)[0], rotationVector=[90, 0, 0], pivot=[0, 0, 0])
+        fn.rotateShapePoints(fn.getChildren(circle3)[0], rotationVector=[0, 90, 0], pivot=[0, 0, 0])
+
+
+        mc.parent(fn.getChildren(circle2)[0], self.name, r=True, s=True)
+        mc.parent(fn.getChildren(circle3)[0], self.name, r=True, s=True)
+
+        mc.delete (circle2, circle3)
+        
+ 
 def copyCtrlShape(ctrl):
     form = mc.getAttr(ctrl+".form")
     shaleCv, degree = getCVFronShape(ctrl, r=True, ws=False)
@@ -188,36 +206,38 @@ def copySelectedControl():
                 degreeShapeList.append(degree)
                 formShapeList.append(form)
 
-def pasteSelectedControl ():        
+    def pasteSelectedControl ():        
 
-    sl = mc.ls(sl=True)
-    if (sl == []):
-        mc.error( "No control shape selected" )
-        return
-    else:
-        try:
-            ctrlShapeList
-        except:
-            mc.error( "NO CONTROL WAS COPIED" )
+        sl = mc.ls(sl=True)
+        if (sl == []):
+            mc.error( "No control shape selected" )
             return
+        else:
+            try:
+                ctrlShapeList
+            except:
+                mc.error( "NO CONTROL WAS COPIED" )
+                return
 
-        # DELETING ALL EXTRA SHAPES
-        count = 0 
-        for elem in fn.getChildren(sl):
-            objType = mc.nodeType(elem, api=True)
-            if (objType != "kNurbsCurve"):
-                continue
-            else:
-                count += 1
-                if (count > 1 ):
-                    mc.delete(elem)
-                    
-        
-        for i, (ctrl, degree, form) in enumerate( zip (ctrlShapeList, degreeShapeList, formShapeList)):
-            if (i == 0):
-                pasteCtrlShape(sl, ctrl, degree, form)
-            else:
-                ctlFn.createNewCureveShape(sl, ctrl, degree, "curveShape")
+            # DELETING ALL EXTRA SHAPES
+            count = 0 
+            for elem in fn.getChildren(sl):
+                objType = mc.nodeType(elem, api=True)
+                if (objType != "kNurbsCurve"):
+                    continue
+                else:
+                    count += 1
+                    if (count > 1 ):
+                        mc.delete(elem)
+                        
+            
+            for i, (ctrl, degree, form) in enumerate( zip (ctrlShapeList, degreeShapeList, formShapeList)):
+                if (i == 0):
+                    pasteCtrlShape(sl, ctrl, degree, form)
+                else:
+                    ctlFn.createNewCureveShape(sl, ctrl, degree, "curveShape")
 
 
-# pasteSelectedControl()
+    # pasteSelectedControl()
+
+

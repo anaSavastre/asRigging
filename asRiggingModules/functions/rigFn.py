@@ -5,6 +5,17 @@ import mayaNode as mNode
 import controlFn as ctlFn
 
 
+
+
+def createJoint ():
+
+    boundingBox = fn.getBoundingBox()
+    center = boundingBox.center()
+    
+    mc.select (clear= True)
+    jnt = mc.joint (p=[center.x, center.y, center.z])
+ 
+
 def createConnectionGroup (object, name="objectParent", side="C"):
     parentGroup = mmod.transform(side=side, name=name, type="GRP", parent = object)
     mc.parent(parentGroup, fn.getParent(object))
@@ -144,6 +155,7 @@ def constructCTL(guideJNT, side="C", name="name", parent=None, ctrlScale=1, ctrl
                 3 -> locator
                 4 -> settings
                 5 -> square
+                6 -> sphere
     Function that creates the following hierarchy 
     mmod.transformNode_GRP
         mmod.transformNode_OFS : aligned with guideJNT
@@ -169,14 +181,22 @@ def constructCTL(guideJNT, side="C", name="name", parent=None, ctrlScale=1, ctrl
         ctl = ctlFn.settingCtl(side=side, name=name, parent=ofs)   
     elif (ctrlShape == 5):
         ctl = ctlFn.squareControl(side = side, name=name, parent=ofs)
+    elif (ctrlShape == 6):
+        ctl = ctlFn.sphereControl(side = side, name=name, parent=ofs)
     else:
         ctl = mmod.circle(side=side, name=name, parent=ofs)
     # Scaling Ctrl
     try:
-        fn.scaleShapePoints(ctl.name, mc.getAttr(guideJNT+".radius")/2)
-        # fn.rotateShapePoints(ctl.name, rotationVector=mc.xform(guideJNT, q=True, ws=True, ro=True), pivot=mc.xform(guideJNT, q=True, ws=True, t=True))
+        
+        
+        if (len(fn.getChildren(ctl.name))>1):
+            for shape in fn.getChildren(ctl.name):
+                fn.scaleShapePoints(shape, mc.getAttr(guideJNT+".radius")/2)
+                fn.rotateShapePoints(shape, rotationVector=[0, 90, 0], pivot=mc.xform(guideJNT, q=True, ws=True, t=True))
 
-        fn.rotateShapePoints(ctl.name, rotationVector=[0, 90, 0], pivot=mc.xform(guideJNT, q=True, ws=True, t=True))
+        else:
+            fn.scaleShapePoints(ctl.name, mc.getAttr(guideJNT+".radius")/2)
+            fn.rotateShapePoints(ctl.name, rotationVector=[0, 90, 0], pivot=mc.xform(guideJNT, q=True, ws=True, t=True))
     except:
         # Scaling Ctrl
         fn.scaleShapePoints(ctl.name, ctrlScale)

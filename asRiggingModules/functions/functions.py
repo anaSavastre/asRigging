@@ -48,6 +48,82 @@ def getLocalOffset(parent, child, translationOffsetFlag = True, rotationOffsetFl
 
 ##################################### END REFERENCE #####################################
 
+def getSelectedComponentsPositions ():
+    ''' 
+    This function loops though all the selected objects and returns the positions of the selected points
+    
+    ReturnType: om.MPointArray
+    '''
+
+    # RETURN ARRAY
+    pointList = om.MPointArray()
+        
+    # Create Enpty Seelction List
+    selectionList = om.MSelectionList()
+
+    # Assign Active Selection List
+    om.MGlobal.getActiveSelectionList(selectionList)
+
+    # Creating a Selection Itter
+    selectionItter = om.MItSelectionList(selectionList)
+
+    selectionItter.reset()
+    while (selectionItter.isDone() == False ):
+        # Get the path of the selected obj
+        dagPath = om.MDagPath()
+        # Get Component List
+        componentList = om.MObject()
+
+        
+        selectionItter.getDagPath(dagPath, componentList )
+        # DependencyNode
+        dependencyNode = om.MFnDependencyNode (dagPath.node())
+
+        # Going through the components
+        if (componentList.isNull() ==False):
+            # Geometry Iterator
+            geomItter = om.MItGeometry (dagPath, componentList)
+
+            # Loop through points
+            while (geomItter.isDone()!=True):
+                # Get WorldSpace Position
+                point = om.MPoint(geomItter.position(om.MSpace.kWorld))
+                geomItter.next()
+                # print point.x, point.y, point.z
+                pointList.append(point)
+
+
+        selectionItter.next()
+
+    return pointList
+
+
+def getBoundingBox():
+    pointList = om.MPointArray()
+    pointList = getSelectedComponentsPositions()
+
+    minCorner = [ pointList[0].x, pointList[0].y, pointList[0].z]
+    maxCorner =  [ pointList[0].x, pointList[0].y, pointList[0].z]
+
+    for i in range (1, pointList.length()):
+        point = pointList[i]
+        if (point.x < minCorner[0]):
+            minCorner[0]= point.x
+        if (point.y < minCorner[1]):
+            minCorner[1] = point.y
+        if (point.z < minCorner[2]):
+            minCorner[2] = point.z
+        if (point.x > maxCorner[0]):
+            maxCorner[0] = point.x
+        if (point.y > maxCorner[1]):
+            maxCorner[1] = point.y
+        if (point.z > maxCorner[2]):
+            maxCorner[2] = point.z
+
+    boundingBox = om.MBoundingBox (om.MPoint(minCorner[0], minCorner[1], minCorner[2]), om.MPoint(maxCorner[0], maxCorner[1], maxCorner[2]))
+    return boundingBox
+
+
 def loadLatestFile(path):
     '''
     This function gets all the files in the given directory and loads the latest maya scene file

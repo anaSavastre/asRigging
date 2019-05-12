@@ -52,6 +52,7 @@ class ribbon(object):
         self.ribbonJoints=[]
         self.ribbonGuides = []
         self.numberOfJoints = numberOfJoints
+        self.jointInputNode = []
         if (root == None):
             self.root = mmod.transform(side=self.side, name="ribbonRoot", type="GRP")
 
@@ -140,7 +141,8 @@ class ribbon(object):
         group = mmod.transform(side=self.side, name=self.name, type="GRP", parent=parent)
         ribbonParent = mmod.transform(side=self.side, name="bind"+self.name.capitalize(), type="GRP", parent=self.ribbonBind)
         fn.align(group, ribbonParent)
-        self.ribbonJoints.append(mmod.joint(side=self.side, name="bind"+self.name.capitalize(), parent= ribbonParent))
+        connectionGroup = mmod.transform(side=self.side, name="bind"+self.name.capitalize()+"RibConnection", type="GRP", parent=self.ribbonBind)
+        self.ribbonJoints.append(mmod.joint(side=self.side, name="bind"+self.name.capitalize(), parent= connectionGroup))
         rivet.parameterU = parameterU
 
         mmod.connectAttr(self.surface+".worldSpace", rivet.getInputSurface())
@@ -153,17 +155,17 @@ class ribbon(object):
         # GET GRP WORLD TRANSFORM
         matrixMult   = mNode.multMatrix(side=self.side, name=self.name)
         mmod.connectAttr(group.name+".worldMatrix", matrixMult.name+".matrixIn[0]")
-        mmod.connectAttr(self.ribbonJoints[-1].name+".parentInverseMatrix", matrixMult.name+".matrixIn[1]")
+        mmod.connectAttr(connectionGroup.name+".parentInverseMatrix", matrixMult.name+".matrixIn[1]")
         decompMatrix = mNode.decomposeMatrix(side=self.side, name=self.name)
         mmod.connectAttr(matrixMult.getMatrixSum(), decompMatrix.getInputMatrix())
-        mmod.connectAttr(decompMatrix.getOutputTranslate(), self.ribbonJoints[-1].name+".translate" )
-        mmod.connectAttr(decompMatrix.getOutputRotate() , self.ribbonJoints[-1].name+".rotate" )
+        mmod.connectAttr(decompMatrix.getOutputTranslate(), connectionGroup.name+".translate" )
+        mmod.connectAttr(decompMatrix.getOutputRotate() ,connectionGroup.name+".rotate" )
         try:
-            mmod.connectAttr(self.root.name+".scale", fn.getParent(self.ribbonJoints[-1].name)+".scale")
+            mmod.connectAttr(self.root.name+".scale", fn.getParent(connectionGroup.name)+".scale")
         except:
-            mmod.connectAttr(self.root+".scale", fn.getParent(self.ribbonJoints[-1].name)+".scale" )
+            mmod.connectAttr(self.root+".scale", fn.getParent(connectionGroup.name)+".scale" )
 
-
+        self.jointInputNode.append(decompMatrix)
       
     def attachJoinnts(self, parent=None):
         group = mmod.transform(side=self.side, name=self.name+"BindJnt", type="GRP", parent=parent)

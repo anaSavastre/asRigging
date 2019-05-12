@@ -326,6 +326,37 @@ class clamp(utilityNode):
     def min(self, value):
         mc.setAttr(self.name+".min", value)
 
+    # MinR
+    def getMin(self):
+        return self.name+".minR"
+    @property
+    def minR(self):
+        ''' returns node's plug '''
+        return self.getPlug("minR")
+    @minR.setter
+    def minR(self, value):
+        mc.setAttr(self.name+".minR", value)
+    # MinG
+    def getMin(self):
+        return self.name+".minG"
+    @property
+    def minG(self):
+        ''' returns node's plug '''
+        return self.getPlug("minG")
+    @minG.setter
+    def minG(self, value):
+        mc.setAttr(self.name+".minG", value)
+    # MinB
+    def getMin(self):
+        return self.name+".minB"
+    @property
+    def minB(self):
+        ''' returns node's plug '''
+        return self.getPlug("minB")
+    @minB.setter
+    def minB(self, value):
+        mc.setAttr(self.name+".minB", value)
+
     # Max
     def getMax(self):
         return self.name+".max"
@@ -337,8 +368,8 @@ class clamp(utilityNode):
     def max(self, value):
         mc.setAttr(self.name+".max", value)
 
-    # maxR
-    def getMaxR(self):
+    # MaxR
+    def getMax(self):
         return self.name+".maxR"
     @property
     def maxR(self):
@@ -347,8 +378,39 @@ class clamp(utilityNode):
     @maxR.setter
     def maxR(self, value):
         mc.setAttr(self.name+".maxR", value)
+    # MaxG
+    def getMax(self):
+        return self.name+".maxG"
+    @property
+    def maxG(self):
+        ''' returns node's plug '''
+        return self.getPlug("maxG")
+    @maxG.setter
+    def maxG(self, value):
+        mc.setAttr(self.name+".maxG", value)
+    # MaxB
+    def getMax(self):
+        return self.name+".maxB"
+    @property
+    def maxB(self):
+        ''' returns node's plug '''
+        return self.getPlug("maxB")
+    @maxB.setter
+    def maxB(self, value):
+        mc.setAttr(self.name+".maxB", value)
+
 
     # OUTPUT ATTRIBUTES
+    # output
+    def getOutput(self):
+        return self.name+".output"
+    @property
+    def output(self):
+        ''' returns node's plug '''
+        return self.getPlug("output")
+    @output.setter
+    def output(self, value):
+        mc.setAttr(self.name+".output", value)
     # outputR
     def getOutputR(self):
         return self.name+".outputR"
@@ -359,6 +421,28 @@ class clamp(utilityNode):
     @outputR.setter
     def outputR(self, value):
         mc.setAttr(self.name+".outputR", value)
+
+    # outputG
+    def getOutputG(self):
+        return self.name+".outputG"
+    @property
+    def outputG(self):
+        ''' returns node's plug '''
+        return self.getPlug("outputG")
+    @outputG.setter
+    def outputG(self, value):
+        mc.setAttr(self.name+".outputG", value)
+
+    # outputB
+    def getOutputB(self):
+        return self.name+".outputB"
+    @property
+    def outputB(self):
+        ''' returns node's plug '''
+        return self.getPlug("outputB")
+    @outputB.setter
+    def outputB(self, value):
+        mc.setAttr(self.name+".outputB", value)
 
 
 class plusMinusAverage(utilityNode):

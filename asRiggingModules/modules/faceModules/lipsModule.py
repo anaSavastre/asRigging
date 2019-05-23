@@ -5,7 +5,12 @@ import mayaModule as mmod
 import mayaNode as mNode
 import ribbon as ribbon
 
+'''
+Lip Module:
 
+Clean-Up:
+        Control Hierarchy 
+'''
 
 class lips(object):
     def __init__(self, side="C", name="lips", lipUpper=None, lipLower=None, lipCorners = None, jawJNT = None, root=None, parent=None, hook=None):
@@ -136,7 +141,7 @@ class lips(object):
         upWorldY  = mc.xform(effectObj, q=True, ws=True, t=True)[1]
         lowWorldY = mc.xform(causeObj, q=True, ws=True, t=True)[1]
         # CHANGE TO RADIUS OFFSET
-        mc.setAttr(offset.name+".input3D[1].input3Dy", -1*(abs(upWorldY - lowWorldY)-0.1))
+        mc.setAttr(offset.name+".input3D[1].input3Dy", -1*(abs(upWorldY - lowWorldY)))
 
         # Clamping Distance
         mmod.connectAttr(offset.getOutput3D(), clamp.getInput())
@@ -155,7 +160,7 @@ class lips(object):
         autoMovementGuideGroup = mmod.transform(side=self.side, name=self.name+"AutoMovGuides", type="GRP", parent= self.parent)
         for i, (upper, lower) in enumerate(zip(self.upperControls, self.lowerControls)):
             # LOWER TO UPPER
-            print lower, fn.getParent(lower), fn.getParent(upper)
+            
             self.lipCollisionSetUp (fn.getParent(fn.getParent(lower)), fn.getParent(upper), self.root, translationDirection=1)
             self.lipCollisionSetUp (fn.getParent(fn.getParent(upper)), fn.getParent(lower), self.jawJnt, translationDirection=-1)
 

@@ -14,6 +14,7 @@ def createJoint ():
     
     mc.select (clear= True)
     jnt = mc.joint (p=[center.x, center.y, center.z])
+    return jnt
  
 
 def createConnectionGroup (object, name="objectParent", side="C"):

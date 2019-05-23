@@ -97,28 +97,52 @@ def getSelectedComponentsPositions ():
 
     return pointList
 
+# def getGeoBoundingBox(self):
+    
+   
+
+#     # Creating the bounding box
+#     boundingBox = om.MBoundingBox(minCourner, maxCourner)
+
+#     return boundingBox
 
 def getBoundingBox():
     pointList = om.MPointArray()
     pointList = getSelectedComponentsPositions()
 
-    minCorner = [ pointList[0].x, pointList[0].y, pointList[0].z]
-    maxCorner =  [ pointList[0].x, pointList[0].y, pointList[0].z]
+    try:
 
-    for i in range (1, pointList.length()):
-        point = pointList[i]
-        if (point.x < minCorner[0]):
-            minCorner[0]= point.x
-        if (point.y < minCorner[1]):
-            minCorner[1] = point.y
-        if (point.z < minCorner[2]):
-            minCorner[2] = point.z
-        if (point.x > maxCorner[0]):
-            maxCorner[0] = point.x
-        if (point.y > maxCorner[1]):
-            maxCorner[1] = point.y
-        if (point.z > maxCorner[2]):
-            maxCorner[2] = point.z
+        minCorner = [ pointList[0].x, pointList[0].y, pointList[0].z]
+        maxCorner =  [ pointList[0].x, pointList[0].y, pointList[0].z]
+
+        for i in range (1, pointList.length()):
+            point = pointList[i]
+            if (point.x < minCorner[0]):
+                minCorner[0]= point.x
+            if (point.y < minCorner[1]):
+                minCorner[1] = point.y
+            if (point.z < minCorner[2]):
+                minCorner[2] = point.z
+            if (point.x > maxCorner[0]):
+                maxCorner[0] = point.x
+            if (point.y > maxCorner[1]):
+                maxCorner[1] = point.y
+            if (point.z > maxCorner[2]):
+                maxCorner[2] = point.z
+    except:
+        geoList = mc.ls(sl=True)
+        bBoxList = mc.polyEvaluate(geoList, boundingBox = True)
+        minCorner = om.MPoint()
+        maxCorner = om.MPoint()
+        
+        minCorner.x = bBoxList[0][0]
+        minCorner.y = bBoxList[1][0]
+        minCorner.z = bBoxList[2][0]
+        
+
+        maxCorner.x = bBoxList[0][1]
+        maxCorner.y = bBoxList[1][1]
+        maxCorner.z = bBoxList[2][1]
 
     boundingBox = om.MBoundingBox (om.MPoint(minCorner[0], minCorner[1], minCorner[2]), om.MPoint(maxCorner[0], maxCorner[1], maxCorner[2]))
     return boundingBox
@@ -289,8 +313,20 @@ def translateShapePoints(shape, translationVector, pivot):
 
 def scaleShapePoints(shape, scaleAmount):
     # !!!!!!!!!!!!!! UPDATE FUNCTION: to scale locally not according to world center !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-    mc.xform(shape+"*.cv[0:*]", s=[scaleAmount, scaleAmount, scaleAmount], r=True)
+    # Calculate Point Center
+    mc.select(shape+"*.cv[*]")
+    boundingBox = getBoundingBox()
+    center = boundingBox.center()
+    # Scale
+    mc.xform(shape+"*.cv[0:*]", s=[scaleAmount, scaleAmount, scaleAmount], piv=[center.x, center.y, center.z] ,r=True)
+def vectorScaleShapePoints(shape, scaleVector):
+    # !!!!!!!!!!!!!! UPDATE FUNCTION: to scale locally not according to world center !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    # Calculate Point Center
+    mc.select(shape+"*.cv[*]")
+    boundingBox = getBoundingBox()
+    center = boundingBox.center()
+    # Scale
+    mc.xform(shape+"*.cv[0:*]", s=[scaleVector[0], scaleVector[1], scaleVector[2]], piv=[center.x, center.y, center.z] ,r=True)
 
 def rotateShapePoints(shape, rotationVector=[0, 0, 0], pivot=[0, 0, 0]):
 
